@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  加载动画 + 飞行
---  Version : 1.0.0
+--  Version : 1.0.1
 --  Date    : 2026-09-27
 --
 --  用法（执行器里粘贴执行）：
@@ -19,7 +19,8 @@ local CONFIG = {
 	Title    = "O_X HUB",
 	Version  = "v1.0.0",
 	FlySpeed = 60,                                                    -- 默认飞行速度
-	MaxSpeed = 300,                                                   -- 速度条上限
+	MinSpeed = 0.01,                                                  -- 速度条下限
+	MaxSpeed = 3000,                                                  -- 速度条上限
 	FlyKey   = Enum.KeyCode.F,                                        -- 开关飞行
 	UpKeys   = { Enum.KeyCode.Space },                                -- 上升
 	DownKeys = { Enum.KeyCode.LeftControl, Enum.KeyCode.LeftShift },  -- 下降
@@ -41,6 +42,16 @@ local C = {
 
 local FONT_N = Enum.Font.GothamMedium
 local FONT_B = Enum.Font.GothamBold
+
+-- 速度显示格式化：小数值保留小数位，避免 0.01 被显示成 0
+local function fmtSpeed(v)
+	if v < 1 then
+		return string.format("%.2f", v)
+	elseif v < 10 then
+		return string.format("%.1f", v)
+	end
+	return string.format("%d", math.floor(v + 0.5))
+end
 
 --========================== 工具函数 ==========================
 
@@ -139,6 +150,22 @@ local GUI_PARENT = getGuiParent()
 --========================== 滑块组件 ==========================
 local function createSlider(parent, opts)
 	local min, max = opts.Min or 0, opts.Max or 100
+	local useLog = opts.Log and min > 0
+
+	-- 数值 <-> 滑块位置(0~1)。对数刻度下低速段才调得动
+	local function toFrac(v)
+		if useLog then
+			return (math.log(v) - math.log(min)) / (math.log(max) - math.log(min))
+		end
+		return (v - min) / (max - min)
+	end
+
+	local function fromFrac(f)
+		if useLog then
+			return math.exp(math.log(min) + f * (math.log(max) - math.log(min)))
+		end
+		return min + (max - min) * f
+	end
 
 	local hit = new("Frame", {
 		Name = "SliderHit",
@@ -182,7 +209,7 @@ local function createSlider(parent, opts)
 
 	local function setValue(v, fire)
 		v = math.clamp(v, min, max)
-		local frac = (v - min) / (max - min)
+		local frac = math.clamp(toFrac(v), 0, 1)
 		fill.Size = UDim2.new(frac, 0, 1, 0)
 		knob.Position = UDim2.new(frac, 0, 0.5, 0)
 		if fire and opts.OnChange then
@@ -195,7 +222,7 @@ local function createSlider(parent, opts)
 		local w = track.AbsoluteSize.X
 		if w <= 0 then return end
 		local rel = math.clamp((input.Position.X - track.AbsolutePosition.X) / w, 0, 1)
-		setValue(min + (max - min) * rel, true)
+		setValue(fromFrac(rel), true)
 	end
 
 	hit.InputBegan:Connect(function(input)
@@ -544,7 +571,7 @@ local speedLabel = new("TextLabel", {
 	Size = UDim2.new(0, 80, 0, 16),
 	Position = UDim2.new(1, -92, 0, 94),
 	BackgroundTransparency = 1,
-	Text = tostring(CONFIG.FlySpeed),
+	Text = fmtSpeed(CONFIG.FlySpeed),
 	TextSize = 12,
 	Font = FONT_B,
 	TextColor3 = C.Accent,
@@ -766,7 +793,7 @@ function Fly:SetEnabled(state)
 		toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 		toggleBtn.BackgroundColor3 = C.Green
 		toggleStroke.Color = C.Green
-		notify("飞行已开启  ·  速度 " .. math.floor(self.Speed), C.Green)
+		notify("飞行已开启  ·  速度 " .. fmtSpeed(self.Speed), C.Green)
 	else
 		self:Stop()
 		toggleBtn.Text = "飞行  已关闭"
@@ -785,12 +812,13 @@ end
 createSlider(panel, {
 	Position = UDim2.new(0, 12, 0, 118),
 	Width = 206,
-	Min = 10,
+	Min = CONFIG.MinSpeed,
 	Max = CONFIG.MaxSpeed,
 	Default = CONFIG.FlySpeed,
+	Log = true,   -- 对数刻度：0.01 ~ 3000 跨 5 个数量级，线性滑块够不到低速段
 	OnChange = function(v)
 		Fly.Speed = v
-		speedLabel.Text = tostring(math.floor(v))
+		speedLabel.Text = fmtSpeed(v)
 	end,
 })
 
