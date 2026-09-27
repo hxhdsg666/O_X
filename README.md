@@ -1,4 +1,4 @@
-# O_X HUB
+# Roblox Scripts
 
 Roblox 执行器脚本集合，通过 `loadstring` + `HttpGet` 分发。
 
@@ -34,7 +34,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/he
 | `W A S D` | 沿相机视角水平移动 |
 | `空格` | 上升 |
 | `左Ctrl` / `左Shift` | 下降 |
-| 速度滑块 | 10 ~ 300 |
+| 速度滑块 | 0.01 ~ 3000（对数刻度） |
 
 移动端自动在右侧出现 ▲ / ▼ 升降按钮，方向由摇杆控制。角色复活后若飞行原为开启状态会自动恢复。
 
