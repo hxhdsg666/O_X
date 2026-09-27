@@ -6,23 +6,23 @@ Roblox 执行器脚本集合，通过 `loadstring` + `HttpGet` 分发。
 
 | 文件 | 说明 |
 | --- | --- |
-| `AutoScript.lua` | 加载动画 + 飞行面板 |
+| `O_X_HUB.lua` | 加载动画 + 飞行面板 |
 
 ## 用法
 
 执行器里粘贴执行：
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/AutoScript.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/O_X_HUB.lua"))()
 ```
 
 改完脚本发现还是旧效果，加时间戳破缓存：
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/AutoScript.lua?t=" .. os.time()))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/O_X_HUB.lua?t=" .. os.time()))()
 ```
 
-## AutoScript.lua 功能
+## O_X_HUB.lua 功能
 
 **加载动画** — 全屏深色遮罩 + LOGO + 5 阶段进度条，走完自动淡出。
 
