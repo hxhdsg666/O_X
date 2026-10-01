@@ -60,6 +60,12 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/he
 
 ### 设置
 - **联系作者**：显示 `oxhub@atomicmail.io`，点整张卡片复制到剪贴板，右上角弹提示
+  - 各家执行器的剪贴板函数**名字和位置都不一样**，所以是层层兜底地找：
+    ① 脚本加载时用**裸全局引用**抓一遍（`setclipboard` / `toclipboard` / `set_clipboard` / `setrbxclipboard`）
+    ② `_G` ③ `getgenv()` ④ 再扫一遍环境里所有名字带 `clip` 的可调用项
+    —— 有些执行器给脚本的是沙箱环境，那里的 `_G` 是空表，只有裸全局引用能拿到
+  - 也兼容被包成 table / userdata（带 `__call`）的情况
+  - 真的一个都没有时，会在控制台打印"环境里带 clip 的名字"方便排查，界面上明确提示手动复制
 - **语言**：两个按钮（当前语言高亮）。点另一个语言 → 提示「已切换为 xx，正在重启...」→ 0.45 秒后**把旧界面整体卸载、用新语言重新建一遍**（等价于重启，但不用重新注入，也不会闪一下语言选择页）
 
 界面的每一处运行时状态（主窗口、飞行窗口、悬浮图标、提示条 GUI、所有事件连接）都装在 `boot(lang)` 里，所以"重启"就是 `unloadAll` + 再跑一次 `boot`。语言包和图标资源缓存在 `boot` 外面，重启时不用重新落盘。
@@ -127,6 +133,10 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/he
 如果你之前跑过老版本、换了图还是不生效，删掉执行器工作目录里的 `oxhub_icon.jpg` 再执行一次就好（新版本会自动删）。
 
 > 哈希格式化踩过的坑：`string.format("%x", h)` 在部分运行时（数值走双精度、位运算只有 32 位的那种）遇到 **大于 2³¹ 的哈希值**会直接报 `number has no integer representation`。所以这里改成手写十六进制，只依赖 `math.floor` 和除法。
+
+> 取执行器注入的函数时，**先裸全局引用，再 `_G`，再 `getgenv()`**。
+> 有些执行器给脚本的是沙箱环境，那里的 `_G` 是一张全新的空表，
+> 只有裸全局引用（顺着 `__index` 回落到真正的环境）才拿得到函数。
 
 ## 注意
 
