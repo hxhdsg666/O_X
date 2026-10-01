@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.5.2
+--  Version : 1.6.0
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -49,9 +49,47 @@ local LOCALES = {
 		-- 侧栏
 		navGroup     = "功能列表",
 		navHome      = "主页",
+		navServers   = "服务器",
 		navGeneral   = "通用",
 		navFly       = "飞行",
 		navSettings  = "设置",
+
+		-- 服务器列表
+		srvTitle     = "服务器脚本",
+		srvSub       = "挑一个服务器，打开它专属的脚本面板",
+		srvOpen      = "打开",
+		srvMore      = "更多服务器还在做",
+		srvNds       = "自然灾害模拟器",
+
+		-- 服务器面板
+		srvTabTp     = "传送",
+		srvTabFarm   = "农场",
+		srvTabMain   = "主要",
+
+		tpTitle      = "传送",
+		tpSub        = "选一个地点，再点下面的按钮过去",
+		tpLocSpawn   = "出生点",
+		tpLocSpawnD  = "大厅出生点，灾害打不到这里",
+		tpLocField   = "游戏场地",
+		tpLocFieldD  = "每局开始所有人被送过去的那个岛",
+		tpBtn        = "传送",
+		tpDone       = "已传送到「%s」",
+		tpNoChar     = "角色还没加载好",
+		tpWrongPlace = "当前不在这个服务器里（Place ID %s），传送可能没效果",
+
+		farmTitle    = "农场",
+		farmSub      = "挂机拿胜利",
+		farmAutoWin  = "自动获胜",
+		farmAutoWinD = "开启后回到出生点，并且顶掉游戏内的传送",
+		farmRunning  = "运行中",
+		farmOn       = "自动获胜已开启  ·  已经回到出生点",
+		farmOff      = "自动获胜已关闭",
+		farmHint     = "开启期间角色会被按在出生点。游戏开局把你传去场地，也会被立刻拉回来。",
+
+		mainTitle    = "主要",
+		mainSub      = "还没做",
+		mainWip      = "敬请期待",
+		mainWipD     = "这一块还在做，下次更新补上。",
 
 		-- 主页
 		homeWelcome  = "欢迎使用 %s",
@@ -133,9 +171,45 @@ local LOCALES = {
 
 		navGroup     = "FEATURES",
 		navHome      = "Home",
+		navServers   = "Servers",
 		navGeneral   = "General",
 		navFly       = "Fly",
 		navSettings  = "Settings",
+
+		srvTitle     = "Server scripts",
+		srvSub       = "Pick a game and open its own script panel",
+		srvOpen      = "Open",
+		srvMore      = "More servers are on the way",
+		srvNds       = "Natural Disaster Survival",
+
+		srvTabTp     = "Teleport",
+		srvTabFarm   = "Farm",
+		srvTabMain   = "Main",
+
+		tpTitle      = "Teleport",
+		tpSub        = "Pick a place, then hit the button below",
+		tpLocSpawn   = "Spawn",
+		tpLocSpawnD  = "Lobby spawn. Disasters never reach here",
+		tpLocField   = "Game field",
+		tpLocFieldD  = "The island everyone gets sent to each round",
+		tpBtn        = "Teleport",
+		tpDone       = "Teleported to %s",
+		tpNoChar     = "Character is not loaded yet",
+		tpWrongPlace = "You are not in this game (Place ID %s), teleport may do nothing",
+
+		farmTitle    = "Farm",
+		farmSub      = "Win without playing",
+		farmAutoWin  = "Auto win",
+		farmAutoWinD = "Returns to spawn and blocks the game's own teleports",
+		farmRunning  = "RUNNING",
+		farmOn       = "Auto win on  ·  back at spawn",
+		farmOff      = "Auto win off",
+		farmHint     = "While on, you are pinned to spawn. If the round sends you to the field, you get pulled right back.",
+
+		mainTitle    = "Main",
+		mainSub      = "Not built yet",
+		mainWip      = "Coming soon",
+		mainWipD     = "This part is still being built. It lands in the next update.",
 
 		homeWelcome  = "Welcome to %s",
 		homeSub      = "Executor script suite  ·  %s",
@@ -221,7 +295,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.5.2",
+	Version = "v1.6.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -510,6 +584,39 @@ VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 VVVVVVVVVVVVVVVVVVVVVVVVVVVV
+]==],
+	srv_nds = [==[
+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
 ]==],
 	sfx_close = [==[
 SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgzLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAASW5mbwAA
@@ -1096,7 +1203,7 @@ local ASSET_TRIED, ASSET_CACHE = {}, {}
 
 -- 各资源的文件扩展名（getcustomasset 靠它判断类型）
 local ASSET_EXT = { icon = "jpg", flag_us = "png", flag_cn = "png",
-	sfx_notify = "mp3", sfx_close = "mp3" }
+	sfx_notify = "mp3", sfx_close = "mp3", srv_nds = "png" }
 
 local function getAsset(key)
 	if ASSET_TRIED[key] then return ASSET_CACHE[key] end
@@ -2229,6 +2336,10 @@ boot = function(lang)
 
 	local FLY_W, FLY_H   = 380, 356
 
+	local SRV_W, SRV_H   = 520, 360
+	local SRV_SIDE_W     = 118
+	local SRV_HEAD_H     = 42
+
 	local guiMain = new("ScreenGui", {
 		Name = "O_X_HUB",
 		IgnoreGuiInset = true,
@@ -2581,6 +2692,10 @@ boot = function(lang)
 
 	-- 飞行窗口的开窗函数、飞行开关（都在后面定义，这里先占位）
 	local openFlyWindow = function() end
+	local openSrvWindow = function() end
+	local SrvTeleportRequest = function() end
+	local SrvAutoWinRequest = function() end
+	local SrvCloseRequest = function() end
 	local FlyToggleRequest = function() end
 	-- 伤害保护总开关（速度回零模块在下面才定义，这里先占位，免得闭包绑到全局）
 	local ShieldRequest = function() end
@@ -2827,9 +2942,160 @@ boot = function(lang)
 		Parent = home,
 	})
 
+	--========================== 服务器 ==========================
+	-- 跟主页一样是个 page（不新开窗口），右边列出可用的服务器脚本
+	local serversPage = addPage("servers")
+	addNav("servers", L("navServers"), 2)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 22),
+		Position = UDim2.new(0, 0, 0, 2),
+		BackgroundTransparency = 1,
+		Text = L("srvTitle"),
+		TextSize = 17,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = serversPage,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0, 0, 0, 28),
+		BackgroundTransparency = 1,
+		Text = L("srvSub"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = serversPage,
+	})
+
+	-- 一张服务器卡：图标 + 名字 + Place ID + 打开
+	local srvList = new("Frame", {
+		Name = "ServerList",
+		Size = UDim2.new(1, 0, 1, -54),
+		Position = UDim2.new(0, 0, 0, 54),
+		BackgroundTransparency = 1,
+		Parent = serversPage,
+	})
+
+	local function addServerCard(order, name, placeId, assetKey)
+		local y = (order - 1) * 78
+		local card = new("TextButton", {
+			Name = "SrvCard_" .. tostring(placeId),
+			Size = UDim2.new(1, 0, 0, 70),
+			Position = UDim2.new(0, 0, 0, y),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			ClipsDescendants = true,
+			Parent = srvList,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = card })
+		local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = card })
+
+		local iconBox = new("Frame", {
+			Size = UDim2.new(0, 46, 0, 46),
+			Position = UDim2.new(0, 14, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card2,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			Parent = card,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 12), Parent = iconBox })
+		local iconAsset = getAsset(assetKey)
+		if iconAsset then
+			new("ImageLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Image = iconAsset,
+				ScaleType = Enum.ScaleType.Crop,
+				Parent = iconBox,
+			})
+		end
+		new("UIStroke", { Color = C.Stroke2, Thickness = 1, Transparency = 0.5, Parent = iconBox })
+
+		new("TextLabel", {
+			Size = UDim2.new(1, -150, 0, 20),
+			Position = UDim2.new(0, 74, 0, 14),
+			BackgroundTransparency = 1,
+			Text = name,
+			TextSize = 15,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = card,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -150, 0, 16),
+			Position = UDim2.new(0, 74, 0, 38),
+			BackgroundTransparency = 1,
+			Text = "place " .. tostring(placeId),
+			TextSize = 11,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = card,
+		})
+
+		local pill = new("Frame", {
+			Size = UDim2.new(0, 64, 0, 28),
+			Position = UDim2.new(1, -78, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card2,
+			BorderSizePixel = 0,
+			Parent = card,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = pill })
+		local pillStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = pill })
+		local pillText = new("TextLabel", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Text = L("srvOpen"),
+			TextSize = 12,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			Parent = pill,
+		})
+
+		card.MouseEnter:Connect(function()
+			tween(card, EASE.soft, { BackgroundColor3 = C.Card2 })
+			tween(stroke, EASE.soft, { Color = C.Accent })
+			tween(pill, EASE.soft, { BackgroundColor3 = C.Accent })
+			tween(pillStroke, EASE.soft, { Color = C.Accent })
+			tween(pillText, EASE.soft, { TextColor3 = C.White })
+		end)
+		card.MouseLeave:Connect(function()
+			tween(card, EASE.soft, { BackgroundColor3 = C.Card })
+			tween(stroke, EASE.soft, { Color = C.Stroke })
+			tween(pill, EASE.soft, { BackgroundColor3 = C.Card2 })
+			tween(pillStroke, EASE.soft, { Color = C.Stroke })
+			tween(pillText, EASE.soft, { TextColor3 = C.Sub })
+		end)
+		bindPress(card, C.Accent)
+		card.MouseButton1Click:Connect(function() openSrvWindow() end)
+		return card
+	end
+
+	addServerCard(1, L("srvNds"), 189707, "srv_nds")
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0, 0, 0, 86),
+		BackgroundTransparency = 1,
+		Text = L("srvMore"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = srvList,
+	})
+
 	--========================== 通用设置 ==========================
 	local general = addPage("general")
-	addNav("general", L("navGeneral"), 2)
+	addNav("general", L("navGeneral"), 3)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, 0, 0, 20),
@@ -3023,7 +3289,7 @@ boot = function(lang)
 	--========================== 设置 ==========================
 	-- 跟主页一样是个 page（不新开窗口）
 	local settingsPage = addPage("settings")
-	addNav("settings", L("navSettings"), 4)
+	addNav("settings", L("navSettings"), 5)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, 0, 0, 20),
@@ -3241,7 +3507,7 @@ boot = function(lang)
 	})
 
 	--========================== 飞行（独立窗口） ==========================
-	local flyNavBtn = addNav("fly", L("navFly"), 3, function() openFlyWindow() end)
+	local flyNavBtn = addNav("fly", L("navFly"), 4, function() openFlyWindow() end)
 
 	local flyWin = new("Frame", {
 		Name = "FlyWindow",
@@ -3668,6 +3934,691 @@ boot = function(lang)
 		end)
 	end
 
+	--========================== 服务器窗口 ==========================
+	-- 跟飞行窗口一个套路：独立 Frame、－ 收胶囊、✕ 关掉，打开时播开场动画
+	local srvWin = new("Frame", {
+		Name = "ServerWindow",
+		Size = UDim2.new(0, SRV_W, 0, SRV_H),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Visible = false,
+		Parent = guiMain,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = srvWin })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = srvWin })
+	local srvScale = new("UIScale", { Scale = 1, Parent = srvWin })
+
+	local srvHeader = new("Frame", {
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, SRV_HEAD_H),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Parent = srvWin,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = srvHeader })
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 12),
+		Position = UDim2.new(0, 0, 1, -12),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Parent = srvHeader,
+	})
+	new("Frame", {
+		Size = UDim2.new(1, -24, 0, 1),
+		Position = UDim2.new(0, 12, 1, -1),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = srvHeader,
+	})
+
+	local function srvIconAt(parent, px, py, size, radius)
+		local box = new("Frame", {
+			Size = UDim2.new(0, size, 0, size),
+			Position = UDim2.new(0, px, 0.5, py),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card2,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			Parent = parent,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, radius), Parent = box })
+		local a = getAsset("srv_nds")
+		if a then
+			new("ImageLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Image = a,
+				ScaleType = Enum.ScaleType.Crop,
+				Parent = box,
+			})
+		end
+		new("UIStroke", { Color = C.Stroke2, Thickness = 1, Transparency = 0.5, Parent = box })
+		return box
+	end
+
+	srvIconAt(srvHeader, 14, 0, 22, 7)
+
+	new("TextLabel", {
+		Size = UDim2.new(0, 200, 1, 0),
+		Position = UDim2.new(0, 44, 0, 0),
+		BackgroundTransparency = 1,
+		Text = L("srvNds"),
+		TextSize = 14,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = srvHeader,
+	})
+
+	-- 自动获胜开着的时候这里亮一个 RUNNING
+	local srvRunTag = new("TextLabel", {
+		Name = "RunTag",
+		Size = UDim2.new(0, 84, 1, 0),
+		Position = UDim2.new(1, -190, 0, 0),
+		BackgroundTransparency = 1,
+		Text = L("farmRunning"),
+		TextSize = 10,
+		Font = FONT_M,
+		TextColor3 = C.Green,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		TextTransparency = 1,
+		Parent = srvHeader,
+	})
+
+	local srvMinBtn = new("TextButton", {
+		Name = "Minimize",
+		Size = UDim2.new(0, 26, 0, 26),
+		Position = UDim2.new(1, -70, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "－",
+		TextSize = 14,
+		Font = FONT_B,
+		TextColor3 = C.Sub,
+		Parent = srvHeader,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = srvMinBtn })
+	local srvMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = srvMinBtn })
+	bindHover(srvMinBtn, {
+		Bg = { C.Card, C.Card2 }, Stroke = srvMinStroke, StrokeOn = C.Stroke2,
+		Label = srvMinBtn, LabelOn = C.Text,
+	})
+
+	local srvCloseBtn = new("TextButton", {
+		Name = "Close",
+		Size = UDim2.new(0, 26, 0, 26),
+		Position = UDim2.new(1, -38, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "✕",
+		TextSize = 13,
+		Font = FONT_B,
+		TextColor3 = C.Sub,
+		Parent = srvHeader,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = srvCloseBtn })
+	local srvCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = srvCloseBtn })
+	bindHover(srvCloseBtn, {
+		Bg = { C.Card, C.Red }, Stroke = srvCloseStroke, StrokeOn = C.Red,
+		Label = srvCloseBtn, LabelOn = C.White,
+	})
+
+	makeDraggable(srvWin, srvHeader, function() return srvScale.Scale end)
+
+	-- ---------- 主体：左边分区 / 右边内容 ----------
+	local srvBody = new("Frame", {
+		Size = UDim2.new(1, -20, 1, -SRV_HEAD_H - 12),
+		Position = UDim2.new(0, 10, 0, SRV_HEAD_H + 6),
+		BackgroundTransparency = 1,
+		Parent = srvWin,
+	})
+
+	local srvSide = new("Frame", {
+		Name = "Sidebar",
+		Size = UDim2.new(0, SRV_SIDE_W, 1, 0),
+		BackgroundColor3 = C.Side,
+		BorderSizePixel = 0,
+		Parent = srvBody,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = srvSide })
+
+	local srvIndicator = new("Frame", {
+		Name = "SrvIndicator",
+		Size = UDim2.new(0, 3, 0, 18),
+		Position = UDim2.new(0, 0, 0, 15),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+		Parent = srvSide,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = srvIndicator })
+
+	local srvContent = new("Frame", {
+		Name = "Content",
+		Size = UDim2.new(1, -(SRV_SIDE_W + 18), 1, 0),
+		Position = UDim2.new(0, SRV_SIDE_W + 14, 0, 0),
+		BackgroundTransparency = 1,
+		Parent = srvBody,
+	})
+
+	local srvPages, srvNav = {}, {}
+
+	local function srvAddPage(key)
+		local page = new("Frame", {
+			Name = "SrvPage_" .. key,
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Visible = false,
+			Parent = srvContent,
+		})
+		srvPages[key] = page
+		return page
+	end
+
+	local function srvShow(key)
+		for k, page in pairs(srvPages) do
+			page.Visible = (k == key)
+		end
+		for k, item in pairs(srvNav) do
+			local active = (k == key)
+			tween(item.label, EASE.soft, { TextColor3 = active and C.Text or C.Sub })
+			tween(item.btn, EASE.soft, { BackgroundColor3 = active and C.Card or C.Side })
+		end
+		local item = srvNav[key]
+		if item then
+			tween(srvIndicator, EASE.pop, { Position = UDim2.new(0, 0, 0, item.y + 5) })
+		end
+		local target = srvPages[key]
+		if target then
+			staggerIn(target:GetChildren(), 8, 0.03, 0.3)
+		end
+	end
+
+	local function srvAddNav(key, text, order)
+		local y = 10 + (order - 1) * 32
+		local btn = new("TextButton", {
+			Name = "Srv_" .. key,
+			Size = UDim2.new(1, -16, 0, 28),
+			Position = UDim2.new(0, 8, 0, y),
+			BackgroundColor3 = C.Side,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			Parent = srvSide,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = btn })
+		local label = new("TextLabel", {
+			Size = UDim2.new(1, -24, 1, 0),
+			Position = UDim2.new(0, 16, 0, 0),
+			BackgroundTransparency = 1,
+			Text = text,
+			TextSize = 13,
+			Font = FONT_N,
+			TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = btn,
+		})
+		btn.MouseButton1Click:Connect(function() srvShow(key) end)
+		btn.MouseEnter:Connect(function()
+			if not srvPages[key] or not srvPages[key].Visible then
+				tween(btn, EASE.soft, { BackgroundColor3 = C.Card })
+			end
+			tween(label, EASE.soft, { TextColor3 = C.Text })
+		end)
+		btn.MouseLeave:Connect(function()
+			if not srvPages[key] or not srvPages[key].Visible then
+				tween(btn, EASE.soft, { BackgroundColor3 = C.Side })
+			end
+			tween(label, EASE.soft, {
+				TextColor3 = (srvPages[key] and srvPages[key].Visible) and C.Text or C.Sub,
+			})
+		end)
+		srvNav[key] = { btn = btn, label = label, y = y }
+		return btn
+	end
+
+	-- ---------- 页面：传送 ----------
+	local tpPage = srvAddPage("tp")
+	srvAddNav("tp", L("srvTabTp"), 1)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 22),
+		Position = UDim2.new(0, 0, 0, 2),
+		BackgroundTransparency = 1,
+		Text = L("tpTitle"),
+		TextSize = 16,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = tpPage,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0, 0, 0, 26),
+		BackgroundTransparency = 1,
+		Text = L("tpSub"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = tpPage,
+	})
+
+	local tpChoice = "spawn"
+	local tpRows = {}
+
+	local function tpSelect(key)
+		tpChoice = key
+		for k, row in pairs(tpRows) do
+			local on = (k == key)
+			tween(row.btn, EASE.soft, { BackgroundColor3 = on and C.Card2 or C.Card })
+			tween(row.stroke, EASE.soft, {
+				Color = on and C.Accent or C.Stroke,
+				Thickness = on and 2 or 1,
+			})
+			tween(row.mark, EASE.soft, {
+				BackgroundColor3 = on and C.Accent or C.Card2,
+				BackgroundTransparency = on and 0 or 1,
+			})
+			tween(row.label, EASE.soft, { TextColor3 = on and C.Text or C.Sub })
+		end
+	end
+
+	local TP_LOCS = {
+		{ key = "spawn", name = L("tpLocSpawn"), desc = L("tpLocSpawnD") },
+		{ key = "field", name = L("tpLocField"), desc = L("tpLocFieldD") },
+	}
+	for i, loc in ipairs(TP_LOCS) do
+		local y = 54 + (i - 1) * 64
+		local btn = new("TextButton", {
+			Name = "TpLoc_" .. loc.key,
+			Size = UDim2.new(1, 0, 0, 58),
+			Position = UDim2.new(0, 0, 0, y),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			ClipsDescendants = true,
+			Parent = tpPage,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = btn })
+		local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = btn })
+
+		local mark = new("Frame", {
+			Name = "Mark",
+			Size = UDim2.new(0, 10, 0, 10),
+			Position = UDim2.new(0, 16, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card2,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = btn,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = mark })
+
+		local label = new("TextLabel", {
+			Size = UDim2.new(1, -60, 0, 18),
+			Position = UDim2.new(0, 38, 0, 12),
+			BackgroundTransparency = 1,
+			Text = loc.name,
+			TextSize = 14,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = btn,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -60, 0, 16),
+			Position = UDim2.new(0, 38, 0, 32),
+			BackgroundTransparency = 1,
+			Text = loc.desc,
+			TextSize = 11,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = btn,
+		})
+
+		btn.MouseButton1Click:Connect(function() tpSelect(loc.key) end)
+		tpRows[loc.key] = { btn = btn, stroke = stroke, mark = mark, label = label }
+	end
+	tpSelect("spawn")
+
+	createButton(tpPage, {
+		Name = "TpGo",
+		Size = UDim2.new(1, 0, 0, 42),
+		Position = UDim2.new(0, 0, 0, 190),
+		Text = L("tpBtn"),
+		TextSize = 15,
+		Style = "primary",
+		TextColor3 = C.White,
+		OnClick = function() SrvTeleportRequest(tpChoice) end,
+	})
+
+	-- 不在这个服务器里就提醒一句（不挡操作，只是说明）
+	local tpWarn = new("TextLabel", {
+		Name = "PlaceWarn",
+		Size = UDim2.new(1, 0, 0, 32),
+		Position = UDim2.new(0, 0, 0, 244),
+		BackgroundTransparency = 1,
+		Text = "",
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Amber,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextWrapped = true,
+		Visible = false,
+		Parent = tpPage,
+	})
+	do
+		local okId, pid = pcall(function() return game.PlaceId end)
+		if okId and type(pid) == "number" and pid ~= 189707 then
+			tpWarn.Text = string.format(L("tpWrongPlace"), tostring(pid))
+			tpWarn.Visible = true
+		end
+	end
+
+	-- ---------- 页面：农场 ----------
+	local farmPage = srvAddPage("farm")
+	srvAddNav("farm", L("srvTabFarm"), 2)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 22),
+		Position = UDim2.new(0, 0, 0, 2),
+		BackgroundTransparency = 1,
+		Text = L("farmTitle"),
+		TextSize = 16,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = farmPage,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0, 0, 0, 26),
+		BackgroundTransparency = 1,
+		Text = L("farmSub"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = farmPage,
+	})
+
+	local farmCard = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 72),
+		Position = UDim2.new(0, 0, 0, 54),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		Parent = farmPage,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = farmCard })
+	local farmStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = farmCard })
+
+	new("TextLabel", {
+		Size = UDim2.new(1, -80, 0, 18),
+		Position = UDim2.new(0, 16, 0, 14),
+		BackgroundTransparency = 1,
+		Text = L("farmAutoWin"),
+		TextSize = 14,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = farmCard,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, -80, 0, 16),
+		Position = UDim2.new(0, 16, 0, 38),
+		BackgroundTransparency = 1,
+		Text = L("farmAutoWinD"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = farmCard,
+	})
+
+	local farmRun = new("TextLabel", {
+		Name = "FarmRunTag",
+		Size = UDim2.new(0, 70, 0, 16),
+		Position = UDim2.new(1, -168, 0.5, -8),
+		BackgroundTransparency = 1,
+		Text = L("farmRunning"),
+		TextSize = 10,
+		Font = FONT_M,
+		TextColor3 = C.Green,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		TextTransparency = 1,
+		Parent = farmCard,
+	})
+
+	createSwitch(farmPage, {
+		Name = "AutoWin",
+		Position = UDim2.new(1, -56, 0, 79),
+		Default = false,
+		OnChange = function(v) SrvAutoWinRequest(v) end,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 44),
+		Position = UDim2.new(0, 0, 0, 140),
+		BackgroundTransparency = 1,
+		Text = L("farmHint"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextWrapped = true,
+		Parent = farmPage,
+	})
+
+	-- ---------- 页面：主要（占位） ----------
+	local mainPage = srvAddPage("main")
+	srvAddNav("main", L("srvTabMain"), 3)
+
+	local mainEmpty = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 150),
+		Position = UDim2.new(0, 0, 0, 62),
+		BackgroundTransparency = 1,
+		Parent = mainPage,
+	})
+	local mainLogo = createLogo(mainEmpty, {
+		Size = UDim2.new(0, 54, 0, 54),
+		Position = UDim2.new(0.5, 0, 0, 0),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Radius = 16,
+		TextSize = 26,
+	})
+	mainLogo.BackgroundTransparency = 0.62
+	for _, d in ipairs(mainLogo:GetDescendants()) do
+		if d:IsA("ImageLabel") then d.ImageTransparency = 0.62 end
+		if d:IsA("UIStroke") then d.Transparency = 0.7 end
+	end
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 24),
+		Position = UDim2.new(0, 0, 0, 68),
+		BackgroundTransparency = 1,
+		Text = L("mainWip"),
+		TextSize = 18,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		Parent = mainEmpty,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 20),
+		Position = UDim2.new(0, 0, 0, 96),
+		BackgroundTransparency = 1,
+		Text = L("mainWipD"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		Parent = mainEmpty,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 22),
+		Position = UDim2.new(0, 0, 0, 2),
+		BackgroundTransparency = 1,
+		Text = L("mainTitle"),
+		TextSize = 16,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = mainPage,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0, 0, 0, 26),
+		BackgroundTransparency = 1,
+		Text = L("mainSub"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = mainPage,
+	})
+
+	srvShow("tp")
+
+	-- ---------- 服务器窗口的开场动画 ----------
+	local srvSplash = new("Frame", {
+		Name = "ServerSplash",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		ZIndex = 30,
+		Visible = false,
+		Parent = srvWin,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = srvSplash })
+
+	local srvSplashGlow = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 150),
+		Position = UDim2.new(0, 0, 0, -90),
+		BackgroundColor3 = C.Accent,
+		BackgroundTransparency = 0.88,
+		BorderSizePixel = 0,
+		ZIndex = 30,
+		Parent = srvSplash,
+	})
+	new("UIGradient", {
+		Rotation = 90,
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = srvSplashGlow,
+	})
+
+	local srvSplashIcon = new("Frame", {
+		Size = UDim2.new(0, 56, 0, 56),
+		Position = UDim2.new(0.5, 0, 0.5, -38),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = C.Card2,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		ZIndex = 31,
+		Parent = srvSplash,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 16), Parent = srvSplashIcon })
+	do
+		local a = getAsset("srv_nds")
+		if a then
+			new("ImageLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Image = a,
+				ScaleType = Enum.ScaleType.Crop,
+				ZIndex = 32,
+				Parent = srvSplashIcon,
+			})
+		end
+	end
+	local srvSplashScale = new("UIScale", { Scale = 1, Parent = srvSplashIcon })
+
+	local srvSplashTitle = new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 22),
+		Position = UDim2.new(0.5, 0, 0.5, 14),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundTransparency = 1,
+		Text = L("srvNds"),
+		TextSize = 16,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		ZIndex = 31,
+		Parent = srvSplash,
+	})
+
+	local srvSplashBarBg = new("Frame", {
+		Size = UDim2.new(0, 150, 0, 4),
+		Position = UDim2.new(0.5, 0, 0.5, 42),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = C.Card2,
+		BorderSizePixel = 0,
+		ZIndex = 31,
+		Parent = srvSplash,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = srvSplashBarBg })
+	local srvSplashBar = new("Frame", {
+		Size = UDim2.new(0, 0, 1, 0),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		ZIndex = 31,
+		Parent = srvSplashBarBg,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = srvSplashBar })
+	new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Parent = srvSplashBar })
+
+	local srvSplashBusy = false
+	local function playSrvSplash()
+		if srvSplashBusy then return end
+		srvSplashBusy = true
+		srvSplash.Visible = true
+		srvSplash.BackgroundTransparency = 0
+		srvSplashGlow.BackgroundTransparency = 0.88
+		srvSplashBar.Size = UDim2.new(0, 0, 1, 0)
+		srvSplashTitle.TextTransparency = 0
+		srvSplashIcon.BackgroundTransparency = 0
+
+		srvSplashScale.Scale = 0.6
+		tween(srvSplashScale, EASE.pop, { Scale = 1 })
+		slideIn(srvSplashTitle, 8, 0.06, 0.3)
+
+		task.spawn(function()
+			TweenService:Create(srvSplashBar,
+				TweenInfo.new(0.44, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+				{ Size = UDim2.new(1, 0, 1, 0) }):Play()
+			task.wait(0.52)
+
+			local fade = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			TweenService:Create(srvSplash, fade, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(srvSplashGlow, fade, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(srvSplashTitle, fade, { TextTransparency = 1 }):Play()
+			TweenService:Create(srvSplashIcon, fade, { BackgroundTransparency = 1 }):Play()
+			for _, d in ipairs(srvSplashIcon:GetDescendants()) do
+				if d:IsA("ImageLabel") then
+					TweenService:Create(d, fade, { ImageTransparency = 1 }):Play()
+				end
+			end
+			task.wait(0.26)
+			srvSplash.Visible = false
+			srvSplashIcon.BackgroundTransparency = 0
+			for _, d in ipairs(srvSplashIcon:GetDescendants()) do
+				if d:IsA("ImageLabel") then d.ImageTransparency = 0 end
+			end
+			srvSplashBusy = false
+		end)
+	end
+
 	--========================== 悬浮图标（最小化后） ==========================
 	local reopen = new("TextButton", {
 		Name = "Reopen",
@@ -3747,11 +4698,67 @@ boot = function(lang)
 		Parent = flyReopen,
 	})
 
+	-- 服务器窗口最小化后的悬浮胶囊
+	local srvReopen = new("TextButton", {
+		Name = "ServerReopen",
+		Size = UDim2.new(0, 104, 0, 32),
+		Position = UDim2.new(0, 20, 0, 192),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "",
+		Visible = false,
+		Parent = guiMain,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = srvReopen })
+	local srvReopenStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = srvReopen })
+	local srvReopenScale = new("UIScale", { Scale = 1, Parent = srvReopen })
+	bindHover(srvReopen, {
+		Stroke = srvReopenStroke, StrokeOn = C.Stroke2,
+		Scale = srvReopenScale, ScaleOn = 1.06,
+	})
+
+	local srvReopenIcon = new("Frame", {
+		Size = UDim2.new(0, 20, 0, 20),
+		Position = UDim2.new(0, 7, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card2,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		Parent = srvReopen,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = srvReopenIcon })
+	do
+		local a = getAsset("srv_nds")
+		if a then
+			new("ImageLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Image = a,
+				ScaleType = Enum.ScaleType.Crop,
+				Parent = srvReopenIcon,
+			})
+		end
+	end
+	new("TextLabel", {
+		Size = UDim2.new(1, -34, 1, 0),
+		Position = UDim2.new(0, 32, 0, 0),
+		BackgroundTransparency = 1,
+		Text = L("navServers"),
+		TextSize = 12,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = srvReopen,
+	})
+
 	local function updateScale()
 		uiScale.Scale = computeScale(WIN_W, WIN_H)
 		flyScale.Scale = computeScale(FLY_W, FLY_H)
+		srvScale.Scale = computeScale(SRV_W, SRV_H)
 		if reopen.Visible then reopenScale.Scale = uiScale.Scale end
 		if flyReopen.Visible then flyReopenScale.Scale = flyScale.Scale end
+		if srvReopen.Visible then srvReopenScale.Scale = srvScale.Scale end
 	end
 	updateScale()
 
@@ -3830,6 +4837,38 @@ boot = function(lang)
 	flyReopen.MouseButton1Click:Connect(function()
 		if flyReopenDragged() then return end
 		openFlyWindow()
+	end)
+
+	-- 服务器窗口：同一套语义（－ 收胶囊 / ✕ 关掉）
+	local srvReopenDragged = makeDraggable(srvReopen, srvReopen, nil, { threshold = 6, clamp = true })
+
+	local function hideSrv()
+		srvWin.Visible = false
+		srvReopen.Visible = true
+		srvReopenScale.Scale = 0.4
+		tween(srvReopenScale, EASE.pop, { Scale = srvScale.Scale })
+	end
+
+	local function closeSrvWindow()
+		srvWin.Visible = false
+		srvReopen.Visible = false
+	end
+
+	openSrvWindow = function()
+		if srvWin.Visible then return end
+		srvReopen.Visible = false
+		srvWin.Visible = true
+		srvScale.Scale = math.clamp(srvScale.Scale * 0.9, 0.5, 1)
+		tween(srvScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = computeScale(SRV_W, SRV_H) })
+		playSrvSplash()
+	end
+
+	srvMinBtn.MouseButton1Click:Connect(function() hideSrv() end)
+	srvCloseBtn.MouseButton1Click:Connect(function() SrvCloseRequest() end)
+	srvReopen.MouseButton1Click:Connect(function()
+		if srvReopenDragged() then return end
+		openSrvWindow()
 	end)
 
 	showPage("home")
@@ -4411,6 +5450,86 @@ boot = function(lang)
 		return conn
 	end
 
+	--========================== 服务器脚本：自然灾害模拟器 ==========================
+	-- place 189707。两个坐标是社区脚本里通用的固定点：
+	--   出生点   大厅出生点，灾害打不到这里
+	--   游戏场地 每局开始所有人被送过去的那个岛
+	local NDS = {
+		PlaceId = 189707,
+		Spawn   = Vector3.new(-270.72131347656, 195.98658752441, 360.30114746094),
+		Field   = Vector3.new(-105.42873382568, 48.893535614014, 6.6068959236145),
+		Anchor  = 34,      -- 离出生点超过这么多 studs 就当成"被游戏传走了"，拉回来
+		AutoWin = false,
+		Conn    = nil,
+	}
+
+	local function ndsChar()
+		local char = LocalPlayer.Character
+		if not char then return nil, nil end
+		return char, char:FindFirstChild("HumanoidRootPart")
+	end
+
+	-- 传送本身不出声，让调用方决定提示什么
+	local function ndsMoveTo(pos)
+		local char, root = ndsChar()
+		if not char then return false end
+		if root then
+			if pcall(function() root.CFrame = CFrame.new(pos) end) then return true end
+		end
+		return pcall(function() char:MoveTo(pos) end)
+	end
+
+	SrvTeleportRequest = function(which)
+		local pos   = (which == "field") and NDS.Field or NDS.Spawn
+		local label = (which == "field") and L("tpLocField") or L("tpLocSpawn")
+		if ndsMoveTo(pos) then
+			notify(string.format(L("tpDone"), label), C.Green)
+		else
+			notify(L("tpNoChar"), C.Red)
+		end
+	end
+
+	SrvAutoWinRequest = function(on)
+		NDS.AutoWin = on and true or false
+
+		if NDS.Conn then
+			pcall(function() NDS.Conn:Disconnect() end)
+			NDS.Conn = nil
+		end
+
+		farmRun.TextTransparency = NDS.AutoWin and 0 or 1
+		srvRunTag.TextTransparency = NDS.AutoWin and 0 or 1
+		tween(farmStroke, EASE.soft, { Color = NDS.AutoWin and C.Green or C.Stroke })
+
+		if not NDS.AutoWin then
+			notify(L("farmOff"), C.Red)
+			return
+		end
+
+		ndsMoveTo(NDS.Spawn)
+
+		-- 一直盯着：被游戏传走就立刻拉回出生点，等于免疫游戏内的传送
+		NDS.Conn = RunService.Heartbeat:Connect(function()
+			if SHUTDOWN or not NDS.AutoWin then return end
+			local _, root = ndsChar()
+			if not root then return end
+			local d = root.Position - NDS.Spawn
+			if d.Magnitude > NDS.Anchor then
+				pcall(function() root.CFrame = CFrame.new(NDS.Spawn) end)
+			end
+		end)
+		track(NDS.Conn)
+
+		notify(L("farmOn"), C.Green)
+	end
+
+	-- 服务器窗口的 ✕：只关窗口，自动获胜继续跑（不然挂机就白挂了）
+	SrvCloseRequest = function()
+		closeSrvWindow()
+	end
+
+
+
 	-- 快捷键
 	track(UserInputService.InputBegan:Connect(function(input, processed)
 		if SHUTDOWN or processed then return end
@@ -4574,6 +5693,9 @@ boot = function(lang)
 	unloadAll = function(instant)
 		if SHUTDOWN then return end
 		SHUTDOWN = true
+
+		-- 自动获胜还在跑的话先断掉，不然关掉之后它还会一直把你往出生点拉
+		pcall(function() SrvAutoWinRequest(false) end)
 
 		-- 1. 停飞行。走缓降流程，别让玩家直接摔死
 		pcall(function() Fly:SetEnabled(false) end)
