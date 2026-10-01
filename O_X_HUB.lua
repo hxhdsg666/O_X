@@ -1,15 +1,16 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.2.2
+--  Version : 1.3.0
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
 --    loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/O_X_HUB.lua"))()
 --
 --  说明：
---    · 主窗口做成软件样式：右上角 ✕ 关闭 / － 最小化成图标
+--    · 主窗口做成软件样式：右上角 － 最小化成图标 / ✕ 结束整个脚本
 --    · 左侧是功能列表：主页 / 通用（速度·跳跃·重力）/ 飞行
---    · 飞行是独立窗口，可最小化、可关闭
+--    · 主窗口、飞行窗口、悬浮图标都可以拖动移动
+--    · 飞行是独立窗口：－ 收成胶囊，✕ 只结束飞行
 --    · 飞行开启后角色进入飞行状态，官方摇杆 / WASD 直接控制方向，
 --      没有任何额外的升降按钮。没有输入时自动悬停，不会下坠。
 --    · 伤害保护：飞行中把角色速度回零（服务端读到的速度恒为 0），
@@ -23,10 +24,15 @@ local TweenService     = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 
+-- 已经加载过就先卸掉上一份，避免重复执行时叠出两套界面 / 两套连接
+if _G.O_X_HUB_LOADED then
+	pcall(_G.O_X_HUB_LOADED, true)
+end
+
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.2.2",
+	Version = "v1.3.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -92,59 +98,53 @@ local FONT_B = Enum.Font.GothamBold
 local ICON_B64 = [==[
 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
-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
+Ozs7Ozs7Ozs7Ozs7Ozv/wAARCACgAKADASIAAhEBAxEB/8QAGwAAAQUBAQAAAAAAAAAAAAAABAECAwUGBwD/xAA1EAACAQMD
+AgUBBwQCAwEAAAABAgMABBEFEiExQRMiUWFxBgcUMkJSgZEVobHRI8FDYvDx/8QAGQEAAwEBAQAAAAAAAAAAAAAAAQIDAAQF
+/8QAHhEBAQEBAQEBAQEBAQAAAAAAAAECESExEgNBE1H/2gAMAwEAAhEDEQA/AMCsfPFExRHHSkhTc1WkFuCORXLa6A0UPfHS
+pCtFyRhFAHGaHPTmp0ULLTd4Q8nAqU9KCu32sij1yaM+gsI36USr+9ARNwKJVsUwCQ9ITUDy7I2YAsQOg6mqK5164disKiMe
+vU0Zm34Fsi6F/D4JlZtgDFTu7H0qF9UtllRBICH/ADA8D5rNSzu5Z2OWY5PzUJLEYB7VT/nC/utVc6lDHA8iOrEcAA9TVDPd
+yGUTCQtIeScYC+woFmK4Ge3NOjl2yhxggdiMijMyFuutBpc89yTI8zMq8EbRgmrPPvmhLSZZ7dZAoUMOg7VOWqd+qT4eT700
+mmlqaWoCcT70wmkLU0txQYtlDuOSKuoIMKOKGsIMKKspcRW5Pc8CltFXT+Zz6DgUM/BopqGk5oCibpVfcjfKT6cCj5DtBJ7U
+FgluaMBJAfKKJVqEUbTxUqsaf6HEeq3DR2hVMgPwxHYVnByxJrR3iCW0dfbPziqB4zHI6ng8VXHxPX0yRWVFYdCTXmUqOeM8
+1KVUxYw28H04xU91YyQ2UM7f+QkY9qP64P4tiufk0gwMU505wFxTWXB/aj0nGi0l1+5BQMMpO4UduoOzm8W1jkwQSvNT7uKj
+fqs+JC49aYzelNyaYTQE7dXi1MzSE84os1dnDgDikv2y4jHRRz80bCojiLnoozVXIS7Fj1JyakKBxULCp2qJ6LAbo4XHqagQ
+Zpt5cAXfh9gP4NSoOKPAIRTQcGpSKjYUYxQxqoeITakwLDaX5PtVoCaiKRwb2Kk7z2HQ9v2p5eB/vo9UsWbbBErOiZLP0oDV
+LnUpIYo5UVYo/wAOB5RUsCxSNzuHfAOM1LqEj/dQq20CIv58DJpJOV029ihMoMeGAJHehixLZHFSyHAYKBlqksI1ec7uQq5x
+61b45berGwJFqEbqhK0RuqIGl3Ul+h1IWzTTTc0maA9ONJmmk00ms3W6vX2QrEOrcn4quaiLqTxZmcdOg+KGapnRNUMhAUk9
+B1qduaA1OXwrN8HlvKKMjKGaQyzPIfzHNHWU25Qjde1V2M0XaQTTSLHCjO56KoyTVbPCTvViRTGWjP6dfRpmW1lU9/LULRkH
+BBB9DU4eywKQa8QD1ojwSaaYSO1OSq0SSwqzY7kAjtQNxczSnzMT+9aSG3AUqYyQecYoO80nJJjTFGWdP+bYzxJNWGnIBEzd
+ycVHJamI8iprMFY2GDjd1o29idnBWaTNNzXs4pWOzXqbmvZrAdmkpu6kJrC15qNqkaozU1EbHAqj1qXMqRA9Bk1eOaoFtJdU
+1UJE6r4jYy3RQO9Nn/0Od8gnQtGlvbmOaWBjbZOWbhWI7ZrbWtlZ20xa3hjhkYYJQY4oS0J060jgiilkWJccc596cdctEU5D
+B8ZKkYNQ3bquzGM4ixdZoVLHa6/FUmqlb2LdDtypw4HUGq6XX7vc4RsI5wB6VHps5SafxCSrpz854ps4s9De5fGp+lPoqbW4
+zc3MiwWyttBXlnI9B2/etPf/AGfaOlpiFZg4H4zJnn3FDfZxfkm4s2fy4Dovv3/6rczqHhYH0rrk8efb643d6Y9tM0Tgb04P
+uOxoJ4ow2GQmul6h9OW9+v3+SaWMxKdyxqDvHvmuca7ZTW4KMWg3HKs3Qio6xZXVj+s56pr+ztgpdm2KvJ74FZy5lUnEZYAH
+gZ6Va6qq26i2RiceZyepPYGqUjLGnxj/AFH+n9O+HLeSAYIBqRbxfzKR8UGeCa8ePj/FU/KXVisyP+Fs08mqpZCkgPpVgr5F
+LZw0PyaU03NezQZs25php7GmMeKkqB1CcQ2kj55xgVT6bdm3u45E55x/NS/UNxhEhB6+Y1SRTGNgc9KeZ7kv65XRItaSMbZ1
+aJvXqKA127sLlF2IDcLyJBxj/dAy3CysAwwSAcHtQs8aY3LxgVLOXVrXhhl8RSFBzVhp217nbIMbwBjPXFVInVBuHNJBO8ly
+Gzjb0x2romOuXW+Ol/Tyy2N1HPFhJN/lz0IPY+2K6RbXMs8eWMJHcqTXMvpfVItQRNNvWCSlh4U36j+k106yt0WFVHKJ5V9y
+OpNPyxz/AHVpwGcgIQnQY/zWF+0W0lITamUZdwxxgjqf8VvZInJyJCFPX2+KoNWaO9tHhkPiRxnAkPX961Nzrieo6extBdKv
+lPEg5ypHf4PWqNlwPmum3+li3LqmDFJ687D/AKNYbWNMktH8RUKx7sEfpPp/qtnXfB4omXzE+lNPWppVxvqFuHHuKYERPJo+
+M4K+4oE8Gi4zkpU9Hz8onOa9mm5r1Kzbmon6VKaDvpxBbSSH8q1P6p1ldYuPGv5MHIU7R+1DWY3XkIK7hvBIPeoZGLyEnqTm
+jdKjzceIeiAmrXyJ590spXkmfxWwWzzUUUjXl1FbjhXcA/HepJ2CQ5HU0LYSbLwP+lWP9jUszxfV9JOUBbYMLuOB7Zp9kuXz
+Q8p8oFGWi4x8V1ZjltaHSC63cLRkhg6lSPXNd5t08OBE/SAP3rln0DpVvPqjSTukqW0YlCjoWzx84rqNtL48XiAgo3K49K1o
+QHrFzJbafPNGWJRDxt4rLaH9TltmnXlt4hc4SReuSeARWxurKO9AS4ijkjzna2f7UKPp/SreVJ47OON4zuVsng/zQCzXfGR1
+q0W0lZioUN+Jeo+KzF3DFexupUeAxwcnnA9//u1b76itUuZDIGxuU4x2IFYA283/ACqWACvjLHGTUfisYrWdKkspjtDNCx8k
+mOo9/eqeYYI9hXVr+CKfTvuPJg28kDl39f8AVc01OymsrgxTIVPUZHUeop866WxXPRURyV9hQzUSnl2n1FbQ5TZr2abmvZpW
+bljxVH9RXGyzWMdZG/sKu3NZH6hn8S+KDpGMfvSZnp9eRVAFnx61baaBsl7A4x8VUoduW/YVaIfA8Mjo0YBqmvgfz+9SXcnl
+AHago5NjMf8A1IqSZ91CkkmhiDvXqYNuI5zVpa8kVVwrlhV1Ywl2GK6Ig6D9nexLi9mkHEdsW646EV02znS4tkkjGI2Hk9x6
+1ifof6cnFpcT3aGOC6h8NRnDMCQSfYcVuoIY7eFIYl2ogwoHYUtGH0JcBAcudxHQdhU8kyJwclv0qMmq66muXH/HCkfu/mP8
+dKWiodZ5zt3e4XNYq6m2xmVx5DK5B/jmtpefeQ5aW7kPsCFH8CstrEUbookcBQc47EVLU6rm8qhOtMl3D4+WijYE7PzYqr+s
+9YstQeCK1TIiB8+MdecUHqtxEl9JDbsSg45OefmqqRGf5962Zy+trl+AmILCjDxGPahGXa2CMEUSTlKfQZ+H5pDTQeKXNArc
+TuI42duigk1grqVpZnkJ5Zia1mv3Hg6cwHBkO0VjsgyAnpQxG1Xm48uelW8gDW6euwf4qlyM1amTNnGR+kUdDgMzHpSpGTya
+ao3vRBGF2+tPmF1TrdcsPc10P7O9Fj1TWU8ZA0MC+K6noewH81hLaPbtz2rpX2X3q22rTRPwkkB59MHNOR1fhFx0ApMFupwK
+RAW87jHoPSq3WNfttKj87Av+mktMPmkhtoyzkKKymr/VtnbblUhiPesl9QfWk92zIj7U9qxV5qMkzHzH5rctZqtW+tnlLJEo
+FY3U9curskNKSKFeXg560FJkk0JIPpoLPKoHUmjnhkRQxQ/xQ9ltjlErckdKspdTyuAABU9298W/nnz1VSxBjlxg9jTCPIRT
+p5jK+aSMgghqIeGg8ClzXmAU4HSkzRTvi3+p7jdcJCD+Bcn5NZ5jRup3H3i8llz+Jjj4oGmzOQK8OtTxTEJ4Z6Z49qgqWCPe
+/sOabgCoRg89TUy+aT4qNVxzU0YweKLDLWKWaUrFG7lF3EKpOB61ovpvVf6TqlrdN+BWBceqk/8A4f2qisNQmsIpo4tv/Lgl
+j1BHp/NLLIVkKZ/BgY/at7bxvHcNb+q4bC2xG4ZmXIIrmeqardanOWLMSxwB61Fa+Nd6LLc3ErBbfakQI/H7fAzV5/SIINQ0
+q3iQ+KUeeV85J2rx/cGtM8+t1kb2wngJWbyybQ+w+h5FU07FTtHFbrVIYbv6xt4ZVLQySCIheuASnH8VmNa0mWzvvu4Rm3sf
+C4yXAJH/AFQvRnOKFsjNRMWJzii5LeVXKeG29RkrjkCh3RlLKykFTg+xpDIRIVrzSk+tedscVESPWsPTg3OcV4yVGW7A0gyT
+wKwdSh92PanUkceB5utP2CgD/9k=
 ]==]
 
 --========================== 工具函数 ==========================
@@ -236,13 +236,25 @@ local function fadeIn(root, dur)
 end
 
 -- 拖拽。scaleFn 用来抵消 UIScale —— 否则缩放后拖拽会"跟不上手"
-local function makeDraggable(frame, handle, scaleFn)
-	local dragging, dragStart, startPos = false, nil, nil
+-- 所有全局连接的登记处 —— 主窗口 ✕ 关掉时要能把它们全断开
+local GLOBAL_CONNS = {}
+
+-- 按住 handle 拖动 frame。
+--   scaleFn        : 返回当前 UIScale.Scale —— 有缩放时 delta 要除回去，否则拖拽"跟不上手"
+--   opts.threshold : 位移超过这么多像素才算拖动（挂在按钮上时用来区分"点击"和"拖动"）
+--   opts.clamp     : 限制在屏幕内，别被拖出可视区
+-- 返回一个函数；点击回调里调它就能知道"刚才那一下到底是点击还是拖动"
+local function makeDraggable(frame, handle, scaleFn, opts)
+	opts = opts or {}
+	local dragging, moved = false, false
+	local dragStart, startPos = nil, nil
+	local threshold = opts.threshold or 0
 
 	handle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1
 			or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
+			moved = false
 			dragStart = input.Position
 			startPos = frame.Position
 			input.Changed:Connect(function()
@@ -253,22 +265,51 @@ local function makeDraggable(frame, handle, scaleFn)
 		end
 	end)
 
-	UserInputService.InputChanged:Connect(function(input)
+	local function getViewport()
+		local w, h = 1920, 1080
+		pcall(function()
+			local cam = workspace.CurrentCamera
+			if cam and cam.ViewportSize then
+				w, h = cam.ViewportSize.X, cam.ViewportSize.Y
+			end
+		end)
+		return w, h
+	end
+
+	table.insert(GLOBAL_CONNS, UserInputService.InputChanged:Connect(function(input)
 		if not dragging then return end
 		if input.UserInputType == Enum.UserInputType.MouseMovement
 			or input.UserInputType == Enum.UserInputType.Touch then
 			local delta = input.Position - dragStart
+
+			-- 没过阈值就还当它是"点击"，不移动
+			if not moved and delta.Magnitude < threshold then return end
+			moved = true
+
 			local s = 1
 			if scaleFn then
 				local ok, v = pcall(scaleFn)
 				if ok and type(v) == "number" and v > 0 then s = v end
 			end
-			frame.Position = UDim2.new(
-				startPos.X.Scale, startPos.X.Offset + delta.X / s,
-				startPos.Y.Scale, startPos.Y.Offset + delta.Y / s
-			)
+
+			local nx = startPos.X.Offset + delta.X / s
+			local ny = startPos.Y.Offset + delta.Y / s
+
+			-- 只在纯 offset 定位时才夹取，Scale 定位的窗口不动它
+			if opts.clamp and startPos.X.Scale == 0 and startPos.Y.Scale == 0 then
+				local vpW, vpH = getViewport()
+				local w, h = frame.AbsoluteSize.X, frame.AbsoluteSize.Y
+				if not w or w <= 0 then w = 46 * s end
+				if not h or h <= 0 then h = 46 * s end
+				nx = math.clamp(nx, 0, math.max(0, vpW - w))
+				ny = math.clamp(ny, 0, math.max(0, vpH - h))
+			end
+
+			frame.Position = UDim2.new(startPos.X.Scale, nx, startPos.Y.Scale, ny)
 		end
-	end)
+	end))
+
+	return function() return moved end
 end
 
 -- GUI 挂载点（优先执行器的 gethui，其次 CoreGui，最后 PlayerGui）
@@ -629,6 +670,9 @@ local function createSwitch(parent, opts)
 end
 
 --========================== 提示条 ==========================
+-- 卸载标记：关掉之后所有还在跑的异步逻辑（缓降、提示、复活恢复）都要安静退出
+local SHUTDOWN = false
+
 -- 单独一个 ScreenGui，主窗口隐藏时提示依然能弹出来
 local notifyGui = new("ScreenGui", {
 	Name = "O_X_HUB_Notify",
@@ -650,6 +694,7 @@ local notifyHolder = new("Frame", {
 })
 
 local function notify(text, color)
+	if SHUTDOWN then return end
 	local box = new("Frame", {
 		Size = UDim2.fromScale(1, 1),
 		Position = UDim2.new(0, 0, 0, -22),
@@ -965,7 +1010,7 @@ new("TextLabel", {
 
 new("TextLabel", {
 	Size = UDim2.new(0, 80, 1, 0),
-	Position = UDim2.new(1, -116, 0, 0),
+	Position = UDim2.new(1, -158, 0, 0),
 	BackgroundTransparency = 1,
 	Text = CONFIG.Version,
 	TextSize = 11,
@@ -975,54 +1020,60 @@ new("TextLabel", {
 	Parent = header,
 })
 
--- 最小化（缩成图标）
+-- 最小化：只是把窗口缩成一个悬浮图标，什么都不结束
 local minBtn = new("TextButton", {
 	Name = "Minimize",
-	Size = UDim2.new(0, 26, 0, 26),
-	Position = UDim2.new(1, -70, 0.5, 0),
+	Size = UDim2.new(0, 28, 0, 28),
+	Position = UDim2.new(1, -72, 0.5, 0),
 	AnchorPoint = Vector2.new(0, 0.5),
 	BackgroundColor3 = C.Card,
 	BorderSizePixel = 0,
 	AutoButtonColor = false,
 	Text = "－",
-	TextSize = 13,
+	TextSize = 15,
 	Font = FONT_B,
 	TextColor3 = C.Sub,
 	Parent = header,
 })
-new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = minBtn })
+new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = minBtn })
+local minStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = minBtn })
 minBtn.MouseEnter:Connect(function()
 	minBtn.BackgroundColor3 = C.Card2
 	minBtn.TextColor3 = C.Text
+	minStroke.Color = C.Dim
 end)
 minBtn.MouseLeave:Connect(function()
 	minBtn.BackgroundColor3 = C.Card
 	minBtn.TextColor3 = C.Sub
+	minStroke.Color = C.Stroke
 end)
 
--- 关闭
+-- 关闭：真的结束 —— 停飞行、撤伤害保护、断开所有连接、销毁整个界面
 local closeBtn = new("TextButton", {
 	Name = "Close",
-	Size = UDim2.new(0, 26, 0, 26),
-	Position = UDim2.new(1, -40, 0.5, 0),
+	Size = UDim2.new(0, 28, 0, 28),
+	Position = UDim2.new(1, -38, 0.5, 0),
 	AnchorPoint = Vector2.new(0, 0.5),
 	BackgroundColor3 = C.Card,
 	BorderSizePixel = 0,
 	AutoButtonColor = false,
 	Text = "✕",
-	TextSize = 13,
+	TextSize = 14,
 	Font = FONT_B,
 	TextColor3 = C.Sub,
 	Parent = header,
 })
-new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = closeBtn })
+new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = closeBtn })
+local closeStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = closeBtn })
 closeBtn.MouseEnter:Connect(function()
 	closeBtn.BackgroundColor3 = C.Red
 	closeBtn.TextColor3 = C.White
+	closeStroke.Color = C.Red
 end)
 closeBtn.MouseLeave:Connect(function()
 	closeBtn.BackgroundColor3 = C.Card
 	closeBtn.TextColor3 = C.Sub
+	closeStroke.Color = C.Stroke
 end)
 
 makeDraggable(window, header, function() return uiScale.Scale end)
@@ -1160,6 +1211,9 @@ local openFlyWindow = function() end
 local FlyToggleRequest = function() end
 -- 伤害保护总开关（速度回零模块在下面才定义，这里先占位，免得闭包绑到全局）
 local ShieldRequest = function() end
+-- 主窗口 ✕ = 结束整个脚本；飞行窗口 ✕ = 只结束飞行（都在后面接上）
+local ShutdownRequest = function() end
+local FlyCloseRequest = function() end
 
 --========================== 主页 ==========================
 local home = addPage("home")
@@ -1559,7 +1613,7 @@ new("TextLabel", {
 
 local flyWinState = new("TextLabel", {
 	Size = UDim2.new(0, 64, 1, 0),
-	Position = UDim2.new(1, -128, 0, 0),
+	Position = UDim2.new(1, -142, 0, 0),
 	BackgroundTransparency = 1,
 	Text = "已停止",
 	TextSize = 11,
@@ -1569,52 +1623,60 @@ local flyWinState = new("TextLabel", {
 	Parent = flyHeader,
 })
 
+-- 最小化：收成侧边胶囊
 local flyMinBtn = new("TextButton", {
 	Name = "Minimize",
-	Size = UDim2.new(0, 24, 0, 24),
-	Position = UDim2.new(1, -66, 0.5, 0),
+	Size = UDim2.new(0, 26, 0, 26),
+	Position = UDim2.new(1, -70, 0.5, 0),
 	AnchorPoint = Vector2.new(0, 0.5),
 	BackgroundColor3 = C.Card,
 	BorderSizePixel = 0,
 	AutoButtonColor = false,
 	Text = "－",
-	TextSize = 12,
+	TextSize = 14,
 	Font = FONT_B,
 	TextColor3 = C.Sub,
 	Parent = flyHeader,
 })
-new("UICorner", { CornerRadius = UDim.new(0, 7), Parent = flyMinBtn })
+new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = flyMinBtn })
+local flyMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyMinBtn })
 flyMinBtn.MouseEnter:Connect(function()
 	flyMinBtn.BackgroundColor3 = C.Card2
 	flyMinBtn.TextColor3 = C.Text
+	flyMinStroke.Color = C.Dim
 end)
 flyMinBtn.MouseLeave:Connect(function()
 	flyMinBtn.BackgroundColor3 = C.Card
 	flyMinBtn.TextColor3 = C.Sub
+	flyMinStroke.Color = C.Stroke
 end)
 
+-- 关闭：结束飞行（走落地保护）+ 收起窗口，不留胶囊
 local flyCloseBtn = new("TextButton", {
 	Name = "Close",
-	Size = UDim2.new(0, 24, 0, 24),
+	Size = UDim2.new(0, 26, 0, 26),
 	Position = UDim2.new(1, -38, 0.5, 0),
 	AnchorPoint = Vector2.new(0, 0.5),
 	BackgroundColor3 = C.Card,
 	BorderSizePixel = 0,
 	AutoButtonColor = false,
 	Text = "✕",
-	TextSize = 12,
+	TextSize = 13,
 	Font = FONT_B,
 	TextColor3 = C.Sub,
 	Parent = flyHeader,
 })
-new("UICorner", { CornerRadius = UDim.new(0, 7), Parent = flyCloseBtn })
+new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = flyCloseBtn })
+local flyCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyCloseBtn })
 flyCloseBtn.MouseEnter:Connect(function()
 	flyCloseBtn.BackgroundColor3 = C.Red
 	flyCloseBtn.TextColor3 = C.White
+	flyCloseStroke.Color = C.Red
 end)
 flyCloseBtn.MouseLeave:Connect(function()
 	flyCloseBtn.BackgroundColor3 = C.Card
 	flyCloseBtn.TextColor3 = C.Sub
+	flyCloseStroke.Color = C.Stroke
 end)
 
 makeDraggable(flyWin, flyHeader, function() return flyScale.Scale end)
@@ -1992,6 +2054,11 @@ end
 updateScale()
 
 --========================== 窗口显隐 ==========================
+-- 悬浮图标（主窗口的圆标 / 飞行胶囊）也能拖着走。
+-- 带阈值：位移超过 6px 才算拖动，否则还是当点击，不会被拖拽吃掉
+local reopenDragged    = makeDraggable(reopen, reopen, nil, { threshold = 6, clamp = true })
+local flyReopenDragged = makeDraggable(flyReopen, flyReopen, nil, { threshold = 6, clamp = true })
+
 local function hideMain(collapse)
 	window.Visible = false
 	reopen.Visible = true
@@ -2015,9 +2082,13 @@ local function showMain()
 	):Play()
 end
 
+-- － 只是缩成图标；✕ 是结束整个脚本（停飞行 + 撤保护 + 销毁界面）
 minBtn.MouseButton1Click:Connect(function() hideMain(true) end)
-closeBtn.MouseButton1Click:Connect(function() hideMain(false) end)
-reopen.MouseButton1Click:Connect(function() showMain() end)
+closeBtn.MouseButton1Click:Connect(function() ShutdownRequest() end)
+reopen.MouseButton1Click:Connect(function()
+	if reopenDragged() then return end   -- 刚才是在拖它，不当点击
+	showMain()
+end)
 
 local function hideFly()
 	flyWin.Visible = false
@@ -2028,6 +2099,12 @@ local function hideFly()
 		TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 		{ Scale = flyScale.Scale }
 	):Play()
+end
+
+-- 真·关闭飞行窗口：连胶囊一起收掉，不留入口（要再开就去主页卡片 / 左侧「飞行」）
+local function closeFlyWindow()
+	flyWin.Visible = false
+	flyReopen.Visible = false
 end
 
 openFlyWindow = function()
@@ -2047,8 +2124,11 @@ openFlyWindow = function()
 end
 
 flyMinBtn.MouseButton1Click:Connect(function() hideFly() end)
-flyCloseBtn.MouseButton1Click:Connect(function() hideFly() end)
-flyReopen.MouseButton1Click:Connect(function() openFlyWindow() end)
+flyCloseBtn.MouseButton1Click:Connect(function() FlyCloseRequest() end)
+flyReopen.MouseButton1Click:Connect(function()
+	if flyReopenDragged() then return end
+	openFlyWindow()
+end)
 
 showPage("home")
 
@@ -2599,30 +2679,106 @@ end
 
 syncFlyUI()
 
+-- 飞行窗口的 ✕：结束飞行（走落地保护，不会摔死）+ 收起窗口，不留胶囊
+FlyCloseRequest = function()
+	Fly:SetEnabled(false)
+	closeFlyWindow()
+end
+
+--========================== 全局连接（关闭时要能全断掉） ==========================
+local function track(conn)
+	table.insert(GLOBAL_CONNS, conn)
+	return conn
+end
+
 -- 快捷键
-UserInputService.InputBegan:Connect(function(input, processed)
-	if processed then return end
+track(UserInputService.InputBegan:Connect(function(input, processed)
+	if SHUTDOWN or processed then return end
 	if input.KeyCode == CONFIG.FlyKey then
 		Fly:Toggle()
 	end
-end)
+end))
 
 -- 复活后自动恢复飞行 + 重新应用通用属性
-LocalPlayer.CharacterAdded:Connect(function()
+track(LocalPlayer.CharacterAdded:Connect(function()
+	if SHUTDOWN then return end
 	Fly:Stop(false)
 	Fly:StopShield()      -- 旧角色的回零 / 状态屏蔽全部撤掉，重新来过
 	task.wait(0.8)
+	if SHUTDOWN then return end
 	applySettings()
 	if Fly.Enabled then
 		Fly:Start()
 	end
-end)
+end))
 
 -- 相机重建时重算缩放
-workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+track(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 	task.wait(0.2)
+	if SHUTDOWN then return end
 	updateScale()
-end)
+end))
+
+--=====================================================================
+--  主窗口 ✕ = 结束进程
+--  停飞行 → 撤伤害保护 → 断开所有连接 → 还原改过的属性 → 销毁界面
+--=====================================================================
+local function unloadAll(instant)
+	if SHUTDOWN then return end
+	SHUTDOWN = true
+
+	-- 1. 停飞行。走缓降流程，别让玩家直接摔死
+	pcall(function() Fly:SetEnabled(false) end)
+	pcall(function() Fly:StopShield() end)
+	local hum = getHumanoid()
+	if hum then
+		pcall(function() hum.PlatformStand = false end)
+	end
+
+	-- 2. 断开所有全局连接（含拖拽用的 InputChanged）
+	for _, c in ipairs(GLOBAL_CONNS) do
+		pcall(function() c:Disconnect() end)
+	end
+	GLOBAL_CONNS = {}
+
+	-- 3. 还原被改过的全局属性（重力是 workspace 级的，必须还回去）
+	pcall(function() workspace.Gravity = gravDef end)
+	if hum then
+		pcall(function() hum.WalkSpeed = walkDef end)
+		pcall(function()
+			hum.UseJumpPower = true
+			hum.JumpPower = jumpDef
+		end)
+	end
+
+	-- 4. 收起界面再销毁
+	local function kill()
+		pcall(function() guiMain:Destroy() end)
+		pcall(function() notifyGui:Destroy() end)
+		_G.O_X_HUB_LOADED = nil
+	end
+
+	if instant then
+		kill()
+		return
+	end
+
+	pcall(function()
+		local t = TweenService:Create(
+			uiScale,
+			TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{ Scale = 0.86 }
+		)
+		t:Play()
+	end)
+	task.delay(0.16, kill)
+end
+
+ShutdownRequest = function()
+	unloadAll(false)
+end
+
+_G.O_X_HUB_LOADED = unloadAll   -- 下次重复执行时能先把这一份卸干净
 
 --=====================================================================
 --  四、启动流程
