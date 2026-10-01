@@ -7,7 +7,7 @@ Roblox 执行器脚本，通过 `loadstring` + `HttpGet` 分发。
 | 文件 | 说明 |
 | --- | --- |
 | `O_X_HUB.lua` | 语言选择 + 软件式主界面（主页 / 服务器 / 通用 / 飞行 / 设置）+ 开机动画 |
-| `preview_v171.html` | 全部界面的 1:1 视觉预览（浏览器打开） |
+| `preview_v172.html` | 全部界面的 1:1 视觉预览（浏览器打开） |
 
 ## 用法
 
@@ -123,6 +123,17 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/he
 点卡片会打开一个**独立窗口**（和飞行窗口一个套路：顶栏可拖、`－` 收成悬浮胶囊、`✕` 关掉、
 打开时播一段开场动画）。窗口左边是分区，右边是内容。
 
+**不在对应服务器里会被拦住**
+点卡片时会先比对 `game.PlaceId`：
+
+- 对得上 → 正常打开面板
+- 对不上 → **不给用**，响一声 `bruh.mp3`，同时弹一个模态窗
+  （标题「未在对应服务器内」，说明这个脚本只能在哪个服务器用，并显示当前 Place ID），
+  **点右上角 ✕ 关闭**
+
+> 这种检查只防误用，不防有人在正确的游戏里开脚本 —— 它拦的是"跑错地方"。
+> 拦截窗是模态的，盖在所有界面之上，关掉脚本时也会一起收掉。
+
 **传送**
 两个地点可选，选中一个再点下面的「传送」按钮：
 
@@ -192,7 +203,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/he
 飞行窗口里有两个开关：「**伤害保护**」（①② 的总开关）和「**落地缓降**」（③）。都不喜欢就都关掉。
 
 ### 内联资源
-脚本内联了 6 个资源（base64），运行时会写进执行器工作目录再用 `getcustomasset` 转成可用资源：
+脚本内联了 7 个资源（base64），运行时会写进执行器工作目录再用 `getcustomasset` 转成可用资源：
 
 | key | 内容 | 大小 |
 | --- | --- | --- |
@@ -202,13 +213,14 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/he
 | `sfx_notify` | 提示音 | mp3, 8301 B |
 | `sfx_close` | 关闭音效 | mp3, 8377 B |
 | `srv_nds` | 自然灾害模拟器图标 | 128×128, 2214 B |
+| `sfx_deny` | 「不在对应服务器里」的音效 | mp3, 14061 B |
 
 执行器不支持文件 API 时会自动降级：图标变成代码画的 `O` 字 LOGO，国旗变成 `ZH` / `EN` 文字块，不会报错。
 服务器图标是 64 色量化的 PNG（渐变图标不量化会到 11 KB，量化后 2.2 KB）。
 
 ⚠️ **写出来的文件名带内容哈希**（`oxhub_<key>_<hash>.<ext>`）。用固定文件名的话，换图之后执行器里残留的旧文件会让"已存在就跳过写入"直接跳过，`getcustomasset` 也按文件名缓存 —— 结果就是**换了图但界面还是旧的**。带哈希之后图一变文件名就变，从根上绕开缓存；启动时还会顺手清掉同一个 key 的历史遗留文件。
 
-当前哈希（内容变了就会变）：`oxhub_icon_4d78c619.jpg`、`oxhub_flag_us_2a81896c.png`、`oxhub_flag_cn_d267011c.png`、`oxhub_sfx_notify_078ca069.mp3`、`oxhub_srv_nds_530ae4d3.png`。
+当前哈希（内容变了就会变）：`oxhub_icon_4d78c619.jpg`、`oxhub_flag_us_2a81896c.png`、`oxhub_flag_cn_d267011c.png`、`oxhub_sfx_notify_078ca069.mp3`、`oxhub_srv_nds_530ae4d3.png`、`oxhub_sfx_deny_4a242997.mp3`。
 
 如果你之前跑过老版本、换了图还是不生效，删掉执行器工作目录里的 `oxhub_icon.jpg` 再执行一次就好（新版本会自动删）。
 
