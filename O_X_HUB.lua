@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.7.2
+--  Version : 1.8.0
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -64,6 +64,9 @@ local LOCALES = {
 		denyTitle    = "未在对应服务器内",
 		denyBody     = "这个脚本只能在「%s」里用，你现在不在这个服务器。",
 		denyNow      = "当前 Place ID：%s",
+		denyJoin     = "加入对应服务器",
+		joinOk       = "正在加入「%s」  ·  落地后会自动重新执行脚本",
+		joinNoQueue  = "正在加入「%s」  ·  这个执行器不支持传送后自动执行，落地后请手动再注入一次",
 
 		-- 服务器面板
 		srvTabTp     = "传送",
@@ -114,6 +117,10 @@ local LOCALES = {
 		jumpPower    = "跳跃高度",
 		gravity      = "重力",
 		resetBtn     = "恢复默认",
+		antiAfk      = "防挂机",
+		antiAfkD     = "开着就不会因为 20 分钟没操作被踢出游戏",
+		antiAfkOn    = "防挂机已开启  ·  挂机不会再被踢",
+		antiAfkOff   = "防挂机已关闭",
 		resetDone    = "已恢复默认属性",
 		gravityWarn  = "重力改动影响整个服务器画面，慎调",
 
@@ -192,6 +199,9 @@ local LOCALES = {
 		denyTitle    = "Wrong game",
 		denyBody     = "This script only works in %s. You are not in that game right now.",
 		denyNow      = "Current Place ID: %s",
+		denyJoin     = "Join that game",
+		joinOk       = "Joining %s  ·  the script re-runs automatically on arrival",
+		joinNoQueue  = "Joining %s  ·  this executor cannot auto-run after teleport, inject again on arrival",
 
 		srvTabTp     = "Teleport",
 		srvTabFarm   = "Farm",
@@ -239,6 +249,10 @@ local LOCALES = {
 		jumpPower    = "Jump power",
 		gravity      = "Gravity",
 		resetBtn     = "Reset to default",
+		antiAfk      = "Anti AFK",
+		antiAfkD     = "Stops the 20 minute idle kick",
+		antiAfkOn    = "Anti AFK on  ·  idling will not kick you",
+		antiAfkOff   = "Anti AFK off",
 		resetDone    = "Settings restored",
 		gravityWarn  = "Gravity affects the whole server, change with care",
 
@@ -309,7 +323,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.7.2",
+	Version = "v1.8.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -357,6 +371,9 @@ local CONFIG = {
 	SoundNotify = 0.45,
 	SoundClose  = 0.60,
 	SoundDeny   = 0.55,
+
+	-- ---------- 自我分发（传送后自动重新执行要用） ----------
+	RawUrl = "https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/O_X_HUB.lua",
 
 	-- ---------- 联系方式 ----------
 	Contact = "oxhub@atomicmail.io",
@@ -1786,154 +1803,6 @@ local function inPlace(id)
 	return false, nil
 end
 
-local function showDenyModal(titleText, bodyText, noteText)
-	closeDenyModal()
-
-	local gui = new("ScreenGui", {
-		Name = "O_X_HUB_Deny",
-		IgnoreGuiInset = true,
-		ResetOnSpawn = false,
-		DisplayOrder = 100010,
-		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		Parent = GUI_PARENT,
-	})
-
-	local scrim = new("Frame", {
-		Name = "Scrim",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = C.Void,
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		Parent = gui,
-	})
-
-	local card = new("Frame", {
-		Name = "DenyCard",
-		Size = UDim2.new(0, 400, 0, 220),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		BackgroundColor3 = C.Window,
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		Parent = scrim,
-	})
-	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = card })
-	local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Transparency = 1, Parent = card })
-	local cardScale = new("UIScale", { Scale = 0.92, Parent = card })
-
-	local badge = new("Frame", {
-		Name = "Badge",
-		Size = UDim2.new(0, 46, 0, 46),
-		Position = UDim2.new(0.5, 0, 0, 28),
-		AnchorPoint = Vector2.new(0.5, 0),
-		BackgroundColor3 = C.AccentLo,
-		BorderSizePixel = 0,
-		Parent = card,
-	})
-	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = badge })
-	new("UIStroke", { Color = C.Accent, Thickness = 1, Transparency = 0.35, Parent = badge })
-	new("TextLabel", {
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		Text = "!",
-		TextSize = 24,
-		Font = FONT_B,
-		TextColor3 = C.Accent,
-		Parent = badge,
-	})
-
-	local title = new("TextLabel", {
-		Size = UDim2.new(1, -56, 0, 24),
-		Position = UDim2.new(0, 28, 0, 86),
-		BackgroundTransparency = 1,
-		Text = titleText,
-		TextSize = 18,
-		Font = FONT_B,
-		TextColor3 = C.Text,
-		Parent = card,
-	})
-	local body = new("TextLabel", {
-		Size = UDim2.new(1, -64, 0, 40),
-		Position = UDim2.new(0, 32, 0, 116),
-		BackgroundTransparency = 1,
-		Text = bodyText,
-		TextSize = 12,
-		Font = FONT_N,
-		TextColor3 = C.Sub,
-		TextWrapped = true,
-		TextYAlignment = Enum.TextYAlignment.Top,
-		Parent = card,
-	})
-	local note = new("TextLabel", {
-		Size = UDim2.new(1, -64, 0, 16),
-		Position = UDim2.new(0, 32, 0, 164),
-		BackgroundTransparency = 1,
-		Text = noteText,
-		TextSize = 11,
-		Font = FONT_M,
-		TextColor3 = C.Dim,
-		Parent = card,
-	})
-
-	-- 右上角的 ✕：唯一指定的关闭方式
-	local closeBtn = new("TextButton", {
-		Name = "Close",
-		Size = UDim2.new(0, 28, 0, 28),
-		Position = UDim2.new(1, -38, 0, 12),
-		BackgroundColor3 = C.Card,
-		BorderSizePixel = 0,
-		AutoButtonColor = false,
-		Text = "✕",
-		TextSize = 14,
-		Font = FONT_B,
-		TextColor3 = C.Sub,
-		Parent = card,
-	})
-	new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = closeBtn })
-	local closeStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = closeBtn })
-	bindHover(closeBtn, {
-		Bg = { C.Card, C.Red }, Stroke = closeStroke, StrokeOn = C.Red,
-		Label = closeBtn, LabelOn = C.White,
-	})
-
-	local closing = false
-	local function close()
-		if closing then return end
-		closing = true
-		local fade = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-		TweenService:Create(scrim, fade, { BackgroundTransparency = 1 }):Play()
-		TweenService:Create(card, fade, { BackgroundTransparency = 1 }):Play()
-		TweenService:Create(stroke, fade, { Transparency = 1 }):Play()
-		tween(cardScale, fade, { Scale = 0.94 })
-		for _, d in ipairs(card:GetDescendants()) do
-			if d:IsA("TextLabel") or d:IsA("TextButton") then
-				TweenService:Create(d, fade, { TextTransparency = 1 }):Play()
-			elseif d:IsA("Frame") then
-				TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
-			end
-		end
-		task.delay(0.24, function() pcall(function() gui:Destroy() end) end)
-	end
-
-	closeBtn.MouseButton1Click:Connect(close)
-
-	-- 入场
-	TweenService:Create(scrim, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ BackgroundTransparency = 0.42 }):Play()
-	TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ BackgroundTransparency = 0 }):Play()
-	TweenService:Create(stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ Transparency = 0 }):Play()
-	tween(cardScale, EASE.pop, { Scale = 1 })
-	slideIn(badge, 10, 0.04, 0.3)
-	slideIn(title, 10, 0.09, 0.3)
-	slideIn(body, 10, 0.14, 0.3)
-	slideIn(note, 10, 0.19, 0.3)
-
-	DENY_MODAL = close
-	return close
-end
-
 --========================== 角色工具 ==========================
 local function getRoot()
 	local char = LocalPlayer.Character
@@ -2307,6 +2176,203 @@ end
 --=====================================================================
 -- opts = { Title, Subtitle, Stages = {{text, pct, dur}, ...} }
 -- 固定 720×420 画布 + UIScale，任何屏幕比例都不会散
+-- 加入某个服务器。跨服之后要能自动重新执行脚本，只能靠执行器提供的
+-- queueonteleport 之类的函数；拿不到就照样传送，但要如实告诉用户一句。
+local function joinPlace(id, name)
+	local TeleportService = game:GetService("TeleportService")
+
+	local queue = execFn("queueonteleport") or execFn("queue_on_teleport")
+	if not queue then
+		pcall(function()
+			local syn = rawget(_G, "syn")
+			if type(syn) == "table" and isCallable(syn.queue_on_teleport) then
+				queue = syn.queue_on_teleport
+			end
+		end)
+	end
+
+	local queued = false
+	if queue and CONFIG.RawUrl then
+		local code = string.format('loadstring(game:HttpGet("%s?t=" .. os.time()))()', CONFIG.RawUrl)
+		queued = pcall(queue, code)
+	end
+
+	local ok = pcall(function() TeleportService:Teleport(id, LocalPlayer) end)
+	if not ok then
+		pcall(function() TeleportService:Teleport(id) end)
+	end
+
+	notify(string.format(queued and L("joinOk") or L("joinNoQueue"), tostring(name)), C.Accent)
+end
+
+local function showDenyModal(titleText, bodyText, noteText, placeId, serverName)
+	closeDenyModal()
+
+	local gui = new("ScreenGui", {
+		Name = "O_X_HUB_Deny",
+		IgnoreGuiInset = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 100010,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		Parent = GUI_PARENT,
+	})
+
+	local scrim = new("Frame", {
+		Name = "Scrim",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = C.Void,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Parent = gui,
+	})
+
+	local card = new("Frame", {
+		Name = "DenyCard",
+		Size = UDim2.new(0, 400, 0, 240),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		BackgroundColor3 = C.Window,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Parent = scrim,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = card })
+	local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Transparency = 1, Parent = card })
+	local cardScale = new("UIScale", { Scale = 0.92, Parent = card })
+
+	local badge = new("Frame", {
+		Name = "Badge",
+		Size = UDim2.new(0, 46, 0, 46),
+		Position = UDim2.new(0.5, 0, 0, 28),
+		AnchorPoint = Vector2.new(0.5, 0),
+		BackgroundColor3 = C.AccentLo,
+		BorderSizePixel = 0,
+		Parent = card,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = badge })
+	new("UIStroke", { Color = C.Accent, Thickness = 1, Transparency = 0.35, Parent = badge })
+	new("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Text = "!",
+		TextSize = 24,
+		Font = FONT_B,
+		TextColor3 = C.Accent,
+		Parent = badge,
+	})
+
+	local title = new("TextLabel", {
+		Size = UDim2.new(1, -56, 0, 24),
+		Position = UDim2.new(0, 28, 0, 86),
+		BackgroundTransparency = 1,
+		Text = titleText,
+		TextSize = 18,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		Parent = card,
+	})
+	local body = new("TextLabel", {
+		Size = UDim2.new(1, -64, 0, 40),
+		Position = UDim2.new(0, 32, 0, 116),
+		BackgroundTransparency = 1,
+		Text = bodyText,
+		TextSize = 12,
+		Font = FONT_N,
+		TextColor3 = C.Sub,
+		TextWrapped = true,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		Parent = card,
+	})
+	local note = new("TextLabel", {
+		Size = UDim2.new(1, -64, 0, 16),
+		Position = UDim2.new(0, 32, 0, 160),
+		BackgroundTransparency = 1,
+		Text = noteText,
+		TextSize = 11,
+		Font = FONT_M,
+		TextColor3 = C.Dim,
+		Parent = card,
+	})
+
+	-- 右上角的 ✕：指定过的关闭方式
+	local closeBtn = new("TextButton", {
+		Name = "Close",
+		Size = UDim2.new(0, 28, 0, 28),
+		Position = UDim2.new(1, -38, 0, 12),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "✕",
+		TextSize = 14,
+		Font = FONT_B,
+		TextColor3 = C.Sub,
+		Parent = card,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = closeBtn })
+	local closeStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = closeBtn })
+	bindHover(closeBtn, {
+		Bg = { C.Card, C.Red }, Stroke = closeStroke, StrokeOn = C.Red,
+		Label = closeBtn, LabelOn = C.White,
+	})
+
+	local closing = false
+	local function close()
+		if closing then return end
+		closing = true
+		local fade = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		TweenService:Create(scrim, fade, { BackgroundTransparency = 1 }):Play()
+		TweenService:Create(card, fade, { BackgroundTransparency = 1 }):Play()
+		TweenService:Create(stroke, fade, { Transparency = 1 }):Play()
+		tween(cardScale, fade, { Scale = 0.94 })
+		for _, d in ipairs(card:GetDescendants()) do
+			if d:IsA("TextLabel") or d:IsA("TextButton") then
+				TweenService:Create(d, fade, { TextTransparency = 1 }):Play()
+			elseif d:IsA("Frame") then
+				TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
+			end
+		end
+		task.delay(0.24, function() pcall(function() gui:Destroy() end) end)
+	end
+
+	closeBtn.MouseButton1Click:Connect(close)
+
+	-- 「加入对应服务器」：直接跳过去，并尽量排好落地后自动重新执行
+	if placeId then
+		createButton(card, {
+			Name = "JoinServer",
+			Size = UDim2.new(0, 200, 0, 36),
+			Position = UDim2.new(0.5, -100, 0, 188),
+			Text = L("denyJoin"),
+			TextSize = 13,
+			Style = "primary",
+			TextColor3 = C.White,
+			OnClick = function()
+				close()
+				joinPlace(placeId, serverName or tostring(placeId))
+			end,
+		})
+	end
+
+
+	-- 入场
+	TweenService:Create(scrim, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ BackgroundTransparency = 0.42 }):Play()
+	TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ BackgroundTransparency = 0 }):Play()
+	TweenService:Create(stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ Transparency = 0 }):Play()
+	tween(cardScale, EASE.pop, { Scale = 1 })
+	slideIn(badge, 10, 0.04, 0.3)
+	slideIn(title, 10, 0.09, 0.3)
+	slideIn(body, 10, 0.14, 0.3)
+	slideIn(note, 10, 0.19, 0.3)
+	local joinBtn = card:FindFirstChild("JoinServer")
+	if joinBtn then slideIn(joinBtn, 10, 0.24, 0.3) end
+
+	DENY_MODAL = close
+	return close
+end
+
 local function createLoadingScreen(opts, onDone)
 	opts = opts or {}
 	local gui = new("ScreenGui", {
@@ -2833,6 +2899,13 @@ boot = function(lang)
 	LANG = lang
 	SHUTDOWN = false
 	GLOBAL_CONNS = {}
+
+	-- 全局连接的登记处 —— 主窗口 ✕ 关掉时要能把它们全断开。
+	-- ⚠️ 必须放在 boot 开头：后面每个模块都要用，Lua 只认"声明在前"
+	local function track(conn)
+		table.insert(GLOBAL_CONNS, conn)
+		return conn
+	end
 
 	-- 提示条 GUI（跟主界面一起重建）
 	notifyGui = new("ScreenGui", {
@@ -3609,7 +3682,9 @@ boot = function(lang)
 				showDenyModal(
 					L("denyTitle"),
 					string.format(L("denyBody"), name),
-					string.format(L("denyNow"), tostring(pid or "?"))
+					string.format(L("denyNow"), tostring(pid or "?")),
+					placeId,
+					name
 				)
 				return
 			end
@@ -3745,9 +3820,69 @@ boot = function(lang)
 		return 196.2
 	end
 
+	-- 防挂机：Roblox 20 分钟没操作会踢人。
+	-- 标准做法 —— 挂到 Idled 上，用 VirtualUser 假点一下鼠标就把计时器重置了。
+	local antiAfkConn = nil
+	local setAntiAfk = function(on)
+		if antiAfkConn then pcall(function() antiAfkConn:Disconnect() end) antiAfkConn = nil end
+		if on then
+			local VirtualUser = game:GetService("VirtualUser")
+			antiAfkConn = LocalPlayer.Idled:Connect(function()
+				if SHUTDOWN then return end
+				pcall(function()
+					VirtualUser:CaptureController()
+					VirtualUser:ClickButton2(Vector2.new())
+				end)
+			end)
+			track(antiAfkConn)
+		end
+		notify(on and L("antiAfkOn") or L("antiAfkOff"), on and C.Green or C.Red)
+	end
+
+	local antiAfkRow = new("Frame", {
+		Name = "AntiAfkRow",
+		Size = UDim2.new(1, 0, 0, 52),
+		Position = UDim2.new(0, 0, 0, 46),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		Parent = general,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = antiAfkRow })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = antiAfkRow })
+
+	new("TextLabel", {
+		Size = UDim2.new(1, -104, 0, 18),
+		Position = UDim2.new(0, 14, 0, 9),
+		BackgroundTransparency = 1,
+		Text = L("antiAfk"),
+		TextSize = 13,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = antiAfkRow,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, -104, 0, 14),
+		Position = UDim2.new(0, 14, 0, 30),
+		BackgroundTransparency = 1,
+		Text = L("antiAfkD"),
+		TextSize = 10,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = antiAfkRow,
+	})
+
+	createSwitch(antiAfkRow, {
+		Name = "AntiAfkSwitch",
+		Position = UDim2.new(1, -54, 0, 15),
+		Default = false,
+		OnChange = setAntiAfk,
+	})
+
 	local walkDef, jumpDef, gravDef = currentWalk(), currentJump(), currentGravity()
 
-	local setWalk, walkLabel = addSettingRow(52, {
+	local setWalk, walkLabel = addSettingRow(110, {
 		Label = L("walkSpeed"),
 		Min = 8, Max = 500,
 		Default = math.clamp(walkDef, 8, 500),
@@ -3759,7 +3894,7 @@ boot = function(lang)
 		end,
 	})
 
-	local setJump, jumpLabel = addSettingRow(108, {
+	local setJump, jumpLabel = addSettingRow(166, {
 		Label = L("jumpPower"),
 		Min = 0, Max = 500,
 		Default = math.clamp(jumpDef, 0, 500),
@@ -3771,7 +3906,7 @@ boot = function(lang)
 		end,
 	})
 
-	local setGrav, gravLabel = addSettingRow(164, {
+	local setGrav, gravLabel = addSettingRow(222, {
 		Label = L("gravity"),
 		Min = 0, Max = 500,
 		Default = math.clamp(gravDef, 0, 500),
@@ -3785,7 +3920,7 @@ boot = function(lang)
 
 	new("Frame", {
 		Size = UDim2.new(1, 0, 0, 1),
-		Position = UDim2.new(0, 0, 0, 222),
+		Position = UDim2.new(0, 0, 0, 280),
 		BackgroundColor3 = C.Stroke,
 		BorderSizePixel = 0,
 		Parent = general,
@@ -3794,7 +3929,7 @@ boot = function(lang)
 	local resetBtn, resetLabel = createButton(general, {
 		Name = "ResetSettings",
 		Size = UDim2.new(0, 96, 0, 30),
-		Position = UDim2.new(0, 0, 0, 236),
+		Position = UDim2.new(0, 0, 0, 290),
 		Text = L("resetBtn"),
 		TextSize = 12,
 		Radius = R.ctl,
@@ -3813,7 +3948,7 @@ boot = function(lang)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, -110, 0, 30),
-		Position = UDim2.new(0, 106, 0, 236),
+		Position = UDim2.new(0, 106, 0, 290),
 		BackgroundTransparency = 1,
 		Text = L("gravityWarn"),
 		TextSize = 11,
@@ -5649,12 +5784,6 @@ boot = function(lang)
 	FlyCloseRequest = function()
 		Fly:SetEnabled(false)
 		closeFlyWindow()
-	end
-
-	--========================== 全局连接（关闭时要能全断掉） ==========================
-	local function track(conn)
-		table.insert(GLOBAL_CONNS, conn)
-		return conn
 	end
 
 	--========================== 服务器脚本：自然灾害模拟器 ==========================
