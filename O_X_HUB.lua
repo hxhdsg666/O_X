@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.4.0
+--  Version : 1.4.1
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -207,7 +207,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.4.0",
+	Version = "v1.4.1",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -378,21 +378,104 @@ local function fmtSpeed(v)
 	return string.format("%d", math.floor(v + 0.5))
 end
 
--- 执行器注入的函数（没有就是 nil，Luau 取不存在的全局不会报错）
+-- 执行器注入的函数（没有就是 nil，Luau 取不存在的全局不会报错）。
+-- 这里用**裸全局引用**先抓一遍：这是最可靠的一条路 ——
+-- 有些执行器给脚本的是沙箱环境，那里的 `_G` 是一张全新的空表，
+-- 但裸全局依然能顺着 __index 找到真正的注入函数。
 local EXEC = {
 	writefile      = writefile,
 	getcustomasset = getcustomasset,
 	getsynasset    = getsynasset,
 	isfile         = isfile,
 	gethui         = gethui,
+	-- 剪贴板：各家名字不一样，能引用到的全抓在手里
+	setclipboard    = setclipboard,
+	toclipboard     = toclipboard,
+	set_clipboard   = set_clipboard,
+	setrbxclipboard = setrbxclipboard,
 }
+
+-- 有的执行器把注入函数包成 table / userdata（带 __call），所以不能只认 function
+local function isCallable(v)
+	local t = type(v)
+	return t == "function" or t == "table" or t == "userdata"
+end
+
+-- 执行器环境：`_G` 和 `getgenv()` 不一定是同一张表，两张都翻
+local EXEC_ENVS
+local function execEnvs()
+	if EXEC_ENVS then return EXEC_ENVS end
+	local out = {}
+	if type(_G) == "table" then table.insert(out, _G) end
+	local ok, env = pcall(function()
+		if type(getgenv) == "function" then return getgenv() end
+	end)
+	if ok and type(env) == "table" and env ~= _G then
+		table.insert(out, env)
+	end
+	EXEC_ENVS = out
+	return out
+end
 
 local function execFn(name)
 	local v = EXEC[name]
-	if type(v) == "function" then return v end
-	local ok, g = pcall(function() return _G[name] end)
-	if ok and type(g) == "function" then return g end
+	if isCallable(v) then return v end
+	for _, env in ipairs(execEnvs()) do
+		local ok, g = pcall(function() return env[name] end)
+		if ok and isCallable(g) then return g end
+	end
 	return nil
+end
+
+--========================== 剪贴板 ==========================
+-- 复制到剪贴板。不同执行器的名字/位置都不一样，挨个试；
+-- 全都失败就明确告诉用户手动复制，绝不静默失败。
+local CLIPBOARD_NAMES = {
+	"setclipboard", "toclipboard", "set_clipboard", "setrbxclipboard",
+	"writeclipboard", "write_clipboard", "setClipboard", "copyToClipboard",
+}
+
+local function copyText(text)
+	-- 1) 常见名字：EXEC 里裸全局抓到的 → _G → getgenv()
+	for _, name in ipairs(CLIPBOARD_NAMES) do
+		local fn = execFn(name)
+		if fn and pcall(fn, text) then return true end
+	end
+	-- 2) 名字没见过：把环境里所有带 "clip" 的东西都试一遍（最后的机会）
+	for _, env in ipairs(execEnvs()) do
+		local ok, keys = pcall(function()
+			local out = {}
+			for k in pairs(env) do
+				if type(k) == "string" and string.find(string.lower(k), "clip", 1, true) then
+					out[#out + 1] = k
+				end
+			end
+			return out
+		end)
+		if ok then
+			for _, k in ipairs(keys) do
+				local ok2, v = pcall(function() return env[k] end)
+				if ok2 and isCallable(v) and pcall(v, text) then return true end
+			end
+		end
+	end
+	return false
+end
+
+-- 失败时把环境里跟剪贴板相关的名字打到控制台，方便定位是哪家执行器
+local function dumpClipboardCandidates()
+	pcall(function()
+		local found = {}
+		for _, env in ipairs(execEnvs()) do
+			for k in pairs(env) do
+				if type(k) == "string" and string.find(string.lower(k), "clip", 1, true) then
+					found[#found + 1] = tostring(k)
+				end
+			end
+		end
+		print("[O_X HUB] 剪贴板不可用，环境里带 clip 的名字："
+			.. (#found > 0 and table.concat(found, ", ") or "（一个都没有）"))
+	end)
 end
 
 -- 整体淡入
@@ -2119,15 +2202,10 @@ boot = function(lang)
 		contactStroke.Color = C.Stroke
 	end)
 	contactCard.MouseButton1Click:Connect(function()
-		local fn = execFn("setclipboard") or execFn("toclipboard")
-		if not fn then
-			notify(string.format(L("copyFail"), CONFIG.Contact), C.Red)
-			return
-		end
-		local ok = pcall(fn, CONFIG.Contact)
-		if ok then
+		if copyText(CONFIG.Contact) then
 			notify(L("copied"), C.Green)
 		else
+			dumpClipboardCandidates()
 			notify(string.format(L("copyFail"), CONFIG.Contact), C.Red)
 		end
 	end)
