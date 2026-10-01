@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>O_X HUB v1.5.0 界面预览</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:38px 28px 60px; background:#050507;
+         font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; color:#eeeef4; }
+  h1 { font-size:21px; margin:0 0 8px; font-weight:700; letter-spacing:-.01em; }
+  .lede { color:#9496a4; font-size:13px; margin:0 0 18px; line-height:1.75; max-width:78ch; }
+  .lede b { color:#eeeef4; }
+  .tags { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 30px; }
+  .tag { font-size:11px; padding:4px 10px; border-radius:999px; border:1px solid #25252f;
+         color:#9496a4; font-family:ui-monospace,Consolas,monospace; }
+  .row { display:flex; flex-wrap:wrap; gap:34px; align-items:flex-start; }
+  .cap { font-size:12px; color:#606270; margin:0 0 10px; }
+  .cap b { color:#e83448; font-weight:600; }
+
+  .win { background:#0e0e12; border:1px solid #25252f; border-radius:16px;
+         position:relative; overflow:hidden; flex:none; }
+  .toprule { position:absolute; left:14px; top:0; width:190px; height:2px;
+             background:linear-gradient(90deg,#e83448,transparent); }
+  .hd { height:46px; display:flex; align-items:center; padding:0 14px;
+        border-bottom:1px solid #25252f; }
+  .logo { border-radius:8px; overflow:hidden; background:#1b1b23; flex:none; }
+  .logo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .hd .t { font-size:15px; font-weight:700; margin-left:8px; }
+  .hd .v { margin-left:auto; font-size:11px; color:#606270;
+           font-family:ui-monospace,Consolas,monospace; }
+  .hbtn { width:28px; height:28px; border-radius:9px; background:#14141a;
+          border:1px solid #25252f; color:#9496a4; font-size:14px; margin-left:6px;
+          display:flex; align-items:center; justify-content:center; }
+  .hbtn.x { color:#fff; background:#e83448; border-color:#e83448; }
+  .body { display:flex; height:calc(100% - 46px); padding:6px 10px; gap:12px; }
+  .side { width:132px; background:#0b0b0f; border-radius:12px; padding:8px; flex:none;
+          position:relative; }
+  .group { font-size:10px; font-weight:700; color:#606270; padding:2px 6px 8px; }
+  .nav { height:28px; border-radius:10px; display:flex; align-items:center;
+         padding-left:16px; font-size:13px; color:#9496a4; margin-bottom:4px; position:relative; }
+  .nav.on { background:#14141a; color:#eeeef4; }
+  .nav .dot { position:absolute; right:14px; top:11px; width:6px; height:6px; border-radius:50%;
+              background:#34c77b; }
+  .ind { position:absolute; left:8px; width:3px; height:18px; border-radius:999px;
+         background:#e83448; }
+  .content { flex:1; padding:4px 4px 0 0; }
+  .ptitle { font-size:17px; font-weight:700; }
+  .psub { font-size:11px; color:#606270; margin-top:4px;
+          font-family:ui-monospace,Consolas,monospace; }
+
+  .stats { display:flex; gap:8px; margin-top:14px; }
+  .stat { width:113px; height:52px; background:#14141a; border:1px solid #25252f;
+          border-radius:10px; padding:7px 10px; }
+  .stat .k { font-size:10px; color:#606270; }
+  .stat .n { font-size:17px; margin-top:4px; font-family:ui-monospace,Consolas,monospace; }
+  .card { background:#14141a; border:1px solid #25252f; border-radius:12px;
+          height:62px; margin-top:8px; padding:13px 16px; position:relative; }
+  .card .ct { font-size:15px; font-weight:700; }
+  .card .cd { font-size:11px; color:#606270; margin-top:3px; }
+  .card .arrow { position:absolute; right:16px; top:50%; transform:translateY(-50%);
+                 font-size:18px; color:#606270; }
+  .card .state { position:absolute; right:14px; top:50%; transform:translateY(-50%);
+                 font-size:12px; font-weight:700; color:#34c77b; }
+  .hint { font-size:11px; color:#606270; margin-top:14px; line-height:1.6; }
+
+  .toast { position:absolute; right:18px; bottom:18px; width:288px; height:52px;
+           background:#23232d; border:1px solid #e83448; border-radius:12px;
+           display:flex; align-items:center; padding-left:20px; font-size:13px; }
+  .toast .bar { position:absolute; left:7px; top:9px; width:3px; height:34px;
+                border-radius:999px; background:#e83448; }
+  .toast .line { position:absolute; left:7px; right:7px; bottom:6px; height:2px;
+                 border-radius:999px; background:#e83448; opacity:.5; }
+
+  .srow { margin-top:12px; }
+  .srow .lbl { display:flex; justify-content:space-between; font-size:12px; color:#9496a4; }
+  .srow .val { font-family:ui-monospace,Consolas,monospace; font-size:14px; color:#e83448; }
+  .track { height:5px; border-radius:999px; background:#1b1b23; margin-top:9px; position:relative; }
+  .fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#e83448,#ff7a2e); }
+  .knob { position:absolute; top:50%; width:15px; height:15px; border-radius:50%;
+          background:#fff; border:2px solid #e83448; transform:translate(-50%,-50%); }
+  .sw { width:40px; height:22px; border-radius:999px; background:#1b1b23;
+        border:1px solid #25252f; position:relative; flex:none; }
+  .sw.on { background:#e83448; border-color:#ff7a2e; }
+  .sw i { position:absolute; top:2px; left:3px; width:16px; height:16px; border-radius:50%;
+          background:#9496a4; display:block; }
+  .sw.on i { left:21px; background:#fff; }
+  .divider { height:1px; background:#25252f; margin:14px 0 0; }
+  .krow { display:flex; align-items:center; }
+  .krow .k { font-size:12px; color:#9496a4; }
+  .krow .d { font-size:11px; color:#606270; margin-top:2px; }
+
+  .stage { position:relative; overflow:hidden; border-radius:16px; border:1px solid #25252f; }
+  .glow { position:absolute; border-radius:50%; filter:blur(60px); opacity:.5; }
+  .col { position:absolute; left:0; top:0; }
+  .brand { position:absolute; left:22px; top:196px; font-size:34px; font-weight:700; }
+  .rule { position:absolute; width:46px; height:3px; border-radius:999px; background:#e83448; }
+  .tagline { position:absolute; font-size:12px; color:#606270;
+             font-family:ui-monospace,Consolas,monospace; }
+  .vline { position:absolute; left:348px; top:75px; width:1px; height:290px; background:#25252f; }
+  .prompt { position:absolute; left:396px; top:92px; font-size:12px; color:#606270; }
+  .opt { position:absolute; left:396px; width:340px; height:92px; background:#14141a;
+         border:1px solid #25252f; border-radius:12px; display:flex; align-items:center;
+         padding-left:20px; }
+  .opt.hot { background:#1b1b23; border-color:#e83448; }
+  .opt .fl { width:54px; height:36px; border-radius:7px; overflow:hidden;
+             border:1px solid #3a3a48; flex:none; }
+  .opt .fl img { width:100%; height:100%; object-fit:cover; display:block; }
+  .opt .nm { font-size:17px; font-weight:700; }
+  .opt .ds { font-size:11px; color:#606270; margin-top:3px; }
+  .opt .ar { margin-left:auto; margin-right:18px; font-size:18px; color:#606270; }
+  .opt.hot .ar { color:#e83448; }
+
+  .bscan { position:absolute; left:0; right:0; top:176px; height:2px;
+           background:linear-gradient(90deg,transparent,#e83448,transparent); opacity:.55; }
+  .term { position:absolute; left:0; top:112px; width:720px; height:130px;
+          background:#0e0e12; border:1px solid #25252f; border-radius:12px;
+          padding:16px 14px; }
+  .trow { display:flex; font-family:ui-monospace,Consolas,monospace; font-size:12px;
+          height:21px; align-items:center; }
+  .trow .g { color:#e83448; width:16px; }
+  .trow .tx { color:#9496a4; }
+  .trow .ok { margin-left:auto; color:#34c77b; font-size:11px; }
+  .trow .ok.run { color:#606270; }
+  .pbar { position:absolute; left:0; top:356px; width:648px; height:6px;
+          border-radius:999px; background:#1b1b23; }
+  .pfill { height:100%; border-radius:999px; width:68%;
+           background:linear-gradient(90deg,#e83448,#ff7a2e); }
+  .phead { position:absolute; left:68%; top:50%; width:10px; height:10px; border-radius:50%;
+           background:#fff; transform:translate(-50%,-50%); }
+  .pct { position:absolute; right:0; top:351px; font-size:12px; color:#9496a4;
+         font-family:ui-monospace,Consolas,monospace; }
+  .bver { position:absolute; left:0; bottom:22px; font-size:11px; color:#424450;
+          font-family:ui-monospace,Consolas,monospace; }
+
+  .fly { width:380px; height:356px; background:#0e0e12; border:1px solid #25252f;
+         border-radius:16px; overflow:hidden; position:relative; flex:none; }
+  .flyhd { height:42px; display:flex; align-items:center; padding:0 14px;
+           border-bottom:1px solid #25252f; position:relative; }
+  .flypulse { position:absolute; left:14px; top:40px; width:120px; height:2px;
+              background:linear-gradient(90deg,#34c77b,transparent); }
+  .flybody { padding:10px 16px 0; }
+  .bigbtn { height:42px; border-radius:10px; background:#34c77b; color:#fff;
+            font-size:15px; font-weight:700; display:flex; align-items:center;
+            justify-content:center; }
+  .hintrow { display:flex; font-size:11px; height:22px; align-items:center; }
+  .hintrow .hk { width:46px; color:#e83448; font-family:ui-monospace,Consolas,monospace; }
+  .hintrow .hv { color:#606270; }
+
+  .farewell { width:420px; height:262px; background:#0e0e12; border:1px solid #25252f;
+              border-radius:16px; text-align:center; padding-top:26px; }
+  .farewell .ft { font-size:24px; font-weight:700; margin-top:12px; }
+  .farewell .fc { font-size:11px; color:#606270; margin-top:12px;
+                  font-family:ui-monospace,Consolas,monospace; }
+  .farewell .ff { font-size:22px; font-weight:700; color:#e83448; margin-top:6px; }
+  .farewell .fbar { width:200px; height:4px; border-radius:999px; background:#1b1b23;
+                    margin:18px auto 0; }
+  .farewell .fbar i { display:block; height:100%; width:38%; border-radius:999px;
+                      background:linear-gradient(90deg,#e83448,#ff7a2e); }
+
+  .note { font-size:12px; color:#9496a4; margin-top:34px; line-height:2;
+          border-left:2px solid #e83448; padding-left:16px; max-width:94ch; }
+  .note b { color:#eeeef4; }
+  .note code { font-family:ui-monospace,Consolas,monospace; color:#e83448; }
+</style></head><body>
+  <h1>O_X HUB v1.5.0 · 界面预览</h1>
+  <p class="lede">
+    整份界面重做了一遍：一个强调色、一个圆角刻度、一套缓动曲线锁死，其余全部靠<b>层次和动效</b>拉开。
+    下面每块都按脚本里的真实尺寸 1:1 还原。
+  </p>
+  <div class="tags">
+    <span class="tag">DESIGN_VARIANCE 8</span>
+    <span class="tag">MOTION 9</span>
+    <span class="tag">DENSITY 5</span>
+    <span class="tag">dark tech / terminal</span>
+    <span class="tag">radius 16 / 12 / 10</span>
+    <span class="tag">1 accent</span>
+  </div>
+
+  <div class="row">
+    <div>
+      <p class="cap"><b>① 注入第一屏</b> · 语言选择（左右分栏，不是居中卡片）</p>
+      <div class="stage" style="width:760px;height:440px;background:#060609">
+        <div class="glow" style="left:-260px;top:-260px;width:900px;height:520px;background:#e83448"></div>
+        <div class="col" style="width:760px;height:440px">
+          <div class="logo" style="position:absolute;left:22px;top:86px;width:92px;height:92px;border-radius:26px"><img src="data:image/jpeg;base64,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" alt=""></div>
+          <div class="brand">O_X HUB</div>
+          <div class="rule" style="left:24px;top:246px"></div>
+          <div class="tagline" style="left:23px;top:262px">O_X HUB&nbsp;&nbsp; v1.5.0</div>
+          <div class="vline"></div>
+          <div class="prompt">选择语言&nbsp;&nbsp;/&nbsp;&nbsp;Select language</div>
+          <div class="opt hot" style="top:122px">
+            <div class="fl"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABQCAIAAABd+SbeAAABnklEQVR42u3bwU3DQBCFYRtRCbQAp9gl0Ep8o4+0AiUk4kINnCnDHCxZVtZRBMi7zvh7N0Yc2F+zs/OeTN3s9tXK9Pr9UYXT3fSH4+kw+0ul6mFB03Kqm90+bai26WYbLU895Oioxxk9HHs4anqvc9bjz2hzeXHQx9Ohbbq26c7OX6oeeXRcarQ8czl8s9eze3SpeR0YtPWunGFJ52ae+uYMy3ijz6720nWGhWFhWG50dExPO223nPVNGJb0OpeqMyw5DEvwGb0ewyL4FzD9Xfezxx6v+dnztWh91MvXZ0zQ04ZKH6uc9cDrxxr3aKESLRD8lwqYtrJHp09W5vpW9miGhWEJalhKBUwbCv4FSQwLw1IJ/n+fdRRf70JmHb5U8qWSPdqXSkKlG3kMh4mZBvN56uOf8f74bI+2R/9jdGT+9OtqPbIFLw43/Dc09ujSwX/lHzqtd0DT5dHR9z0KOhpoAhrobT+Gbw9PKOhooAlooIEmoGUdpKOBBpqAlnWQjgYaaAIaaAJa1qGjCWigCWhZh44moIEmoIEGmhbVDxSCQ6gv5jfkAAAAAElFTkSuQmCC" alt=""></div>
+            <div style="margin-left:16px"><div class="nm">English</div><div class="ds">English</div></div>
+            <div class="ar">→</div>
+          </div>
+          <div class="opt" style="top:226px">
+            <div class="fl"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABQCAIAAABd+SbeAAABiUlEQVR42u3b3U2EQBQGUCEUQAs+Wgv12s7SwpbgAwnZABlZZkC5c77skzFEz4yXOz82j6/+Q85PiyA+9Of3E/TpslUpXw09Dn1tvnM6FeOaNNd3HZvQ49Cb0Scqh/ctU6OrLbg36DrGoZ8+tY1Ze+V0fvVNW8dzP/4ynC1K1dlX3Hi12xL8f0MX/9NePDBe6ej+/CeopHU5UqPXNEVK6qLoTy1KfOhSE+0trGC4u2p0kV+4noVfgdJxbGojfrvrOEBGOetluGdqIy7QR/+KSPk2K8PAPXVbUMGu6T1m9DRO82gFG7Yus0fO51g/YfpKsIq/t+tIH0Hl73CetKy/cenYPB/JR1k8odL96D17/PMAeCVmzejNiZy/hbSuy9Mn3mi1xZfUiW9OnwqmTxRdoHGvw5mhK2GuhCkdgUrHzgYGdO6VMH30FXO52s3rxn9lae9AC2jQoAU0aAENGrSABi2gQYMW0KAFNGjQAhq0gAYNWkCDFtCgQQto0AIaNGgBDVpAgwYtoEPkBwXUpb8MT+3nAAAAAElFTkSuQmCC" alt=""></div>
+            <div style="margin-left:16px"><div class="nm">中文</div><div class="ds">简体中文</div></div>
+            <div class="ar">→</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap"><b>② 开机动画</b> · 终端启动序列 + 扫光 + 进度条</p>
+      <div class="stage" style="width:720px;height:420px;background:#060609">
+        <div class="glow" style="left:-90px;top:-260px;width:900px;height:520px;background:#e83448"></div>
+        <div class="col" style="width:720px;height:420px">
+          <div class="logo" style="position:absolute;left:0;top:6px;width:62px;height:62px;border-radius:18px"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCACgAKADASIAAhEBAxEB/8QAGwAAAQUBAQAAAAAAAAAAAAAABAECAwUGBwD/xAA1EAACAQMDAgUBBwQCAwEAAAABAgMABBEFEiExQRMiUWFxBgcUMkJSgZEVobHRI8FDYvDx/8QAGQEAAwEBAQAAAAAAAAAAAAAAAQIDAAQF/8QAHhEBAQEBAQEBAQEBAQAAAAAAAAECESExEgNBE1H/2gAMAwEAAhEDEQA/AMCsfPFExRHHSkhTc1WkFuCORXLa6A0UPfHSpCtFyRhFAHGaHPTmp0ULLTd4Q8nAqU9KCu32sij1yaM+gsI36USr+9ARNwKJVsUwCQ9ITUDy7I2YAsQOg6mqK5164disKiMevU0Zm34Fsi6F/D4JlZtgDFTu7H0qF9UtllRBICH/ADA8D5rNSzu5Z2OWY5PzUJLEYB7VT/nC/utVc6lDHA8iOrEcAA9TVDPdyGUTCQtIeScYC+woFmK4Ge3NOjl2yhxggdiMijMyFuutBpc89yTI8zMq8EbRgmrPPvmhLSZZ7dZAoUMOg7VOWqd+qT4eT700mmlqaWoCcT70wmkLU0txQYtlDuOSKuoIMKOKGsIMKKspcRW5Pc8CltFXT+Zz6DgUM/BopqGk5oCibpVfcjfKT6cCj5DtBJ7UFgluaMBJAfKKJVqEUbTxUqsaf6HEeq3DR2hVMgPwxHYVnByxJrR3iCW0dfbPziqB4zHI6ng8VXHxPX0yRWVFYdCTXmUqOeM81KVUxYw28H04xU91YyQ2UM7f+QkY9qP64P4tiufk0gwMU505wFxTWXB/aj0nGi0l1+5BQMMpO4UduoOzm8W1jkwQSvNT7uKjfqs+JC49aYzelNyaYTQE7dXi1MzSE84os1dnDgDikv2y4jHRRz80bCojiLnoozVXIS7Fj1JyakKBxULCp2qJ6LAbo4XHqagQZpt5cAXfh9gP4NSoOKPAIRTQcGpSKjYUYxQxqoeITakwLDaX5PtVoCaiKRwb2Kk7z2HQ9v2p5eB/vo9UsWbbBErOiZLP0oDVLnUpIYo5UVYo/wAOB5RUsCxSNzuHfAOM1LqEj/dQq20CIv58DJpJOV029ihMoMeGAJHehixLZHFSyHAYKBlqksI1ec7uQq5x61b45berGwJFqEbqhK0RuqIGl3Ul+h1IWzTTTc0maA9ONJmmk00ms3W6vX2QrEOrcn4quaiLqTxZmcdOg+KGapnRNUMhAUk9B1qduaA1OXwrN8HlvKKMjKGaQyzPIfzHNHWU25Qjde1V2M0XaQTTSLHCjO56KoyTVbPCTvViRTGWjP6dfRpmW1lU9/LULRkHBBB9DU4eywKQa8QD1ojwSaaYSO1OSq0SSwqzY7kAjtQNxczSnzMT+9aSG3AUqYyQecYoO80nJJjTFGWdP+bYzxJNWGnIBEzdycVHJamI8iprMFY2GDjd1o29idnBWaTNNzXs4pWOzXqbmvZrAdmkpu6kJrC15qNqkaozU1EbHAqj1qXMqRA9Bk1eOaoFtJdU1UJE6r4jYy3RQO9Nn/0Od8gnQtGlvbmOaWBjbZOWbhWI7ZrbWtlZ20xa3hjhkYYJQY4oS0J060jgiilkWJccc596cdctEU5DB8ZKkYNQ3bquzGM4ixdZoVLHa6/FUmqlb2LdDtypw4HUGq6XX7vc4RsI5wB6VHps5SafxCSrpz854ps4s9De5fGp+lPoqbW4zc3MiwWyttBXlnI9B2/etPf/AGfaOlpiFZg4H4zJnn3FDfZxfkm4s2fy4Dovv3/6rczqHhYH0rrk8efb643d6Y9tM0Tgb04PuOxoJ4ow2GQmul6h9OW9+v3+SaWMxKdyxqDvHvmuca7ZTW4KMWg3HKs3Qio6xZXVj+s56pr+ztgpdm2KvJ74FZy5lUnEZYAHgZ6Va6qq26i2RiceZyepPYGqUjLGnxj/AFH+n9O+HLeSAYIBqRbxfzKR8UGeCa8ePj/FU/KXVisyP+Fs08mqpZCkgPpVgr5FLZw0PyaU03NezQZs25php7GmMeKkqB1CcQ2kj55xgVT6bdm3u45E55x/NS/UNxhEhB6+Y1SRTGNgc9KeZ7kv65XRItaSMbZ1aJvXqKA127sLlF2IDcLyJBxj/dAy3CysAwwSAcHtQs8aY3LxgVLOXVrXhhl8RSFBzVhp217nbIMbwBjPXFVInVBuHNJBO8lyGzjb0x2romOuXW+Ol/Tyy2N1HPFhJN/lz0IPY+2K6RbXMs8eWMJHcqTXMvpfVItQRNNvWCSlh4U36j+k106yt0WFVHKJ5V9yOpNPyxz/AHVpwGcgIQnQY/zWF+0W0lITamUZdwxxgjqf8VvZInJyJCFPX2+KoNWaO9tHhkPiRxnAkPX961Nzrieo6extBdKvlPEg5ypHf4PWqNlwPmum3+li3LqmDFJ687D/AKNYbWNMktH8RUKx7sEfpPp/qtnXfB4omXzE+lNPWppVxvqFuHHuKYERPJo+M4K+4oE8Gi4zkpU9Hz8onOa9mm5r1Kzbmon6VKaDvpxBbSSH8q1P6p1ldYuPGv5MHIU7R+1DWY3XkIK7hvBIPeoZGLyEnqTmjdKjzceIeiAmrXyJ590spXkmfxWwWzzUUUjXl1FbjhXcA/HepJ2CQ5HU0LYSbLwP+lWP9jUszxfV9JOUBbYMLuOB7Zp9kuXzQ8p8oFGWi4x8V1ZjltaHSC63cLRkhg6lSPXNd5t08OBE/SAP3rln0DpVvPqjSTukqW0YlCjoWzx84rqNtL48XiAgo3K49K1oQHrFzJbafPNGWJRDxt4rLaH9TltmnXlt4hc4SReuSeARWxurKO9AS4ijkjzna2f7UKPp/SreVJ47OON4zuVsng/zQCzXfGR1q0W0lZioUN+Jeo+KzF3DFexupUeAxwcnnA9//u1b76itUuZDIGxuU4x2IFYA283/ACqWACvjLHGTUfisYrWdKkspjtDNCx8kmOo9/eqeYYI9hXVr+CKfTvuPJg28kDl39f8AVc01OymsrgxTIVPUZHUeop866WxXPRURyV9hQzUSnl2n1FbQ5TZr2abmvZpWbljxVH9RXGyzWMdZG/sKu3NZH6hn8S+KDpGMfvSZnp9eRVAFnx61baaBsl7A4x8VUoduW/YVaIfA8Mjo0YBqmvgfz+9SXcnlAHago5NjMf8A1IqSZ91CkkmhiDvXqYNuI5zVpa8kVVwrlhV1Ywl2GK6Ig6D9nexLi9mkHEdsW646EV02znS4tkkjGI2Hk9x61ifof6cnFpcT3aGOC6h8NRnDMCQSfYcVuoIY7eFIYl2ogwoHYUtGH0JcBAcudxHQdhU8kyJwclv0qMmq66muXH/HCkfu/mP8dKWiodZ5zt3e4XNYq6m2xmVx5DK5B/jmtpefeQ5aW7kPsCFH8CstrEUbookcBQc47EVLU6rm8qhOtMl3D4+WijYE7PzYqr+s9YstQeCK1TIiB8+MdecUHqtxEl9JDbsSg45OefmqqRGf5962Zy+trl+AmILCjDxGPahGXa2CMEUSTlKfQZ+H5pDTQeKXNArcTuI42duigk1grqVpZnkJ5Zia1mv3Hg6cwHBkO0VjsgyAnpQxG1Xm48uelW8gDW6euwf4qlyM1amTNnGR+kUdDgMzHpSpGTyaao3vRBGF2+tPmF1TrdcsPc10P7O9Fj1TWU8ZA0MC+K6noewH81hLaPbtz2rpX2X3q22rTRPwkkB59MHNOR1fhFx0ApMFupwKRAW87jHoPSq3WNfttKj87Av+mktMPmkhtoyzkKKymr/VtnbblUhiPesl9QfWk92zIj7U9qxV5qMkzHzH5rctZqtW+tnlLJEoFY3U9curskNKSKFeXg560FJkk0JIPpoLPKoHUmjnhkRQxQ/xQ9ltjlErckdKspdTyuAABU9298W/nnz1VSxBjlxg9jTCPIRTp5jK+aSMgghqIeGg8ClzXmAU4HSkzRTvi3+p7jdcJCD+Bcn5NZ5jRup3H3i8llz+Jjj4oGmzOQK8OtTxTEJ4Z6Z49qgqWCPe/sOabgCoRg89TUy+aT4qNVxzU0YweKLDLWKWaUrFG7lF3EKpOB61ovpvVf6TqlrdN+BWBceqk/8A4f2qisNQmsIpo4tv/Lglj1BHp/NLLIVkKZ/BgY/at7bxvHcNb+q4bC2xG4ZmXIIrmeqardanOWLMSxwB61Fa+Nd6LLc3ErBbfakQI/H7fAzV5/SIINQ0q3iQ+KUeeV85J2rx/cGtM8+t1kb2wngJWbyybQ+w+h5FU07FTtHFbrVIYbv6xt4ZVLQySCIheuASnH8VmNa0mWzvvu4Rm3sfC4yXAJH/AFQvRnOKFsjNRMWJzii5LeVXKeG29RkrjkCh3RlLKykFTg+xpDIRIVrzSk+tedscVESPWsPTg3OcV4yVGW7A0gyTwKwdSh92PanUkceB5utP2CgD/9k=" alt=""></div>
+          <div style="position:absolute;left:78px;top:8px;font-size:28px;font-weight:700">O_X HUB</div>
+          <div class="tagline" style="left:79px;top:44px">接管移动控制...</div>
+          <div class="rule" style="left:0;top:84px"></div>
+          <div class="bscan"></div>
+          <div class="term">
+            <div class="trow"><span class="g">&gt;</span><span class="tx">初始化运行环境...</span><span class="ok">OK</span></div>
+            <div class="trow"><span class="g">&gt;</span><span class="tx">加载核心模块...</span><span class="ok">OK</span></div>
+            <div class="trow"><span class="g">&gt;</span><span class="tx">注入界面组件...</span><span class="ok">OK</span></div>
+            <div class="trow"><span class="g">&gt;</span><span class="tx">接管移动控制...</span><span class="ok run">...</span></div>
+          </div>
+          <div class="pbar"><div class="pfill"></div><div class="phead"></div></div>
+          <div class="pct">68%</div>
+          <div class="bver">O_X HUB&nbsp;&nbsp; v1.5.0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:34px">
+    <div>
+      <p class="cap"><b>③ 主界面 · 主页</b> · 数值一览 + 卡片，右下角 toast</p>
+      <div class="win" style="width:520px;height:380px">
+        <div class="toprule"></div>
+        <div class="hd">
+          <div class="logo" style="width:26px;height:26px"><img src="data:image/jpeg;base64,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" alt=""></div>
+          <div class="t">O_X HUB</div><div class="v">v1.5.0</div>
+          <div class="hbtn">－</div><div class="hbtn x">✕</div>
+        </div>
+        <div class="body">
+          <div class="side">
+            <div class="group">功能列表</div>
+            <div class="ind" style="top:35px"></div>
+            <div class="nav on">主页</div><div class="nav">通用</div>
+            <div class="nav">飞行<span class="dot"></span></div><div class="nav">设置</div>
+          </div>
+          <div class="content">
+            <div class="ptitle">欢迎使用 O_X HUB</div>
+            <div class="psub">执行器脚本合集&nbsp; · &nbsp;v1.5.0</div>
+            <div class="stats">
+              <div class="stat"><div class="k">移动速度</div><div class="n">16</div></div>
+              <div class="stat"><div class="k">跳跃高度</div><div class="n">50</div></div>
+              <div class="stat"><div class="k">重力</div><div class="n">196</div></div>
+            </div>
+            <div class="card" style="margin-top:14px">
+              <div class="ct">飞行</div>
+              <div class="cd">官方摇杆 / WASD 直接控制&nbsp; · &nbsp;自动悬停</div>
+              <div class="state">已开启</div>
+            </div>
+            <div class="card">
+              <div class="ct">通用</div>
+              <div class="cd">移动速度&nbsp; · &nbsp;跳跃高度&nbsp; · &nbsp;重力</div>
+              <div class="arrow">→</div>
+            </div>
+            <div class="hint">左侧切换功能页。飞行是独立窗口，可以单独最小化或关闭。</div>
+          </div>
+        </div>
+        <div class="toast"><span class="bar"></span>欢迎使用 O_X HUB&nbsp; · &nbsp;按 F 开关飞行<span class="line"></span></div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap"><b>④ 飞行窗口</b> · 顶栏一条「运行中」呼吸线</p>
+      <div class="fly">
+        <div class="flyhd">
+          <div class="logo" style="width:22px;height:22px;border-radius:7px"><img src="data:image/jpeg;base64,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" alt=""></div>
+          <div style="font-size:14px;font-weight:700;margin-left:8px">O_X 飞行</div>
+          <div style="margin-left:auto;font-size:11px;font-weight:700;color:#34c77b">飞行中</div>
+          <div class="hbtn" style="width:26px;height:26px;border-radius:8px">－</div>
+          <div class="hbtn" style="width:26px;height:26px;border-radius:8px;margin-left:4px">✕</div>
+        </div>
+        <div class="flypulse"></div>
+        <div class="flybody">
+          <div class="bigbtn">关闭飞行</div>
+          <div class="srow">
+            <div class="lbl"><span>飞行速度</span><span class="val">60</span></div>
+            <div class="track"><div class="fill" style="width:56%"></div><div class="knob" style="left:56%"></div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="krow" style="margin-top:9px">
+            <div><div class="k">伤害保护</div><div class="d">速度回零：撞到东西、落地都不掉血</div></div>
+            <div style="margin-left:auto"><div class="sw on"><i></i></div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="krow" style="margin-top:9px">
+            <div><div class="k">落地缓降</div><div class="d">关飞行后缓降到贴地才放手</div></div>
+            <div style="margin-left:auto"><div class="sw on"><i></i></div></div>
+          </div>
+          <div class="divider"></div>
+          <div style="margin-top:9px">
+            <div class="hintrow"><span class="hk">手机</span><span class="hv">摇杆控制方向，滑动屏幕转向；抬头 + 前进即上升</span></div>
+            <div class="hintrow"><span class="hk">电脑</span><span class="hv">WASD 移动&nbsp; · &nbsp;空格上升&nbsp; · &nbsp;Ctrl / Shift 下降</span></div>
+            <div class="hintrow"><span class="hk">开关</span><span class="hv">按 F 键，或点上面的按钮</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap"><b>⑤ 设置页</b> · 联系作者 / 语言 / 音效</p>
+      <div class="win" style="width:520px;height:380px">
+        <div class="toprule"></div>
+        <div class="hd">
+          <div class="logo" style="width:26px;height:26px"><img src="data:image/jpeg;base64,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" alt=""></div>
+          <div class="t">O_X HUB</div><div class="v">v1.5.0</div>
+          <div class="hbtn">－</div><div class="hbtn x">✕</div>
+        </div>
+        <div class="body">
+          <div class="side">
+            <div class="group">功能列表</div>
+            <div class="ind" style="top:131px"></div>
+            <div class="nav">主页</div><div class="nav">通用</div>
+            <div class="nav">飞行</div><div class="nav on">设置</div>
+          </div>
+          <div class="content">
+            <div class="ptitle">设置</div>
+            <div class="psub">联系作者与语言设置</div>
+            <div class="card" style="height:56px;margin-top:16px">
+              <div style="font-size:11px;color:#9496a4">联系作者</div>
+              <div style="font-size:14px;color:#e83448;margin-top:5px;font-family:ui-monospace,Consolas,monospace">oxhub@atomicmail.io</div>
+              <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:10px;color:#606270">点一下复制邮箱</div>
+            </div>
+            <div class="divider" style="margin-top:16px"></div>
+            <div class="krow" style="margin-top:14px"><div class="k">语言</div>
+              <div style="margin-left:auto;font-size:10px;color:#606270">切换后脚本会重启</div></div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <div style="width:150px;height:42px;border-radius:10px;background:#1b1b23;border:2px solid #e83448;display:flex;align-items:center;padding-left:12px">
+                <span style="width:30px;height:20px;border-radius:4px;overflow:hidden;margin-right:10px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABQCAIAAABd+SbeAAABiUlEQVR42u3b3U2EQBQGUCEUQAs+Wgv12s7SwpbgAwnZABlZZkC5c77skzFEz4yXOz82j6/+Q85PiyA+9Of3E/TpslUpXw09Dn1tvnM6FeOaNNd3HZvQ49Cb0Scqh/ctU6OrLbg36DrGoZ8+tY1Ze+V0fvVNW8dzP/4ynC1K1dlX3Hi12xL8f0MX/9NePDBe6ej+/CeopHU5UqPXNEVK6qLoTy1KfOhSE+0trGC4u2p0kV+4noVfgdJxbGojfrvrOEBGOetluGdqIy7QR/+KSPk2K8PAPXVbUMGu6T1m9DRO82gFG7Yus0fO51g/YfpKsIq/t+tIH0Hl73CetKy/cenYPB/JR1k8odL96D17/PMAeCVmzejNiZy/hbSuy9Mn3mi1xZfUiW9OnwqmTxRdoHGvw5mhK2GuhCkdgUrHzgYGdO6VMH30FXO52s3rxn9lae9AC2jQoAU0aAENGrSABi2gQYMW0KAFNGjQAhq0gAYNWkCDFtCgQQto0AIaNGgBDVpAgwYtoEPkBwXUpb8MT+3nAAAAAElFTkSuQmCC" style="width:100%;height:100%;object-fit:cover;display:block" alt=""></span>
+                <span style="font-size:13px;font-weight:700">中文</span>
+              </div>
+              <div style="width:150px;height:42px;border-radius:10px;background:#14141a;border:1px solid #25252f;display:flex;align-items:center;padding-left:12px;color:#9496a4">
+                <span style="width:30px;height:20px;border-radius:4px;overflow:hidden;margin-right:10px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABQCAIAAABd+SbeAAABnklEQVR42u3bwU3DQBCFYRtRCbQAp9gl0Ep8o4+0AiUk4kINnCnDHCxZVtZRBMi7zvh7N0Yc2F+zs/OeTN3s9tXK9Pr9UYXT3fSH4+kw+0ul6mFB03Kqm90+bai26WYbLU895Oioxxk9HHs4anqvc9bjz2hzeXHQx9Ohbbq26c7OX6oeeXRcarQ8czl8s9eze3SpeR0YtPWunGFJ52ae+uYMy3ijz6720nWGhWFhWG50dExPO223nPVNGJb0OpeqMyw5DEvwGb0ewyL4FzD9Xfezxx6v+dnztWh91MvXZ0zQ04ZKH6uc9cDrxxr3aKESLRD8lwqYtrJHp09W5vpW9miGhWEJalhKBUwbCv4FSQwLw1IJ/n+fdRRf70JmHb5U8qWSPdqXSkKlG3kMh4mZBvN56uOf8f74bI+2R/9jdGT+9OtqPbIFLw43/Dc09ujSwX/lHzqtd0DT5dHR9z0KOhpoAhrobT+Gbw9PKOhooAlooIEmoGUdpKOBBpqAlnWQjgYaaAIaaAJa1qGjCWigCWhZh44moIEmoIEGmhbVDxSCQ6gv5jfkAAAAAElFTkSuQmCC" style="width:100%;height:100%;object-fit:cover;display:block" alt=""></span>
+                <span style="font-size:13px;font-weight:700">英文</span>
+              </div>
+            </div>
+            <div class="divider" style="margin-top:16px"></div>
+            <div class="krow" style="margin-top:14px">
+              <div class="k">音效</div>
+              <div style="margin-left:auto;font-size:10px;color:#606270;margin-right:12px">关掉之后一点声音都没有</div>
+              <div class="sw on"><i></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap"><b>⑥ 关闭动画</b> · error 音效 + 全屏告别层</p>
+      <div class="stage" style="width:520px;background:#060609;padding:60px 0;display:flex;justify-content:center">
+        <div class="farewell">
+          <div class="logo" style="width:76px;height:76px;border-radius:22px;margin:0 auto"><img src="data:image/jpeg;base64,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" alt=""></div>
+          <div class="ft">O_X HUB</div>
+          <div class="fc">正在关闭...</div>
+          <div class="ff">期待下次注入</div>
+          <div class="fbar"><i></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">
+    动效与音效（脚本里全部用 <code>TweenService</code> 实现，共用一套缓动曲线）：<br>
+    · <b>开机</b>：品牌区依次落下 → 终端逐行打印并打上 OK → 进度条带亮点推进 → 整屏淡出<br>
+    · <b>语言选择</b>：图标 / 品牌 / 两张卡依次落下；悬停时卡片抬起 4px、描边亮起、箭头右推<br>
+    · <b>主界面</b>：窗口从 0.9 弹回原尺寸，顶栏 → 侧栏 → 内容依次入场；切页时内容整页轻浮 + 侧栏指示条滑过去<br>
+    · <b>滑块</b>：旋钮拖动时放大 1.34 倍、描边加粗；<b>按钮</b>：点击从落点扩散一圈涟漪<br>
+    · <b>提示音</b> <code>discord-notification.mp3</code>：右下角每次弹提示都会响（进场欢迎 / 复制邮箱 / 开关飞行 / 切语言…）<br>
+    · <b>关闭</b>：<code>error-soundss.mp3</code> + 窗口抖四下再缩下去 → 全屏告别层「期待下次注入」→ 约 2 秒后自行销毁
+  </p>
+</body></html>
