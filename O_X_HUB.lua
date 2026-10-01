@@ -67,6 +67,7 @@ local LOCALES = {
 		denyJoin     = "加入对应服务器",
 		joinOk       = "正在加入「%s」  ·  落地后会自动重新执行脚本",
 		joinNoQueue  = "正在加入「%s」  ·  这个执行器不支持传送后自动执行，落地后请手动再注入一次",
+		joinVia      = "正在加入「%s」（通过 %s）",
 		joinFail     = "加入失败：%s  ·  游戏链接已复制到剪贴板，请用浏览器打开",
 		joinSilent   = "传送未生效（执行器或 Roblox 拦截了）  ·  游戏链接已复制，请用浏览器打开",
 
@@ -204,6 +205,7 @@ local LOCALES = {
 		denyJoin     = "Join that game",
 		joinOk       = "Joining %s  ·  the script re-runs automatically on arrival",
 		joinNoQueue  = "Joining %s  ·  this executor cannot auto-run after teleport, inject again on arrival",
+		joinVia      = "Joining %s (via %s)",
 		joinFail     = "Join failed: %s  ·  game link copied to clipboard, open it in your browser",
 		joinSilent   = "Teleport silently rejected by executor or Roblox  ·  game link copied, open it in your browser",
 
@@ -327,7 +329,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.8.2",
+	Version = "v1.8.3",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -2182,6 +2184,39 @@ end
 -- 固定 720×420 画布 + UIScale，任何屏幕比例都不会散
 -- 加入某个服务器。跨服之后要能自动重新执行脚本，只能靠执行器提供的
 -- queueonteleport 之类的函数；拿不到就照样传送，但要如实告诉用户一句。
+--
+-- 传送三层降级：
+--   1) **执行器私有 API**（Synapse X 的 syn.Teleport、Fluxus 的 fluxus.Teleport 等）：
+--      这些是执行器自己实现的传送，**绕过 Roblox 客户端对 TeleportService 的限制**，
+--      是 v1.8.3 之前的脚本漏掉的关键通道。
+--   2) 官方 TeleportService:Teleport（fallback）：Roblox 客户端允许时也能用。
+--   3) 全失败：复制游戏主页链接到剪贴板（手动兜底）。
+local EXEC_TELEPORT_LIBS = { "synapse", "syn", "fluxus", "FL", "script_ware", "SW", "krnl" }
+local EXEC_TELEPORT_FNS = { "Teleport", "teleport" }
+
+local function execTeleport(id)
+	-- 1) obj.fn 形式：syn.Teleport / fluxus.Teleport / ...
+	for _, libName in ipairs(EXEC_TELEPORT_LIBS) do
+		local lib = execFn(libName)
+		if type(lib) == "table" then
+			for _, fnName in ipairs(EXEC_TELEPORT_FNS) do
+				local fn = lib[fnName]
+				if isCallable(fn) and pcall(fn, id) then
+					return true, libName .. "." .. fnName
+				end
+			end
+		end
+	end
+	-- 2) 直接全局函数：teleport(id)
+	for _, fnName in ipairs(EXEC_TELEPORT_FNS) do
+		local fn = execFn(fnName)
+		if isCallable(fn) and pcall(fn, id) then
+			return true, fnName
+		end
+	end
+	return false, nil
+end
+
 local function joinPlace(id, name)
 	local TeleportService = game:GetService("TeleportService")
 
@@ -2214,13 +2249,6 @@ local function joinPlace(id, name)
 	-- （执行器 / Roblox 反作弊会静默忽略 Teleport 请求，pcall 不会报错）
 	local beforePlace = (pcall(function() return game.PlaceId end)) and game.PlaceId or nil
 
-	-- 先尝试不带 player 的传送（某些执行器在这个模式下更稳定）
-	local ok, err = pcall(function() TeleportService:Teleport(id) end)
-	if not ok then
-		-- 失败了再试带 LocalPlayer
-		ok, err = pcall(function() TeleportService:Teleport(id, LocalPlayer) end)
-	end
-
 	local function copyGameLink()
 		pcall(function()
 			local clip = execFn("setclipboard") or execFn("toclipboard")
@@ -2228,28 +2256,41 @@ local function joinPlace(id, name)
 		end)
 	end
 
+	-- ===== 优先：执行器私有 teleport API（绕过客户端限制的关键）=====
+	local execName
+	local ok, usedVia = execTeleport(id)
 	if ok then
-		notify(string.format(queued and L("joinOk") or L("joinNoQueue"), tostring(name)), C.Accent)
-		-- 验证：传送成功玩家会进入新 place、脚本会被卸载；
-		-- 如果 3 秒后还在原 place，说明请求被静默忽略
-		task.delay(3, function()
-			if SHUTDOWN then return end
-			local afterPlace = (pcall(function() return game.PlaceId end)) and game.PlaceId or nil
-			if beforePlace and afterPlace == beforePlace then
-				notify(L("joinSilent"), C.Amber)
-				copyGameLink()
-			end
-			if failConn then pcall(function() failConn:Disconnect() end) end
-		end)
+		notify(string.format(L("joinVia"), tostring(name), tostring(usedVia)), C.Accent)
 	else
-		-- pcall 就抛了，连请求都没发出去
-		notify(string.format(L("joinFail"), tostring(err or "Teleport rejected")), C.Amber)
-		copyGameLink()
-		-- 也设个 3 秒定时把监听器关掉
-		task.delay(3, function()
-			if failConn then pcall(function() failConn:Disconnect() end) end
-		end)
+		-- ===== fallback：官方 TeleportService:Teleport =====
+		ok, usedVia = pcall(function() TeleportService:Teleport(id) end)
+		if not ok then
+			ok, usedVia = pcall(function() TeleportService:Teleport(id, LocalPlayer) end)
+		end
+		if ok then
+			notify(string.format(queued and L("joinOk") or L("joinNoQueue"), tostring(name)), C.Accent)
+		else
+			-- pcall 也抛了
+			notify(string.format(L("joinFail"), tostring(usedVia or "Teleport rejected")), C.Amber)
+			copyGameLink()
+			task.delay(3, function()
+				if failConn then pcall(function() failConn:Disconnect() end) end
+			end)
+			return
+		end
 	end
+
+	-- 验证：传送成功玩家会进入新 place、脚本会被卸载；
+	-- 如果 3 秒后还在原 place，说明请求被静默忽略
+	task.delay(3, function()
+		if SHUTDOWN then return end
+		local afterPlace = (pcall(function() return game.PlaceId end)) and game.PlaceId or nil
+		if beforePlace and afterPlace == beforePlace then
+			notify(L("joinSilent"), C.Amber)
+			copyGameLink()
+		end
+		if failConn then pcall(function() failConn:Disconnect() end) end
+	end)
 end
 
 local function showDenyModal(titleText, bodyText, noteText, placeId, serverName)
