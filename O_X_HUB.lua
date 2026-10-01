@@ -70,6 +70,8 @@ local LOCALES = {
 		joinVia      = "正在加入「%s」（通过 %s）",
 		joinFail     = "加入失败：%s  ·  游戏链接已复制到剪贴板，请用浏览器打开",
 		joinSilent   = "传送未生效（执行器或 Roblox 拦截了）  ·  游戏链接已复制，请用浏览器打开",
+		joinPending  = "已记下「%s」为目标服务器  ·  下次进入任意服务器时脚本会自动重试传送",
+		joinPendingRetry = "上次未加入「%s」  ·  现在自动重试传送",
 
 		-- 服务器面板
 		srvTabTp     = "传送",
@@ -208,6 +210,8 @@ local LOCALES = {
 		joinVia      = "Joining %s (via %s)",
 		joinFail     = "Join failed: %s  ·  game link copied to clipboard, open it in your browser",
 		joinSilent   = "Teleport silently rejected by executor or Roblox  ·  game link copied, open it in your browser",
+		joinPending  = "Marked %s as the target  ·  next time you join any server the script will retry the teleport automatically",
+		joinPendingRetry = "Last attempt to join %s didn't work  ·  auto-retrying now",
 
 		srvTabTp     = "Teleport",
 		srvTabFarm   = "Farm",
@@ -329,7 +333,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.8.3",
+	Version = "v1.8.4",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -2191,6 +2195,68 @@ end
 --      是 v1.8.3 之前的脚本漏掉的关键通道。
 --   2) 官方 TeleportService:Teleport（fallback）：Roblox 客户端允许时也能用。
 --   3) 全失败：复制游戏主页链接到剪贴板（手动兜底）。
+--
+-- 跨服重试（v1.8.4）：如果上面三条路全失败，就把这个目标服务器 ID 写到
+-- _G.O_X_HUB_PENDING_JOIN 持久化。脚本下次被注入时（玩家被传送、或换了服务器、
+-- 或被玩家手动再 loadstring 一次），boot 开头会先检查这个标记——
+-- 如果当前 Place ID 还没到目标 place，**静默自动重试传送**。
+-- 用户在执行器那边设成"加入任意服务器自动注入"就能彻底免手动。
+local PENDING_KEY = "O_X_HUB_PENDING_JOIN"
+
+local function pendingEnvs()
+	local envs = {}
+	pcall(function() envs[#envs + 1] = getgenv and getgenv() end)
+	pcall(function() envs[#envs + 1] = _G end)
+	return envs
+end
+
+local function setPendingJoin(id, name)
+	for _, env in ipairs(pendingEnvs()) do
+		pcall(function()
+			env[PENDING_KEY] = { id = id, name = name, ts = os.time() }
+		end)
+	end
+end
+
+local function getPendingJoin()
+	for _, env in ipairs(pendingEnvs()) do
+		local v = rawget(env, PENDING_KEY)
+		if type(v) == "table" and type(v.id) == "number" then
+			return v
+		end
+	end
+	return nil
+end
+
+local function clearPendingJoin()
+	for _, env in ipairs(pendingEnvs()) do
+		pcall(function() env[PENDING_KEY] = nil end)
+	end
+end
+
+-- 提示条 GUI（提到外面是因为 boot 开头 autoResolvePending 就要用 notify）
+local function ensureNotify()
+	if notifyGui and notifyGui.Parent then return end
+	notifyGui = new("ScreenGui", {
+		Name = "O_X_HUB_Notify",
+		IgnoreGuiInset = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 100001,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		Parent = GUI_PARENT,
+	})
+	TOASTS = {}
+	notifyHolder = new("Frame", {
+		Name = "NotifyHolder",
+		Size = UDim2.new(0, TOAST_W, 0, 1),
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -18, 1, -18),
+		BackgroundTransparency = 1,
+		ZIndex = 60,
+		Parent = notifyGui,
+	})
+end
+
 local EXEC_TELEPORT_LIBS = { "synapse", "syn", "fluxus", "FL", "script_ware", "SW", "krnl" }
 local EXEC_TELEPORT_FNS = { "Teleport", "teleport" }
 
@@ -2259,11 +2325,13 @@ local function joinPlace(id, name)
 	-- ===== 优先：执行器私有 teleport API（绕过客户端限制的关键）=====
 	local execName
 	local ok, usedVia = execTeleport(id)
+	local anyAttempt = ok                                -- 至少试过一条通道
 	if ok then
 		notify(string.format(L("joinVia"), tostring(name), tostring(usedVia)), C.Accent)
 	else
 		-- ===== fallback：官方 TeleportService:Teleport =====
 		ok, usedVia = pcall(function() TeleportService:Teleport(id) end)
+		anyAttempt = true
 		if not ok then
 			ok, usedVia = pcall(function() TeleportService:Teleport(id, LocalPlayer) end)
 		end
@@ -2273,6 +2341,8 @@ local function joinPlace(id, name)
 			-- pcall 也抛了
 			notify(string.format(L("joinFail"), tostring(usedVia or "Teleport rejected")), C.Amber)
 			copyGameLink()
+			-- 持久化为待传送：脚本下次注入时自动重试
+			setPendingJoin(id, name)
 			task.delay(3, function()
 				if failConn then pcall(function() failConn:Disconnect() end) end
 			end)
@@ -2288,9 +2358,30 @@ local function joinPlace(id, name)
 		if beforePlace and afterPlace == beforePlace then
 			notify(L("joinSilent"), C.Amber)
 			copyGameLink()
+			-- 静默被拒 → 也记成 pending（下次注入会重试）
+			setPendingJoin(id, name)
 		end
 		if failConn then pcall(function() failConn:Disconnect() end) end
 	end)
+end
+
+-- boot 开头调一次：如果上一份脚本传送失败时留下了 pending，
+-- 在新 place 上自动重试一次（静默，弹个 "正在加入" 提示）。
+-- 用户执行器那边开"自动注入"就能彻底免手动。
+local function autoResolvePending()
+	local p = getPendingJoin()
+	if not p then return end
+	local current = (pcall(function() return game.PlaceId end)) and game.PlaceId or nil
+	if current == p.id then
+		-- 已经在目标服务器了（可能是用户手动加入的，也可能是某次传送终于成功了）
+		clearPendingJoin()
+		return
+	end
+	if current then
+		-- 当前在某个非目标服务器 → 静默重试
+		notify(string.format(L("joinPendingRetry"), tostring(p.name)), C.Accent)
+	end
+	joinPlace(p.id, p.name)
 end
 
 local function showDenyModal(titleText, bodyText, noteText, placeId, serverName)
@@ -2988,34 +3079,19 @@ boot = function(lang)
 	SHUTDOWN = false
 	GLOBAL_CONNS = {}
 
+	-- 提示条 GUI（autoResolvePending / joinPlace 都依赖它，先建好）
+	ensureNotify()
+
+	-- 上一份脚本传送失败留下了目标 → 在当前 place 静默重试
+	-- 用户执行器那边开"加入任意服务器自动注入"就能彻底免手动
+	autoResolvePending()
+
 	-- 全局连接的登记处 —— 主窗口 ✕ 关掉时要能把它们全断开。
 	-- ⚠️ 必须放在 boot 开头：后面每个模块都要用，Lua 只认"声明在前"
 	local function track(conn)
 		table.insert(GLOBAL_CONNS, conn)
 		return conn
 	end
-
-	-- 提示条 GUI（跟主界面一起重建）
-	notifyGui = new("ScreenGui", {
-		Name = "O_X_HUB_Notify",
-		IgnoreGuiInset = true,
-		ResetOnSpawn = false,
-		DisplayOrder = 100001,
-		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		Parent = GUI_PARENT,
-	})
-
-	-- 提示条改成右下角一叠：新的在下，旧的往上顶
-	TOASTS = {}
-	notifyHolder = new("Frame", {
-		Name = "NotifyHolder",
-		Size = UDim2.new(0, TOAST_W, 0, 1),
-		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -18, 1, -18),
-		BackgroundTransparency = 1,
-		ZIndex = 60,
-		Parent = notifyGui,
-	})
 
 	local WIN_W, WIN_H   = 520, 380
 	local SIDEBAR_W      = 132
@@ -6151,11 +6227,12 @@ boot = function(lang)
 			_G.O_X_HUB_LOADED = nil
 		end
 
-		-- 重启：立刻收干净，不放动画也不出声
-		if instant then
-			kill()
-			return
-		end
+-- 重启：立刻收干净，不放动画也不出声，但 GUI 还是要销毁再重建（ensureNotify 检测到旧 GUI 还活着会跳过）
+	if instant then
+		kill()
+		clearPendingJoin()
+		return
+	end
 
 		-- 正常关闭：error 音效 + 抖一下 + 全屏告别
 		playSfx("sfx_close", CONFIG.SoundClose)
