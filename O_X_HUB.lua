@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.4.1
+--  Version : 1.5.0
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -111,6 +111,13 @@ local LOCALES = {
 		language     = "语言",
 		langHint     = "切换后脚本会重启",
 		langSwitched = "已切换为 %s，正在重启...",
+		sound        = "音效",
+		soundHint    = "关掉之后一点声音都没有",
+
+		welcome      = "欢迎使用 %s  ·  按 F 开关飞行",
+		closing      = "正在关闭...",
+		closed       = "已安全退出",
+		farewell     = "期待下次注入",
 		langNameZh   = "中文",
 		langNameEn   = "英文",
 	},
@@ -183,6 +190,13 @@ local LOCALES = {
 		language     = "Language",
 		langHint     = "Switching restarts the script",
 		langSwitched = "Switched to %s, restarting...",
+		sound        = "Sound",
+		soundHint    = "Turn every notification silent",
+
+		welcome      = "Welcome to %s  ·  press F to fly",
+		closing      = "Shutting down...",
+		closed       = "Session closed",
+		farewell     = "Until next injection",
 		langNameZh   = "Chinese",
 		langNameEn   = "English",
 	},
@@ -207,7 +221,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.4.1",
+	Version = "v1.5.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -249,31 +263,63 @@ local CONFIG = {
 	AssetPrefix = "oxhub_",
 	IconFile    = "oxhub_icon.jpg",   -- 老版本用过的固定名，启动时顺手清掉
 
+	-- ---------- 音效 ----------
+	-- 两个内联 mp3：notify = 右下角弹提示时，close = 结束脚本时
+	Sound       = true,    -- 总开关（设置页可切）
+	SoundNotify = 0.45,
+	SoundClose  = 0.60,
+
 	-- ---------- 联系方式 ----------
 	Contact = "oxhub@atomicmail.io",
 }
 
---========================== 主题色 ==========================
--- 配色跟随图标（暗色 + 红色涂鸦），主色用红橙渐变
+--========================== 设计令牌 ==========================
+-- 全界面只允许用这里的值，别在别处现编颜色 / 圆角 / 缓动。
+-- 一个强调色（红），一个圆角刻度，一套动效曲线 —— 三样都锁死。
 local C = {
-	Bg      = Color3.fromRGB(10, 10, 12),
-	Window  = Color3.fromRGB(18, 18, 22),
-	Side    = Color3.fromRGB(14, 14, 18),
-	Card    = Color3.fromRGB(26, 26, 32),
-	Card2   = Color3.fromRGB(34, 34, 42),
-	Stroke  = Color3.fromRGB(44, 44, 54),
-	Accent  = Color3.fromRGB(226, 42, 60),
-	Accent2 = Color3.fromRGB(255, 110, 30),
-	Text    = Color3.fromRGB(240, 240, 245),
-	Sub     = Color3.fromRGB(140, 142, 155),
-	Dim     = Color3.fromRGB(95, 97, 110),
-	Green   = Color3.fromRGB(34, 197, 94),
-	Red     = Color3.fromRGB(239, 68, 68),
-	White   = Color3.fromRGB(255, 255, 255),
+	-- 底层：不用纯黑，留一点冷灰层次，深色才有深度
+	Void    = Color3.fromRGB(6, 6, 9),
+	Bg      = Color3.fromRGB(9, 9, 12),
+	Side    = Color3.fromRGB(11, 11, 15),
+	Window  = Color3.fromRGB(14, 14, 18),
+	Card    = Color3.fromRGB(20, 20, 26),
+	Card2   = Color3.fromRGB(27, 27, 35),
+	Raised  = Color3.fromRGB(35, 35, 45),
+	Stroke  = Color3.fromRGB(37, 37, 47),
+	Stroke2 = Color3.fromRGB(58, 58, 72),
+
+	-- 唯一强调色（锁死，整份界面只用这一支）
+	Accent   = Color3.fromRGB(232, 52, 72),
+	Accent2  = Color3.fromRGB(255, 122, 46),
+	AccentLo = Color3.fromRGB(72, 20, 28),
+
+	-- 文字层级：靠明度分层，不靠字号堆叠
+	Text  = Color3.fromRGB(238, 238, 244),
+	Sub   = Color3.fromRGB(148, 150, 164),
+	Dim   = Color3.fromRGB(96, 98, 112),
+	White = Color3.fromRGB(255, 255, 255),
+
+	-- 语义色：只表达状态，不做装饰
+	Green = Color3.fromRGB(52, 199, 123),
+	Amber = Color3.fromRGB(240, 180, 60),
+	Red   = Color3.fromRGB(240, 88, 88),
+}
+
+-- 圆角刻度：窗口 16 / 卡片 12 / 控件 10 / 胶囊
+local R = { win = 16, card = 12, ctl = 10, pill = 999 }
+
+-- 动效曲线：统一节奏，别到处现编 TweenInfo
+local EASE = {
+	pop  = TweenInfo.new(0.36, Enum.EasingStyle.Back,  Enum.EasingDirection.Out),
+	out  = TweenInfo.new(0.26, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+	soft = TweenInfo.new(0.18, Enum.EasingStyle.Quad,  Enum.EasingDirection.Out),
+	fast = TweenInfo.new(0.11, Enum.EasingStyle.Quad,  Enum.EasingDirection.Out),
+	gone = TweenInfo.new(0.22, Enum.EasingStyle.Quad,  Enum.EasingDirection.In),
 }
 
 local FONT_N = Enum.Font.GothamMedium
 local FONT_B = Enum.Font.GothamBold
+local FONT_M = Enum.Font.Code        -- 等宽：版本号 / 终端行 / 数值
 
 -- 内联资源：图标 + 两面国旗（base64，运行时落盘再 getcustomasset）
 -- 统一放一张表里，加资源只要往这里塞一条
@@ -346,6 +392,243 @@ noVfgdJxbGojfrvrOEBGOetluGdqIy7QR/+KSPk2K8PAPXVbUMGu6T1m9DRO82gFG7Yus0fO51g/YfpK
 tKy/cenYPB/JR1k8odL96D17/PMAeCVmzejNiZy/hbSuy9Mn3mi1xZfUiW9OnwqmTxRdoHGvw5mhK2GuhCkdgUrHzgYGdO6V
 MH30FXO52s3rxn9lae9AC2jQoAU0aAENGrSABi2gQYMW0KAFNGjQAhq0gAYNWkCDFtCgQQto0AIaNGgBDVpAgwYtoEPkBwXU
 pb8MT+3nAAAAAElFTkSuQmCC
+]==],
+	sfx_notify = [==[
+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
+Fagvjpkds17rMYfDeNqtNl7NrYvO/76dfyb7VBiRd10JuxwAJK6mkiAD6fj0//uUZJUAMtFjRkNDFPA8A8n9AeMJi32JGMyM
+S8C3guWQAqRNj2Acmc9w1Sjixf+ka66tVgEFImb43DWKFceedO4ahLfCQ8bEoVIkKioaTwMZENL/jWLkvO+3GPp2V0A01TQV
+MPAEZ+qUARoSAAst6MkIjtAiKuYXFDw4ILJgA5VhQwmSGA9nkOuHuK76Yn8lS2xcd2RazIq6uyVpW2hcdNKc7nfskTU2Km9/
+//76//xYYj5hbGdCSDDlKk0Eess0FCM18jMDX//5lX//62Szqn//6I7J3KFBHGMpBQUGMZWMrGmKh2Mtv6JZP+//sZVYys/3
+KZSCgoMg5UOMGBrAEglKCE8Ki5kVFx0EhoVjpMqw0SCQFIhI2SCoC1paFDQVGFWj0kgpypJ9oUR/YPSEv/sGWD01//8YhdVM
+QU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//uU
+RLMAAlQXx9AvGEBLwzjZMwYWScWM+AeETcjrBCFMlKRQVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVV
+]==],
+	sfx_close = [==[
+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
+Is3elnMjSYS29LfFm/93otjUQaCYdMOFZZgK3vWcmmQT0oWKPQnTYxqgzei/YDN4q1SLYvT/+1LE6YMKrLUcTWEBgYycokGm
+GWDJgIAY2jKBjWOrUllI1JqzHttYWucb/oChlNYesOq1Wrw1NS8Ic1+zMzeqms+k115wVUCoywyAqZH+GON+l1apsXHiX5Te
+u4dFpVNafKSKpUXG/Bf+/u+KTEFNRTMuMTAwqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+qqqqqqqqABa+zlMFDAg5Ds7fuxgoIEcjpoRmnyMirmRn+RmXyM///zUMDBo5Gf/7UsTrAwto6RINMMrBZRwiRYYY+DWQy//7
+LPP5UMmUMGBo6VD///kv6tQQJyMmWWl/zImWWVDaoZGoYKFCOhkwUMCDoZGrBQaVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tSxO6ADMS/Cgeww8FbHyCkMI+BVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+1LE0APLjaLCQQR1AAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==
 ]==],
 }
 
@@ -611,6 +894,140 @@ end
 
 local GUI_PARENT = getGuiParent()
 
+
+--========================== 动效工具 ==========================
+-- 全站统一走这几个helper，别在业务代码里到处 TweenService:Create
+
+local function tween(obj, info, props)
+	local t = TweenService:Create(obj, info, props)
+	t:Play()
+	return t
+end
+
+-- 抓一个元素（含子孙）的透明度，用来"先藏后显"
+local function alphaSnapshot(root)
+	local snap = {}
+	local function cap(d)
+		if not d:IsA("GuiObject") then return end
+		local e = { d = d, bg = d.BackgroundTransparency }
+		if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+			e.tx = d.TextTransparency
+		end
+		if d:IsA("ImageLabel") or d:IsA("ImageButton") then
+			e.im = d.ImageTransparency
+		end
+		snap[#snap + 1] = e
+	end
+	cap(root)
+	for _, d in ipairs(root:GetDescendants()) do cap(d) end
+	return snap
+end
+
+local function setAlpha(snap, v)
+	for _, e in ipairs(snap) do
+		if e.tx ~= nil then e.d.TextTransparency = (v == nil) and e.tx or v end
+		if e.im ~= nil then e.d.ImageTransparency = (v == nil) and e.im or v end
+		if e.bg ~= nil then e.d.BackgroundTransparency = (v == nil) and e.bg or v end
+	end
+end
+
+-- 依次入场：从下方 dy 处落下 + 淡入。
+-- 用 task.wait 而不是 task.delay —— 假时钟不推进时动画也能走完，测试才测得准
+-- 记住每个元素"本来该在哪"：反复入场（切页 / 重启）时不会越滑越偏
+local BASE_POS = setmetatable({}, { __mode = "k" })
+
+local function slideIn(obj, dy, waitSec, dur)
+	if not obj then return end
+	local base = BASE_POS[obj]
+	if not base then
+		base = obj.Position
+		BASE_POS[obj] = base
+	end
+	local snap = alphaSnapshot(obj)
+	obj.Position = UDim2.new(base.X.Scale, base.X.Offset, base.Y.Scale, base.Y.Offset + (dy or 10))
+	setAlpha(snap, 1)
+	task.spawn(function()
+		if waitSec and waitSec > 0 then task.wait(waitSec) end
+		if not obj.Parent then return end
+		local info = TweenInfo.new(dur or 0.34, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+		TweenService:Create(obj, info, { Position = base }):Play()
+		for _, e in ipairs(snap) do
+			local props = {}
+			if e.tx ~= nil then props.TextTransparency = e.tx end
+			if e.im ~= nil then props.ImageTransparency = e.im end
+			if e.bg ~= nil then props.BackgroundTransparency = e.bg end
+			TweenService:Create(e.d, info, props):Play()
+		end
+	end)
+end
+
+local function staggerIn(objs, dy, step, dur)
+	step = step or 0.05
+	for i, o in ipairs(objs) do
+		slideIn(o, dy, (i - 1) * step, dur)
+	end
+end
+
+-- 悬停：背景 / 描边 / 文字 / 缩放 四件套一起过渡，全站统一手感
+local function bindHover(btn, spec)
+	local info  = spec.Info or EASE.soft
+	local baseBg   = spec.Bg and spec.Bg[1]
+	local hoverBg  = spec.Bg and spec.Bg[2]
+	local baseStr  = spec.Stroke and spec.Stroke.Color
+	local baseTxt  = spec.Label and spec.Label.TextColor3
+	local scale    = spec.Scale
+
+	local function apply(on)
+		if baseBg then tween(btn, info, { BackgroundColor3 = on and hoverBg or baseBg }) end
+		if baseStr then tween(spec.Stroke, info, { Color = on and spec.StrokeOn or baseStr }) end
+		if baseTxt then tween(spec.Label, info, { TextColor3 = on and spec.LabelOn or baseTxt }) end
+		if scale then tween(scale, info, { Scale = on and (spec.ScaleOn or 1.04) or 1 }) end
+	end
+	btn.MouseEnter:Connect(function() apply(true) end)
+	btn.MouseLeave:Connect(function() apply(false) end)
+end
+
+-- 点击涟漪：从手指 / 光标落点扩散一圈
+local function ripple(btn, x, y, color)
+	local size = math.max(btn.AbsoluteSize.X, btn.AbsoluteSize.Y) * 1.8
+	local r = new("Frame", {
+		Name = "Ripple",
+		Size = UDim2.new(0, 0, 0, 0),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, x, 0, y),
+		BackgroundColor3 = color or C.White,
+		BackgroundTransparency = 0.84,
+		BorderSizePixel = 0,
+		ZIndex = (btn.ZIndex or 1) + 5,
+		Parent = btn,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = r })
+	tween(r, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, size, 0, size),
+		BackgroundTransparency = 1,
+	})
+	task.delay(0.5, function() pcall(function() r:Destroy() end) end)
+end
+
+-- 按钮统一"按下反馈" + 涟漪（鼠标 / 触摸都吃）
+local function bindPress(btn, color)
+	btn.MouseButton1Down:Connect(function(x, y)
+		local px = (type(x) == "number") and (x - btn.AbsolutePosition.X) or btn.AbsoluteSize.X * 0.5
+		local py = (type(y) == "number") and (y - btn.AbsolutePosition.Y) or btn.AbsoluteSize.Y * 0.5
+		ripple(btn, px, py, color)
+	end)
+end
+
+-- 一条会呼吸的强调线（用于"正在运行"这类状态，不是纯装饰）
+local function breathe(obj, lo, hi, dur)
+	local a, b = lo or 0.35, hi or 1
+	local t = TweenService:Create(obj, TweenInfo.new(dur or 0.9, Enum.EasingStyle.Sine,
+		Enum.EasingDirection.InOut, -1, true), { BackgroundTransparency = b })
+	obj.BackgroundTransparency = a
+	t:Play()
+	return t
+end
+
 --========================== 图标资源 ==========================
 -- 把内联的 base64 图片写进执行器工作目录，再用 getcustomasset 换成可用资源。
 -- 不支持的执行器会自动回退成代码绘制的 O 字 LOGO。
@@ -675,7 +1092,8 @@ end
 local ASSET_TRIED, ASSET_CACHE = {}, {}
 
 -- 各资源的文件扩展名（getcustomasset 靠它判断类型）
-local ASSET_EXT = { icon = "jpg", flag_us = "png", flag_cn = "png" }
+local ASSET_EXT = { icon = "jpg", flag_us = "png", flag_cn = "png",
+	sfx_notify = "mp3", sfx_close = "mp3" }
 
 local function getAsset(key)
 	if ASSET_TRIED[key] then return ASSET_CACHE[key] end
@@ -750,10 +1168,58 @@ end
 
 local function getIconAsset() return getAsset("icon") end
 
+--========================== 音效 ==========================
+-- Sound.SoundId 吃 getcustomasset 的返回值（rbxasset://...）。
+-- 拿不到资源 / 播放失败都只是没声音，绝不报错、绝不挡住界面。
+local SFX_FOLDER
+
+local function sfxFolder()
+	if SFX_FOLDER and SFX_FOLDER.Parent then return SFX_FOLDER end
+	local ok, f = pcall(function()
+		local folder = Instance.new("Folder")
+		folder.Name = "O_X_HUB_SFX"
+		folder.Parent = game:GetService("SoundService")
+		return folder
+	end)
+	SFX_FOLDER = ok and f or nil
+	return SFX_FOLDER
+end
+
+-- 结束脚本时用：先别把音效容器删了，让最后那声放完
+local function releaseSfxFolder()
+	local f = SFX_FOLDER
+	SFX_FOLDER = nil
+	if f then
+		task.delay(3, function() pcall(function() f:Destroy() end) end)
+	end
+end
+
+local function playSfx(key, volume)
+	if not CONFIG.Sound then return nil end
+	local parent = sfxFolder()
+	if not parent then return nil end
+	local id = getAsset(key)
+	if not id then return nil end
+
+	local ok, snd = pcall(function()
+		local s = Instance.new("Sound")
+		s.Name = "O_X_HUB_SFX_" .. key
+		s.SoundId = id
+		s.Volume = volume or 0.5
+		s.Parent = parent
+		s:Play()
+		return s
+	end)
+	if not ok or not snd then return nil end
+	task.delay(6, function() pcall(function() snd:Destroy() end) end)
+	return snd
+end
+
+
 -- 统一的 LOGO：有图标就用图标，没有就代码画一个
 local function createLogo(parent, opts)
 	opts = opts or {}
-	local radius = opts.Radius or 8
+	local radius = opts.Radius or R.ctl
 
 	local holder = new("Frame", {
 		Name = "Logo",
@@ -789,6 +1255,9 @@ local function createLogo(parent, opts)
 			Parent = holder,
 		})
 	end
+
+	-- 一圈很淡的描边：让 LOGO 在深底上有边界感。不用发光，发光容易糊
+	new("UIStroke", { Color = C.Stroke2, Thickness = 1, Transparency = 0.4, Parent = holder })
 	return holder
 end
 
@@ -825,6 +1294,7 @@ local function createFlag(parent, assetKey, size, pos, anchor, radius, fallbackT
 			Parent = box,
 		})
 	end
+	new("UIStroke", { Color = C.Stroke2, Thickness = 1, Transparency = 0.5, Parent = box })
 	return box
 end
 
@@ -866,14 +1336,14 @@ local function createSlider(parent, opts)
 
 	local hit = new("Frame", {
 		Name = "SliderHit",
-		Size = UDim2.new(1, 0, 0, 22),
+		Size = UDim2.new(1, 0, 0, 26),
 		Position = opts.Position,
 		BackgroundTransparency = 1,
 		Parent = parent,
 	})
 
 	local track = new("Frame", {
-		Size = UDim2.new(1, 0, 0, 6),
+		Size = UDim2.new(1, 0, 0, 5),
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, 0, 0.5, 0),
 		BackgroundColor3 = C.Card2,
@@ -891,17 +1361,20 @@ local function createSlider(parent, opts)
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = fill })
 	new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Parent = fill })
 
+	-- 旋钮：拖动 / 悬停时放大，给一点"抓住了"的手感
 	local knob = new("Frame", {
-		Size = UDim2.new(0, 14, 0, 14),
+		Name = "SliderKnob",
+		Size = UDim2.new(0, 15, 0, 15),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0, 0, 0.5, 0),
 		BackgroundColor3 = C.White,
 		BorderSizePixel = 0,
-		ZIndex = 2,
+		ZIndex = 3,
 		Parent = hit,
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = knob })
-	new("UIStroke", { Color = C.Accent, Thickness = 2, Parent = knob })
+	local knobStroke = new("UIStroke", { Color = C.Accent, Thickness = 2, Parent = knob })
+	local knobScale  = new("UIScale", { Scale = 1, Parent = knob })
 
 	local dragging = false
 
@@ -910,9 +1383,7 @@ local function createSlider(parent, opts)
 		local frac = math.clamp(toFrac(v), 0, 1)
 		fill.Size = UDim2.new(frac, 0, 1, 0)
 		knob.Position = UDim2.new(frac, 0, 0.5, 0)
-		if fire and opts.OnChange then
-			opts.OnChange(v)
-		end
+		if fire and opts.OnChange then opts.OnChange(v) end
 		return v
 	end
 
@@ -927,6 +1398,8 @@ local function createSlider(parent, opts)
 		if input.UserInputType == Enum.UserInputType.MouseButton1
 			or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
+			tween(knobScale, EASE.soft, { Scale = 1.34 })
+			tween(knobStroke, EASE.soft, { Thickness = 3 })
 			fromInput(input)
 		end
 	end)
@@ -943,6 +1416,8 @@ local function createSlider(parent, opts)
 		if input.UserInputType == Enum.UserInputType.MouseButton1
 			or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = false
+			tween(knobScale, EASE.pop, { Scale = 1 })
+			tween(knobStroke, EASE.soft, { Thickness = 2 })
 		end
 	end)
 
@@ -952,12 +1427,16 @@ end
 
 --========================== 按钮组件 ==========================
 local function createButton(parent, opts)
-	local style = opts.Style or "ghost"
-	local baseBg = C.Card
-	local hoverBg = C.Card2
+	local style  = opts.Style or "ghost"
+	local radius = opts.Radius or R.ctl
+
+	local baseBg, hoverBg
 	if style == "primary" then
-		baseBg = C.Accent
-		hoverBg = Color3.fromRGB(245, 70, 88)
+		baseBg, hoverBg = C.Accent, Color3.fromRGB(244, 74, 92)
+	elseif style == "solid" then
+		baseBg, hoverBg = C.Raised, C.Card2
+	else
+		baseBg, hoverBg = C.Card, C.Card2
 	end
 
 	local btn = new("TextButton", {
@@ -968,11 +1447,13 @@ local function createButton(parent, opts)
 		BorderSizePixel = 0,
 		AutoButtonColor = false,
 		Text = "",
+		ClipsDescendants = true,      -- 涟漪要裁在圆角里
+		ZIndex = opts.ZIndex or 1,
 		Parent = parent,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, opts.Radius or 10), Parent = btn })
+	new("UICorner", { CornerRadius = UDim.new(0, radius), Parent = btn })
 	local stroke = new("UIStroke", {
-		Color = opts.StrokeColor or C.Stroke,
+		Color = opts.StrokeColor or (style == "primary" and C.Accent or C.Stroke),
 		Thickness = 1,
 		Parent = btn,
 	})
@@ -983,20 +1464,20 @@ local function createButton(parent, opts)
 		Text = opts.Text or "",
 		TextSize = opts.TextSize or 14,
 		Font = opts.Font or FONT_B,
-		TextColor3 = opts.TextColor or C.Text,
+		TextColor3 = opts.TextColor3 or opts.TextColor or C.Text,
+		ZIndex = 2,
 		Parent = btn,
 	})
 
-	btn.MouseEnter:Connect(function()
-		if style ~= "primary" then
-			TweenService:Create(btn, TweenInfo.new(0.15), { BackgroundColor3 = hoverBg }):Play()
-		end
-	end)
-	btn.MouseLeave:Connect(function()
-		if style ~= "primary" then
-			TweenService:Create(btn, TweenInfo.new(0.15), { BackgroundColor3 = baseBg }):Play()
-		end
-	end)
+	bindHover(btn, {
+		Bg       = { baseBg, hoverBg },
+		Stroke   = stroke,
+		StrokeOn = (style == "primary") and C.Accent2 or C.Stroke2,
+		Label    = label,
+		LabelOn  = (style == "primary") and C.White or C.Text,
+	})
+	bindPress(btn, (style == "primary") and C.White or C.Accent)
+
 	btn.MouseButton1Click:Connect(function()
 		if opts.OnClick then opts.OnClick() end
 	end)
@@ -1006,10 +1487,10 @@ end
 
 --========================== 开关组件 ==========================
 local function createSwitch(parent, opts)
-	local width = 40
+	local width, height = 40, 22
 	local holder = new("TextButton", {
 		Name = opts.Name or "Switch",
-		Size = UDim2.new(0, width, 0, 22),
+		Size = UDim2.new(0, width, 0, height),
 		Position = opts.Position,
 		BackgroundColor3 = C.Card2,
 		BorderSizePixel = 0,
@@ -1018,8 +1499,10 @@ local function createSwitch(parent, opts)
 		Parent = parent,
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = holder })
+	local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = holder })
 
 	local knob = new("Frame", {
+		Name = "SwitchKnob",
 		Size = UDim2.new(0, 16, 0, 16),
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, 3, 0.5, 0),
@@ -1032,12 +1515,13 @@ local function createSwitch(parent, opts)
 	local state = opts.Default and true or false
 
 	local function render(animate)
-		local info = TweenInfo.new(animate and 0.18 or 0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		TweenService:Create(holder, info, { BackgroundColor3 = state and C.Green or C.Card2 }):Play()
-		TweenService:Create(knob, info, {
+		local info = animate and EASE.pop or EASE.fast
+		tween(holder, info, { BackgroundColor3 = state and C.Accent or C.Card2 })
+		tween(stroke, info, { Color = state and C.Accent2 or C.Stroke })
+		tween(knob, info, {
 			Position = state and UDim2.new(0, width - 19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
 			BackgroundColor3 = state and C.White or C.Sub,
-		}):Play()
+		})
 	end
 
 	holder.MouseButton1Click:Connect(function()
@@ -1061,55 +1545,132 @@ local boot, unloadAll, restart
 --========================== 提示条 ==========================
 -- 单独一个 ScreenGui（不挂在主 GUI 下），这样主窗口隐藏时提示照样能弹。
 -- 它在 boot 里创建，所以这里只写函数体。
+--========================== 右下角提示 ==========================
+-- 单独一个 ScreenGui（不挂在主 GUI 下），主窗口隐藏时提示照样能弹。
+-- 它在 boot 里创建，所以这里只写函数体。
+local TOASTS = {}
+local TOAST_W, TOAST_H, TOAST_GAP = 288, 52, 8
+
+local function relayoutToasts()
+	local step = TOAST_H + TOAST_GAP
+	local y = 0
+	for _, o in ipairs(TOASTS) do
+		o.y = y
+		tween(o.frame, EASE.out, { Position = UDim2.new(1, 0, 1, -y) })
+		y = y + step
+	end
+end
+
+local function dismissToast(t)
+	for i, o in ipairs(TOASTS) do
+		if o == t then table.remove(TOASTS, i) break end
+	end
+	tween(t.frame, EASE.gone, { Position = UDim2.new(1, 40, 1, -t.y) })
+	for _, e in ipairs(t.snap) do
+		local props = {}
+		if e.tx ~= nil then props.TextTransparency = 1 end
+		if e.im ~= nil then props.ImageTransparency = 1 end
+		if e.bg ~= nil then props.BackgroundTransparency = 1 end
+		TweenService:Create(e.d, EASE.gone, props):Play()
+	end
+	task.delay(0.3, function() pcall(function() t.frame:Destroy() end) end)
+	relayoutToasts()
+end
+
 notify = function(text, color)
-	if SHUTDOWN then return end
-	local box = new("Frame", {
-		Size = UDim2.fromScale(1, 1),
-		Position = UDim2.new(0, 0, 0, -22),
-		BackgroundColor3 = C.Window,
+	if SHUTDOWN or not notifyHolder then return end
+	color = color or C.Accent
+
+	-- 旧的往上让一格
+	local step = TOAST_H + TOAST_GAP
+	for _, o in ipairs(TOASTS) do
+		o.y = o.y + step
+		tween(o.frame, EASE.out, { Position = UDim2.new(1, 0, 1, -o.y) })
+	end
+
+	local frame = new("Frame", {
+		Name = "Toast",
+		Size = UDim2.new(1, 0, 0, TOAST_H),
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, 44, 1, 0),      -- 先摆在屏幕右侧外面
+		BackgroundColor3 = C.Raised,
 		BorderSizePixel = 0,
-		ZIndex = 50,
+		ZIndex = 60,
 		Parent = notifyHolder,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = box })
-	new("UIStroke", { Color = color or C.Accent, Thickness = 1, Parent = box })
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = frame })
+	new("UIStroke", { Color = color, Thickness = 1, Transparency = 0.55, Parent = frame })
+
+	-- 左侧色条：颜色即语义（成功绿 / 失败红 / 普通红）
 	new("Frame", {
-		Size = UDim2.new(0, 4, 1, -16),
-		Position = UDim2.new(0, 6, 0, 8),
-		BackgroundColor3 = color or C.Accent,
+		Name = "ToastBar",
+		Size = UDim2.new(0, 3, 1, -18),
+		Position = UDim2.new(0, 7, 0, 9),
+		BackgroundColor3 = color,
 		BorderSizePixel = 0,
-		ZIndex = 50,
-		Parent = box,
+		ZIndex = 61,
+		Parent = frame,
 	})
+
 	new("TextLabel", {
-		Size = UDim2.new(1, -26, 1, 0),
-		Position = UDim2.new(0, 18, 0, 0),
+		Size = UDim2.new(1, -34, 1, -8),
+		Position = UDim2.new(0, 20, 0, 4),
 		BackgroundTransparency = 1,
 		Text = text,
 		TextSize = 13,
 		Font = FONT_N,
 		TextColor3 = C.Text,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		ZIndex = 50,
-		Parent = box,
+		TextYAlignment = Enum.TextYAlignment.Center,
+		TextWrapped = true,
+		ZIndex = 61,
+		Parent = frame,
 	})
 
-	local info = TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(box, info, { Position = UDim2.new(0, 0, 0, 0) }):Play()
-	task.delay(2.4, function()
-		if not box.Parent then return end
-		local out = TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-		local t1 = TweenService:Create(box, out, { Position = UDim2.new(0, 0, 0, -22) })
-		t1:Play()
-		t1.Completed:Wait()
-		box:Destroy()
+	-- 底部倒计时细线
+	local bar = new("Frame", {
+		Size = UDim2.new(1, -14, 0, 2),
+		Position = UDim2.new(0, 7, 1, -6),
+		BackgroundColor3 = color,
+		BackgroundTransparency = 0.5,
+		BorderSizePixel = 0,
+		ZIndex = 61,
+		Parent = frame,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
+
+	local t = { frame = frame, y = 0, snap = nil }
+	table.insert(TOASTS, 1, t)
+
+	-- 入场：从右侧滑进来
+	t.snap = alphaSnapshot(frame)
+	setAlpha(t.snap, 1)
+	task.spawn(function()
+		task.wait(0.02)
+		if not frame.Parent then return end
+		TweenService:Create(frame, EASE.pop, { Position = UDim2.new(1, 0, 1, 0) }):Play()
+		for _, e in ipairs(t.snap) do
+			local props = {}
+			if e.tx ~= nil then props.TextTransparency = e.tx end
+			if e.im ~= nil then props.ImageTransparency = e.im end
+			if e.bg ~= nil then props.BackgroundTransparency = e.bg end
+			TweenService:Create(e.d, EASE.pop, props):Play()
+		end
+	end)
+
+	tween(bar, TweenInfo.new(3.2, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 0, 2) })
+	playSfx("sfx_notify", CONFIG.SoundNotify)
+
+	task.delay(3.4, function()
+		if frame.Parent then dismissToast(t) end
 	end)
 end
 
 --=====================================================================
---  一、加载动画
+--  一、开机动画（终端启动序列）
 --=====================================================================
 -- opts = { Title, Subtitle, Stages = {{text, pct, dur}, ...} }
+-- 固定 720×420 画布 + UIScale，任何屏幕比例都不会散
 local function createLoadingScreen(opts, onDone)
 	opts = opts or {}
 	local gui = new("ScreenGui", {
@@ -1122,17 +1683,19 @@ local function createLoadingScreen(opts, onDone)
 	})
 
 	local bg = new("Frame", {
+		Name = "Boot",
 		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = C.Bg,
+		BackgroundColor3 = C.Void,
 		BorderSizePixel = 0,
 		Parent = gui,
 	})
 
+	-- 顶部一层很淡的氛围光：只压一点暖色，不做霓虹
 	local glow = new("Frame", {
-		Size = UDim2.new(1, 0, 0, 220),
-		Position = UDim2.new(0, 0, 0, -160),
+		Size = UDim2.new(1, 0, 0, 340),
+		Position = UDim2.new(0, 0, 0, -220),
 		BackgroundColor3 = C.Accent,
-		BackgroundTransparency = 0.93,
+		BackgroundTransparency = 0.94,
 		BorderSizePixel = 0,
 		Parent = bg,
 	})
@@ -1145,53 +1708,153 @@ local function createLoadingScreen(opts, onDone)
 		Parent = glow,
 	})
 
-	local container = new("Frame", {
-		Size = UDim2.new(0, 340, 0, 200),
+	local stage = new("Frame", {
+		Name = "BootStage",
+		Size = UDim2.new(0, 720, 0, 420),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
 		BackgroundTransparency = 1,
 		Parent = bg,
 	})
+	local stageScale = new("UIScale", { Scale = 1, Parent = stage })
+	local function fitStage()
+		local cam = workspace.CurrentCamera
+		if not cam then return end
+		local vp = cam.ViewportSize
+		stageScale.Scale = math.clamp(math.min(vp.X / 800, vp.Y / 520), 0.45, 1.4)
+	end
+	fitStage()
 
-	createLogo(container, {
-		Size = UDim2.new(0, 68, 0, 68),
-		Position = UDim2.new(0.5, 0, 0, 0),
-		AnchorPoint = Vector2.new(0.5, 0),
-		Radius = 20,
-		TextSize = 36,
+	-- 扫过整屏的一条细光带：暗示"正在跑"
+	local scan = new("Frame", {
+		Name = "Scan",
+		Size = UDim2.new(1, 0, 0, 2),
+		Position = UDim2.new(0, 0, 0, -8),
+		BackgroundColor3 = C.Accent,
+		BackgroundTransparency = 0.8,
+		BorderSizePixel = 0,
+		ZIndex = 1,
+		Parent = stage,
 	})
+	new("UIGradient", {
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = scan,
+	})
+	tween(scan, TweenInfo.new(2.1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1),
+		{ Position = UDim2.new(0, 0, 0, 420) })
 
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 26),
-		Position = UDim2.new(0.5, 0, 0, 80),
-		AnchorPoint = Vector2.new(0.5, 0),
+	-- ---------- 品牌区 ----------
+	local logo = createLogo(stage, {
+		Size = UDim2.new(0, 62, 0, 62),
+		Position = UDim2.new(0, 0, 0, 6),
+		Radius = 18,
+		TextSize = 30,
+	})
+	local brand = new("TextLabel", {
+		Size = UDim2.new(0, 460, 0, 36),
+		Position = UDim2.new(0, 78, 0, 8),
 		BackgroundTransparency = 1,
 		Text = opts.Title or CONFIG.Title,
-		TextSize = 21,
+		TextSize = 28,
 		Font = FONT_B,
 		TextColor3 = C.Text,
-		Parent = container,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = stage,
 	})
-
-	local status = new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0.5, 0, 0, 108),
-		AnchorPoint = Vector2.new(0.5, 0),
+	local subtitle = new("TextLabel", {
+		Size = UDim2.new(0, 460, 0, 18),
+		Position = UDim2.new(0, 79, 0, 44),
 		BackgroundTransparency = 1,
 		Text = opts.Subtitle or L("loading"),
-		TextSize = 13,
-		Font = FONT_N,
-		TextColor3 = C.Sub,
-		Parent = container,
+		TextSize = 12,
+		Font = FONT_M,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = stage,
 	})
 
+	local rule = new("Frame", {
+		Size = UDim2.new(0, 44, 0, 3),
+		Position = UDim2.new(0, 0, 0, 84),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		Parent = stage,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = rule })
+	tween(rule, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ Size = UDim2.new(0, 132, 0, 3) })
+
+	-- ---------- 终端面板 ----------
+	local term = new("Frame", {
+		Name = "BootTerm",
+		Size = UDim2.new(1, 0, 0, 130),
+		Position = UDim2.new(0, 0, 0, 112),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		Parent = stage,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = term })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = term })
+
+	local termLines = {}
+	local function addLine(text)
+		local y = 16 + #termLines * 21
+		local row = new("Frame", {
+			Name = "TermRow",
+			Size = UDim2.new(1, -28, 0, 18),
+			Position = UDim2.new(0, 14, 0, y),
+			BackgroundTransparency = 1,
+			Parent = term,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(0, 12, 1, 0),
+			BackgroundTransparency = 1,
+			Text = ">",
+			TextSize = 12,
+			Font = FONT_M,
+			TextColor3 = C.Accent,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = row,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -76, 1, 0),
+			Position = UDim2.new(0, 16, 0, 0),
+			BackgroundTransparency = 1,
+			Text = text,
+			TextSize = 12,
+			Font = FONT_M,
+			TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = row,
+		})
+		local mark = new("TextLabel", {
+			Size = UDim2.new(0, 56, 1, 0),
+			Position = UDim2.new(1, -56, 0, 0),
+			BackgroundTransparency = 1,
+			Text = "...",
+			TextSize = 11,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Right,
+			Parent = row,
+		})
+		slideIn(row, 6, 0, 0.22)
+		table.insert(termLines, { row = row, mark = mark })
+		return mark
+	end
+
+	-- ---------- 进度条 ----------
 	local track = new("Frame", {
-		Size = UDim2.new(0, 300, 0, 6),
-		Position = UDim2.new(0.5, 0, 0, 140),
-		AnchorPoint = Vector2.new(0.5, 0),
+		Size = UDim2.new(1, -72, 0, 6),
+		Position = UDim2.new(0, 0, 0, 356),
 		BackgroundColor3 = C.Card2,
 		BorderSizePixel = 0,
-		Parent = container,
+		Parent = stage,
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = track })
 
@@ -1204,34 +1867,50 @@ local function createLoadingScreen(opts, onDone)
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = fill })
 	new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Parent = fill })
 
+	local head = new("Frame", {
+		Size = UDim2.new(0, 10, 0, 10),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, 0, 0.5, 0),
+		BackgroundColor3 = C.White,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+		Parent = track,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = head })
+
 	local percent = new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 14),
-		Position = UDim2.new(0.5, 0, 0, 154),
-		AnchorPoint = Vector2.new(0.5, 0),
+		Size = UDim2.new(0, 64, 0, 16),
+		Position = UDim2.new(1, 0, 0, 351),
 		BackgroundTransparency = 1,
 		Text = "0%",
 		TextSize = 12,
-		Font = FONT_N,
+		Font = FONT_M,
 		TextColor3 = C.Sub,
-		Parent = container,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = stage,
 	})
 
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 14),
-		Position = UDim2.new(0.5, 0, 1, -18),
-		AnchorPoint = Vector2.new(0.5, 0),
+	local version = new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0, 0, 1, -22),
 		BackgroundTransparency = 1,
-		Text = (opts.Title or CONFIG.Title) .. "  " .. CONFIG.Version,
+		Text = CONFIG.Title .. "   " .. CONFIG.Version,
 		TextSize = 11,
-		Font = FONT_N,
-		TextColor3 = Color3.fromRGB(70, 74, 90),
-		Parent = container,
+		Font = FONT_M,
+		TextColor3 = Color3.fromRGB(66, 68, 80),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = stage,
 	})
+
+	-- 品牌区依次落下
+	staggerIn({ logo, brand, subtitle, rule }, 14, 0.06, 0.4)
+	slideIn(term, 18, 0.18, 0.42)
 
 	local current = 0
 	local function setPct(v)
 		current = v
 		fill.Size = UDim2.new(v / 100, 0, 1, 0)
+		head.Position = UDim2.new(v / 100, 0, 0.5, 0)
 		percent.Text = string.format("%d%%", math.floor(v + 0.5))
 	end
 	setPct(0)
@@ -1243,13 +1922,10 @@ local function createLoadingScreen(opts, onDone)
 		local conn = nv:GetPropertyChangedSignal("Value"):Connect(function()
 			setPct(start + (target - start) * nv.Value)
 		end)
-		local tween = TweenService:Create(
-			nv,
-			TweenInfo.new(dur, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-			{ Value = 1 }
-		)
-		tween:Play()
-		tween.Completed:Wait()
+		local tw = TweenService:Create(nv,
+			TweenInfo.new(dur, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Value = 1 })
+		tw:Play()
+		tw.Completed:Wait()
 		conn:Disconnect()
 		nv:Destroy()
 		setPct(target)
@@ -1264,27 +1940,31 @@ local function createLoadingScreen(opts, onDone)
 	}
 
 	task.spawn(function()
-		task.wait(0.15)
-		for _, s in ipairs(stages) do
-			status.Text = s[1]
-			animateTo(s[2], s[3])
-			task.wait(0.03)
+		task.wait(0.2)
+		for _, st in ipairs(stages) do
+			subtitle.Text = st[1]
+			local mark = addLine(st[1])
+			animateTo(st[2], st[3])
+			mark.Text = "OK"
+			mark.TextColor3 = C.Green
+			task.wait(0.04)
 		end
-		task.wait(0.25)
+		task.wait(0.3)
 
-		local fadeInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		TweenService:Create(bg, fadeInfo, { BackgroundTransparency = 1 }):Play()
-		TweenService:Create(glow, fadeInfo, { BackgroundTransparency = 1 }):Play()
-		for _, d in ipairs(container:GetDescendants()) do
+		-- 整屏淡出
+		local fade = TweenInfo.new(0.42, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		TweenService:Create(bg, fade, { BackgroundTransparency = 1 }):Play()
+		TweenService:Create(glow, fade, { BackgroundTransparency = 1 }):Play()
+		for _, d in ipairs(stage:GetDescendants()) do
 			if d:IsA("TextLabel") then
-				TweenService:Create(d, fadeInfo, { TextTransparency = 1 }):Play()
+				TweenService:Create(d, fade, { TextTransparency = 1 }):Play()
 			elseif d:IsA("Frame") then
-				TweenService:Create(d, fadeInfo, { BackgroundTransparency = 1 }):Play()
+				TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
 			elseif d:IsA("ImageLabel") then
-				TweenService:Create(d, fadeInfo, { ImageTransparency = 1 }):Play()
+				TweenService:Create(d, fade, { ImageTransparency = 1 }):Play()
 			end
 		end
-		task.wait(0.45)
+		task.wait(0.46)
 		gui:Destroy()
 		if onDone then onDone() end
 	end)
@@ -1292,7 +1972,8 @@ end
 
 --=====================================================================
 --  一·五、语言选择（注入后的第一屏）
---  两种语言都要露脸，所以这一屏不做翻译，中英并排写
+--  两种语言都要露脸，所以这一屏不做翻译，中英并排写。
+--  固定 760×440 画布 + UIScale，手机 / 电脑都是同一套构图。
 --=====================================================================
 local LANG_CHOICES = {
 	{ key = "en", flag = "flag_us", name = "English", desc = "English" },
@@ -1310,23 +1991,23 @@ local function createLanguageScreen(onPick)
 	})
 
 	local bg = new("Frame", {
+		Name = "LangBg",
 		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = C.Bg,
+		BackgroundColor3 = C.Void,
 		BorderSizePixel = 0,
 		Parent = gui,
 	})
 
-	-- 顶部光晕，跟加载页一个味道
 	local glow = new("Frame", {
-		Size = UDim2.new(1, 0, 0, 260),
-		Position = UDim2.new(0, 0, 0, -190),
+		Size = UDim2.new(0, 900, 0, 520),
+		Position = UDim2.new(0, -260, 0, -260),
 		BackgroundColor3 = C.Accent,
-		BackgroundTransparency = 0.9,
+		BackgroundTransparency = 0.93,
 		BorderSizePixel = 0,
 		Parent = bg,
 	})
 	new("UIGradient", {
-		Rotation = 90,
+		Rotation = 45,
 		Transparency = NumberSequence.new({
 			NumberSequenceKeypoint.new(0, 0),
 			NumberSequenceKeypoint.new(1, 1),
@@ -1334,129 +2015,177 @@ local function createLanguageScreen(onPick)
 		Parent = glow,
 	})
 
-	local card = new("Frame", {
-		Name = "LangCard",
-		Size = UDim2.new(0, 430, 0, 372),
+	local stage = new("Frame", {
+		Name = "LangStage",
+		Size = UDim2.new(0, 760, 0, 440),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		BackgroundColor3 = C.Window,
-		BorderSizePixel = 0,
+		BackgroundTransparency = 1,
 		Parent = bg,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 18), Parent = card })
-	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = card })
+	local stageScale = new("UIScale", { Scale = 1, Parent = stage })
+	local function fitStage()
+		local cam = workspace.CurrentCamera
+		if not cam then return end
+		local vp = cam.ViewportSize
+		stageScale.Scale = math.clamp(math.min(vp.X / 830, vp.Y / 510), 0.42, 1.35)
+	end
+	fitStage()
 
-	-- 中间：醒目的图标 + O_X HUB（这个名字不翻译）
-	createLogo(card, {
-		Size = UDim2.new(0, 104, 0, 104),
-		Position = UDim2.new(0.5, 0, 0, 34),
-		AnchorPoint = Vector2.new(0.5, 0),
-		Radius = 28,
-		TextSize = 50,
+	-- 左右两栏之间一条极细的分隔线（分隔真实内容，不是装饰）
+	new("Frame", {
+		Size = UDim2.new(0, 1, 1, -150),
+		Position = UDim2.new(0, 348, 0, 75),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = stage,
 	})
 
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 34),
-		Position = UDim2.new(0.5, 0, 0, 152),
-		AnchorPoint = Vector2.new(0.5, 0),
+	-- ---------- 左：品牌 ----------
+	local logo = createLogo(stage, {
+		Size = UDim2.new(0, 92, 0, 92),
+		Position = UDim2.new(0, 22, 0, 86),
+		Radius = 26,
+		TextSize = 44,
+	})
+	local brand = new("TextLabel", {
+		Size = UDim2.new(0, 300, 0, 42),
+		Position = UDim2.new(0, 22, 0, 196),
 		BackgroundTransparency = 1,
-		Text = CONFIG.Title,
-		TextSize = 28,
+		Text = CONFIG.Title,               -- 这个名字两种语言都不翻译
+		TextSize = 34,
 		Font = FONT_B,
 		TextColor3 = C.Text,
-		Parent = card,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = stage,
+	})
+	local rule = new("Frame", {
+		Size = UDim2.new(0, 46, 0, 3),
+		Position = UDim2.new(0, 24, 0, 246),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		Parent = stage,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = rule })
+
+	local tagline = new("TextLabel", {
+		Size = UDim2.new(0, 300, 0, 18),
+		Position = UDim2.new(0, 23, 0, 262),
+		BackgroundTransparency = 1,
+		Text = CONFIG.Title .. "  " .. CONFIG.Version,
+		TextSize = 12,
+		Font = FONT_M,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = stage,
 	})
 
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0.5, 0, 0, 190),
-		AnchorPoint = Vector2.new(0.5, 0),
+	-- ---------- 右：语言 ----------
+	local prompt = new("TextLabel", {
+		Size = UDim2.new(0, 340, 0, 18),
+		Position = UDim2.new(0, 396, 0, 92),
 		BackgroundTransparency = 1,
 		Text = "选择语言  /  Select language",
 		TextSize = 12,
 		Font = FONT_N,
 		TextColor3 = C.Dim,
-		Parent = card,
-	})
-
-	local row = new("Frame", {
-		Name = "LangRow",
-		Size = UDim2.new(0, 316, 0, 106),
-		Position = UDim2.new(0.5, 0, 0, 228),
-		AnchorPoint = Vector2.new(0.5, 0),
-		BackgroundTransparency = 1,
-		Parent = card,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = stage,
 	})
 
 	local picking = false
 	local function pick(key)
 		if picking then return end
 		picking = true
-		TweenService:Create(
-			card,
-			TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-			{ BackgroundTransparency = 1 }
-		):Play()
-		TweenService:Create(
-			bg,
-			TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-			{ BackgroundTransparency = 1 }
-		):Play()
-		task.delay(0.22, function()
+		playSfx("sfx_notify", 0.32)
+		local fade = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		TweenService:Create(stage, fade, { Position = UDim2.new(0.5, 0, 0.5, -14) }):Play()
+		TweenService:Create(bg, fade, { BackgroundTransparency = 1 }):Play()
+		TweenService:Create(glow, fade, { BackgroundTransparency = 1 }):Play()
+		for _, d in ipairs(stage:GetDescendants()) do
+			if d:IsA("TextLabel") then
+				TweenService:Create(d, fade, { TextTransparency = 1 }):Play()
+			elseif d:IsA("Frame") then
+				TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
+			elseif d:IsA("ImageLabel") then
+				TweenService:Create(d, fade, { ImageTransparency = 1 }):Play()
+			end
+		end
+		task.delay(0.24, function()
 			pcall(function() gui:Destroy() end)
 			onPick(key)
 		end)
 	end
 
+	local cards = {}
 	for i, opt in ipairs(LANG_CHOICES) do
 		local btn = new("TextButton", {
 			Name = "Pick_" .. opt.key,
-			Size = UDim2.new(0, 150, 0, 106),
-			Position = UDim2.new(0, (i - 1) * 166, 0, 0),
+			Size = UDim2.new(0, 340, 0, 92),
+			Position = UDim2.new(0, 396, 0, 122 + (i - 1) * 104),
 			BackgroundColor3 = C.Card,
 			BorderSizePixel = 0,
 			AutoButtonColor = false,
 			Text = "",
-			Parent = row,
+			ClipsDescendants = true,
+			Parent = stage,
 		})
-		new("UICorner", { CornerRadius = UDim.new(0, 12), Parent = btn })
+		new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = btn })
 		local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = btn })
 
-		-- 兜底文字用语言代码，不放汉字：英文模式下界面里一个汉字都不许有
-		createFlag(btn, opt.flag, UDim2.new(0, 64, 0, 42), UDim2.new(0.5, 0, 0, 16),
-			Vector2.new(0.5, 0), 6, opt.key == "zh" and "ZH" or "EN")
+		createFlag(btn, opt.flag, UDim2.new(0, 54, 0, 36), UDim2.new(0, 20, 0.5, 0),
+			Vector2.new(0, 0.5), 7, opt.key == "zh" and "ZH" or "EN")
 
 		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 20),
-			Position = UDim2.new(0, 0, 0, 66),
+			Size = UDim2.new(0, 200, 0, 22),
+			Position = UDim2.new(0, 90, 0, 26),
 			BackgroundTransparency = 1,
 			Text = opt.name,
-			TextSize = 15,
+			TextSize = 17,
 			Font = FONT_B,
 			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = btn,
 		})
 		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 14),
-			Position = UDim2.new(0, 0, 0, 86),
+			Size = UDim2.new(0, 200, 0, 16),
+			Position = UDim2.new(0, 91, 0, 50),
 			BackgroundTransparency = 1,
 			Text = opt.desc,
-			TextSize = 10,
+			TextSize = 11,
 			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = btn,
+		})
+		local arrow = new("TextLabel", {
+			Size = UDim2.new(0, 30, 0, 30),
+			Position = UDim2.new(1, -48, 0.5, -15),
+			BackgroundTransparency = 1,
+			Text = "→",
+			TextSize = 18,
+			Font = FONT_B,
 			TextColor3 = C.Dim,
 			Parent = btn,
 		})
 
+		-- 悬停：抬起来一点 + 描边亮起 + 箭头往右推
 		btn.MouseEnter:Connect(function()
-			btn.BackgroundColor3 = C.Card2
-			stroke.Color = C.Accent
+			tween(btn, EASE.soft, { BackgroundColor3 = C.Card2, Position = UDim2.new(0, 396, 0, 118 + (i - 1) * 104) })
+			tween(stroke, EASE.soft, { Color = C.Accent })
+			tween(arrow, EASE.soft, { TextColor3 = C.Accent, Position = UDim2.new(1, -40, 0.5, -15) })
 		end)
 		btn.MouseLeave:Connect(function()
-			btn.BackgroundColor3 = C.Card
-			stroke.Color = C.Stroke
+			tween(btn, EASE.soft, { BackgroundColor3 = C.Card, Position = UDim2.new(0, 396, 0, 122 + (i - 1) * 104) })
+			tween(stroke, EASE.soft, { Color = C.Stroke })
+			tween(arrow, EASE.soft, { TextColor3 = C.Dim, Position = UDim2.new(1, -48, 0.5, -15) })
 		end)
 		btn.MouseButton1Click:Connect(function() pick(opt.key) end)
+		cards[#cards + 1] = btn
 	end
+
+	staggerIn({ logo, brand, rule, tagline, prompt }, 16, 0.07, 0.42)
+	staggerIn(cards, 22, 0.09, 0.46)
 end
 
 --=====================================================================
@@ -1479,13 +2208,15 @@ boot = function(lang)
 		Parent = GUI_PARENT,
 	})
 
+	-- 提示条改成右下角一叠：新的在下，旧的往上顶
+	TOASTS = {}
 	notifyHolder = new("Frame", {
 		Name = "NotifyHolder",
-		Size = UDim2.new(0, 300, 0, 46),
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 22),
+		Size = UDim2.new(0, TOAST_W, 0, 1),
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -18, 1, -18),
 		BackgroundTransparency = 1,
-		ZIndex = 50,
+		ZIndex = 60,
 		Parent = notifyGui,
 	})
 
@@ -1523,10 +2254,28 @@ boot = function(lang)
 		BorderSizePixel = 0,
 		Parent = guiMain,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = window })
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = window })
 	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = window })
 
 	local uiScale = new("UIScale", { Scale = 1, Parent = window })
+
+	-- 顶栏压一条渐变强调线：软件感的来源，也把视觉重心拉到左边
+	local topRule = new("Frame", {
+		Name = "TopRule",
+		Size = UDim2.new(0, 190, 0, 2),
+		Position = UDim2.new(0, 14, 0, 0),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		ZIndex = 3,
+		Parent = window,
+	})
+	new("UIGradient", {
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = topRule,
+	})
 
 	-- 顶栏
 	local header = new("Frame", {
@@ -1536,7 +2285,7 @@ boot = function(lang)
 		BorderSizePixel = 0,
 		Parent = window,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = header })
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = header })
 	new("Frame", {
 		Size = UDim2.new(1, 0, 0, 14),
 		Position = UDim2.new(0, 0, 1, -14),
@@ -1561,7 +2310,7 @@ boot = function(lang)
 	})
 
 	new("TextLabel", {
-		Size = UDim2.new(0, 140, 1, 0),
+		Size = UDim2.new(0, 150, 1, 0),
 		Position = UDim2.new(0, 48, 0, 0),
 		BackgroundTransparency = 1,
 		Text = CONFIG.Title,
@@ -1573,12 +2322,12 @@ boot = function(lang)
 	})
 
 	new("TextLabel", {
-		Size = UDim2.new(0, 80, 1, 0),
-		Position = UDim2.new(1, -158, 0, 0),
+		Size = UDim2.new(0, 90, 1, 0),
+		Position = UDim2.new(1, -168, 0, 0),
 		BackgroundTransparency = 1,
 		Text = CONFIG.Version,
 		TextSize = 11,
-		Font = FONT_N,
+		Font = FONT_M,
 		TextColor3 = C.Dim,
 		TextXAlignment = Enum.TextXAlignment.Right,
 		Parent = header,
@@ -1601,16 +2350,10 @@ boot = function(lang)
 	})
 	new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = minBtn })
 	local minStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = minBtn })
-	minBtn.MouseEnter:Connect(function()
-		minBtn.BackgroundColor3 = C.Card2
-		minBtn.TextColor3 = C.Text
-		minStroke.Color = C.Dim
-	end)
-	minBtn.MouseLeave:Connect(function()
-		minBtn.BackgroundColor3 = C.Card
-		minBtn.TextColor3 = C.Sub
-		minStroke.Color = C.Stroke
-	end)
+	bindHover(minBtn, {
+		Bg = { C.Card, C.Card2 }, Stroke = minStroke, StrokeOn = C.Stroke2,
+		Label = minBtn, LabelOn = C.Text,
+	})
 
 	-- 关闭：真的结束 —— 停飞行、撤伤害保护、断开所有连接、销毁整个界面
 	local closeBtn = new("TextButton", {
@@ -1629,16 +2372,10 @@ boot = function(lang)
 	})
 	new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = closeBtn })
 	local closeStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = closeBtn })
-	closeBtn.MouseEnter:Connect(function()
-		closeBtn.BackgroundColor3 = C.Red
-		closeBtn.TextColor3 = C.White
-		closeStroke.Color = C.Red
-	end)
-	closeBtn.MouseLeave:Connect(function()
-		closeBtn.BackgroundColor3 = C.Card
-		closeBtn.TextColor3 = C.Sub
-		closeStroke.Color = C.Stroke
-	end)
+	bindHover(closeBtn, {
+		Bg = { C.Card, C.Red }, Stroke = closeStroke, StrokeOn = C.Red,
+		Label = closeBtn, LabelOn = C.White,
+	})
 
 	makeDraggable(window, header, function() return uiScale.Scale end)
 
@@ -1651,11 +2388,11 @@ boot = function(lang)
 		BorderSizePixel = 0,
 		Parent = window,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = sidebar })
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = sidebar })
 
 	new("TextLabel", {
 		Size = UDim2.new(1, -16, 0, 14),
-		Position = UDim2.new(0, 14, 0, 8),
+		Position = UDim2.new(0, 14, 0, 10),
 		BackgroundTransparency = 1,
 		Text = L("navGroup"),
 		TextSize = 10,
@@ -1664,6 +2401,18 @@ boot = function(lang)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = sidebar,
 	})
+
+	-- 会滑动的选中指示条：整份界面只有一条，跟着当前页走
+	local navIndicator = new("Frame", {
+		Name = "NavIndicator",
+		Size = UDim2.new(0, 3, 0, 18),
+		Position = UDim2.new(0, 0, 0, 35),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+		Parent = sidebar,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = navIndicator })
 
 	-- 内容区
 	local content = new("Frame", {
@@ -1695,12 +2444,21 @@ boot = function(lang)
 			page.Visible = (k == key)
 		end
 		for k, item in pairs(navItems) do
-			if pages[k] then
-				local active = (k == key)
-				item.bar.BackgroundTransparency = active and 0 or 1
-				item.label.TextColor3 = active and C.Text or C.Sub
-				item.btn.BackgroundColor3 = active and C.Card or C.Side
-			end
+			local active = (k == key)
+			tween(item.label, EASE.soft, { TextColor3 = active and C.Text or C.Sub })
+			tween(item.btn, EASE.soft, { BackgroundColor3 = active and C.Card or C.Side })
+		end
+
+		-- 指示条滑过去，而不是直接跳过去
+		local item = navItems[key]
+		if item then
+			tween(navIndicator, EASE.pop, { Position = UDim2.new(0, 0, 0, item.y + 5) })
+		end
+
+		-- 内容轻轻浮上来
+		local target = pages[key]
+		if target then
+			staggerIn(target:GetChildren(), 9, 0.03, 0.3)
 		end
 	end
 
@@ -1716,21 +2474,10 @@ boot = function(lang)
 			Text = "",
 			Parent = sidebar,
 		})
-		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = btn })
-
-		local bar = new("Frame", {
-			Size = UDim2.new(0, 3, 0, 14),
-			Position = UDim2.new(0, 0, 0.5, 0),
-			AnchorPoint = Vector2.new(0, 0.5),
-			BackgroundColor3 = C.Accent,
-			BorderSizePixel = 0,
-			BackgroundTransparency = 1,
-			Parent = btn,
-		})
-		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = btn })
 
 		local label = new("TextLabel", {
-			Size = UDim2.new(1, -40, 1, 0),
+			Size = UDim2.new(1, -30, 1, 0),
 			Position = UDim2.new(0, 16, 0, 0),
 			BackgroundTransparency = 1,
 			Text = text,
@@ -1741,32 +2488,42 @@ boot = function(lang)
 			Parent = btn,
 		})
 
-		-- 右侧小圆点（飞行开着的时候亮绿）
-		local dot = new("Frame", {
-			Size = UDim2.new(0, 6, 0, 6),
-			Position = UDim2.new(1, -14, 0.5, 0),
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			BackgroundColor3 = C.Dim,
-			BorderSizePixel = 0,
-			Parent = btn,
-		})
-		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+		-- 只有「飞行」带状态点：绿 = 正在飞。状态点表达真实状态，不做装饰
+		local dot = nil
+		if key == "fly" then
+			dot = new("Frame", {
+				Name = "NavDot",
+				Size = UDim2.new(0, 6, 0, 6),
+				Position = UDim2.new(1, -14, 0.5, 0),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				BackgroundColor3 = C.Green,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Parent = btn,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+		end
 
 		btn.MouseButton1Click:Connect(function()
-			if onClick then
-				onClick()
-			else
-				showPage(key)
-			end
+			if onClick then onClick() else showPage(key) end
 		end)
+		-- 悬停时不要盖掉"当前页"的高亮
 		btn.MouseEnter:Connect(function()
-			if not pages[key] or not pages[key].Visible then btn.BackgroundColor3 = C.Card end
+			if not pages[key] or not pages[key].Visible then
+				tween(btn, EASE.soft, { BackgroundColor3 = C.Card })
+			end
+			tween(label, EASE.soft, { TextColor3 = C.Text })
 		end)
 		btn.MouseLeave:Connect(function()
-			if not pages[key] or not pages[key].Visible then btn.BackgroundColor3 = C.Side end
+			if not pages[key] or not pages[key].Visible then
+				tween(btn, EASE.soft, { BackgroundColor3 = C.Side })
+			end
+			tween(label, EASE.soft, {
+				TextColor3 = (pages[key] and pages[key].Visible) and C.Text or C.Sub,
+			})
 		end)
 
-		navItems[key] = { btn = btn, bar = bar, label = label, dot = dot }
+		navItems[key] = { btn = btn, label = label, dot = dot, y = y }
 		return btn
 	end
 
@@ -1784,11 +2541,11 @@ boot = function(lang)
 	addNav("home", L("navHome"), 1)
 
 	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 24),
-		Position = UDim2.new(0, 0, 0, 6),
+		Size = UDim2.new(1, 0, 0, 28),
+		Position = UDim2.new(0, 0, 0, 2),
 		BackgroundTransparency = 1,
 		Text = string.format(L("homeWelcome"), CONFIG.Title),
-		TextSize = 19,
+		TextSize = 20,
 		Font = FONT_B,
 		TextColor3 = C.Text,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -1800,30 +2557,98 @@ boot = function(lang)
 		Position = UDim2.new(0, 0, 0, 32),
 		BackgroundTransparency = 1,
 		Text = string.format(L("homeSub"), CONFIG.Version),
-		TextSize = 12,
-		Font = FONT_N,
+		TextSize = 11,
+		Font = FONT_M,
 		TextColor3 = C.Dim,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = home,
 	})
 
+	-- 当前数值一览：等宽字体，数字对齐了才有"仪表盘"的感觉
+	local statRow = new("Frame", {
+		Name = "HomeStats",
+		Size = UDim2.new(1, 0, 0, 52),
+		Position = UDim2.new(0, 0, 0, 58),
+		BackgroundTransparency = 1,
+		Parent = home,
+	})
+	local homeStats = {}
+	local STAT_DEF = {
+		{ key = "walk", label = L("walkSpeed") },
+		{ key = "jump", label = L("jumpPower") },
+		{ key = "grav", label = L("gravity") },
+	}
+	for i, def in ipairs(STAT_DEF) do
+		local tile = new("Frame", {
+			Name = "Stat_" .. def.key,
+			Size = UDim2.new(0, 113, 1, 0),
+			Position = UDim2.new(0, (i - 1) * 121, 0, 0),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			Parent = statRow,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = tile })
+		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = tile })
+		new("TextLabel", {
+			Size = UDim2.new(1, -20, 0, 14),
+			Position = UDim2.new(0, 10, 0, 7),
+			BackgroundTransparency = 1,
+			Text = def.label,
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = tile,
+		})
+		homeStats[def.key] = new("TextLabel", {
+			Size = UDim2.new(1, -20, 0, 22),
+			Position = UDim2.new(0, 10, 0, 23),
+			BackgroundTransparency = 1,
+			Text = "--",
+			TextSize = 17,
+			Font = FONT_M,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = tile,
+		})
+	end
+
+	local function refreshHomeStats()
+		local hum = getHumanoid()
+		local ws, jp = 16, 50
+		if hum then
+			local ok1, v1 = pcall(function() return hum.WalkSpeed end)
+			if ok1 and type(v1) == "number" then ws = v1 end
+			local ok2, v2 = pcall(function() return hum.JumpPower end)
+			if ok2 and type(v2) == "number" then jp = v2 end
+		end
+		local gv = 196.2
+		local ok3, v3 = pcall(function() return workspace.Gravity end)
+		if ok3 and type(v3) == "number" then gv = v3 end
+		if homeStats.walk then homeStats.walk.Text = string.format("%d", math.floor(ws + 0.5)) end
+		if homeStats.jump then homeStats.jump.Text = string.format("%d", math.floor(jp + 0.5)) end
+		if homeStats.grav then homeStats.grav.Text = string.format("%d", math.floor(gv + 0.5)) end
+	end
+
 	-- 飞行状态卡片
 	local flyCard = new("TextButton", {
 		Name = "FlyCard",
-		Size = UDim2.new(1, 0, 0, 64),
-		Position = UDim2.new(0, 0, 0, 60),
+		Size = UDim2.new(1, 0, 0, 62),
+		Position = UDim2.new(0, 0, 0, 124),
 		BackgroundColor3 = C.Card,
 		BorderSizePixel = 0,
 		AutoButtonColor = false,
 		Text = "",
+		ClipsDescendants = true,
 		Parent = home,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = flyCard })
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = flyCard })
 	local flyCardStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyCard })
 
 	local flyDot = new("Frame", {
-		Size = UDim2.new(0, 8, 0, 8),
-		Position = UDim2.new(0, 16, 0, 20),
+		Name = "FlyDot",
+		Size = UDim2.new(0, 7, 0, 7),
+		Position = UDim2.new(0, 16, 0, 18),
 		BackgroundColor3 = C.Dim,
 		BorderSizePixel = 0,
 		Parent = flyCard,
@@ -1831,8 +2656,8 @@ boot = function(lang)
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyDot })
 
 	new("TextLabel", {
-		Size = UDim2.new(1, -100, 0, 18),
-		Position = UDim2.new(0, 32, 0, 14),
+		Size = UDim2.new(1, -110, 0, 18),
+		Position = UDim2.new(0, 32, 0, 13),
 		BackgroundTransparency = 1,
 		Text = L("cardFlyTitle"),
 		TextSize = 15,
@@ -1841,10 +2666,9 @@ boot = function(lang)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = flyCard,
 	})
-
 	new("TextLabel", {
-		Size = UDim2.new(1, -100, 0, 16),
-		Position = UDim2.new(0, 32, 0, 34),
+		Size = UDim2.new(1, -110, 0, 16),
+		Position = UDim2.new(0, 32, 0, 33),
 		BackgroundTransparency = 1,
 		Text = L("cardFlyDesc"),
 		TextSize = 11,
@@ -1853,10 +2677,9 @@ boot = function(lang)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = flyCard,
 	})
-
 	local flyCardState = new("TextLabel", {
-		Size = UDim2.new(0, 70, 1, 0),
-		Position = UDim2.new(1, -80, 0, 0),
+		Size = UDim2.new(0, 74, 1, 0),
+		Position = UDim2.new(1, -88, 0, 0),
 		BackgroundTransparency = 1,
 		Text = L("stateOff"),
 		TextSize = 12,
@@ -1866,27 +2689,35 @@ boot = function(lang)
 		Parent = flyCard,
 	})
 
-	flyCard.MouseEnter:Connect(function() flyCard.BackgroundColor3 = C.Card2 end)
-	flyCard.MouseLeave:Connect(function() flyCard.BackgroundColor3 = C.Card end)
+	flyCard.MouseEnter:Connect(function()
+		tween(flyCard, EASE.soft, { BackgroundColor3 = C.Card2, Position = UDim2.new(0, 0, 0, 122) })
+		tween(flyCardStroke, EASE.soft, { Color = C.Accent })
+	end)
+	flyCard.MouseLeave:Connect(function()
+		tween(flyCard, EASE.soft, { BackgroundColor3 = C.Card, Position = UDim2.new(0, 0, 0, 124) })
+		tween(flyCardStroke, EASE.soft, { Color = C.Stroke })
+	end)
+	bindPress(flyCard, C.Accent)
 	flyCard.MouseButton1Click:Connect(function() openFlyWindow() end)
 
 	-- 通用设置卡片
 	local genCard = new("TextButton", {
 		Name = "GeneralCard",
-		Size = UDim2.new(1, 0, 0, 64),
-		Position = UDim2.new(0, 0, 0, 132),
+		Size = UDim2.new(1, 0, 0, 62),
+		Position = UDim2.new(0, 0, 0, 194),
 		BackgroundColor3 = C.Card,
 		BorderSizePixel = 0,
 		AutoButtonColor = false,
 		Text = "",
+		ClipsDescendants = true,
 		Parent = home,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = genCard })
-	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = genCard })
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = genCard })
+	local genCardStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = genCard })
 
 	new("TextLabel", {
-		Size = UDim2.new(1, -24, 0, 18),
-		Position = UDim2.new(0, 16, 0, 14),
+		Size = UDim2.new(1, -60, 0, 18),
+		Position = UDim2.new(0, 16, 0, 13),
 		BackgroundTransparency = 1,
 		Text = L("cardGenTitle"),
 		TextSize = 15,
@@ -1896,8 +2727,8 @@ boot = function(lang)
 		Parent = genCard,
 	})
 	new("TextLabel", {
-		Size = UDim2.new(1, -24, 0, 16),
-		Position = UDim2.new(0, 16, 0, 34),
+		Size = UDim2.new(1, -60, 0, 16),
+		Position = UDim2.new(0, 16, 0, 33),
 		BackgroundTransparency = 1,
 		Text = L("cardGenDesc"),
 		TextSize = 11,
@@ -1906,16 +2737,36 @@ boot = function(lang)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = genCard,
 	})
-	genCard.MouseEnter:Connect(function() genCard.BackgroundColor3 = C.Card2 end)
-	genCard.MouseLeave:Connect(function() genCard.BackgroundColor3 = C.Card end)
+	local genArrow = new("TextLabel", {
+		Size = UDim2.new(0, 30, 1, 0),
+		Position = UDim2.new(1, -44, 0, 0),
+		BackgroundTransparency = 1,
+		Text = "→",
+		TextSize = 18,
+		Font = FONT_B,
+		TextColor3 = C.Dim,
+		Parent = genCard,
+	})
+
+	genCard.MouseEnter:Connect(function()
+		tween(genCard, EASE.soft, { BackgroundColor3 = C.Card2, Position = UDim2.new(0, 0, 0, 192) })
+		tween(genCardStroke, EASE.soft, { Color = C.Accent })
+		tween(genArrow, EASE.soft, { TextColor3 = C.Accent, Position = UDim2.new(1, -38, 0, 0) })
+	end)
+	genCard.MouseLeave:Connect(function()
+		tween(genCard, EASE.soft, { BackgroundColor3 = C.Card, Position = UDim2.new(0, 0, 0, 194) })
+		tween(genCardStroke, EASE.soft, { Color = C.Stroke })
+		tween(genArrow, EASE.soft, { TextColor3 = C.Dim, Position = UDim2.new(1, -44, 0, 0) })
+	end)
+	bindPress(genCard, C.Accent)
 	genCard.MouseButton1Click:Connect(function() showPage("general") end)
 
 	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 32),
-		Position = UDim2.new(0, 0, 0, 208),
+		Size = UDim2.new(1, 0, 0, 34),
+		Position = UDim2.new(0, 0, 0, 268),
 		BackgroundTransparency = 1,
 		Text = L("homeHint"),
-		TextSize = 12,
+		TextSize = 11,
 		Font = FONT_N,
 		TextColor3 = C.Dim,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -1968,11 +2819,11 @@ boot = function(lang)
 
 		local valueLabel = new("TextLabel", {
 			Size = UDim2.new(0, 80, 0, 16),
-			Position = UDim2.new(1, -80, 0, y),
+			Position = UDim2.new(1, -80, 0, y - 1),
 			BackgroundTransparency = 1,
 			Text = opts.Format(opts.Default),
-			TextSize = 12,
-			Font = FONT_B,
+			TextSize = 14,
+			Font = FONT_M,                 -- 等宽：拖动时数字不会左右抖
 			TextColor3 = C.Accent,
 			TextXAlignment = Enum.TextXAlignment.Right,
 			Parent = general,
@@ -2047,6 +2898,7 @@ boot = function(lang)
 		OnChange = function(v)
 			Settings.WalkSpeed = v
 			applySettings()
+			refreshHomeStats()
 		end,
 	})
 
@@ -2058,6 +2910,7 @@ boot = function(lang)
 		OnChange = function(v)
 			Settings.JumpPower = v
 			applySettings()
+			refreshHomeStats()
 		end,
 	})
 
@@ -2069,6 +2922,7 @@ boot = function(lang)
 		OnChange = function(v)
 			Settings.Gravity = v
 			applySettings()
+			refreshHomeStats()
 		end,
 	})
 
@@ -2086,7 +2940,7 @@ boot = function(lang)
 		Position = UDim2.new(0, 0, 0, 236),
 		Text = L("resetBtn"),
 		TextSize = 12,
-		Radius = 8,
+		Radius = R.ctl,
 		OnClick = function()
 			setWalk(16)
 			setJump(50)
@@ -2095,6 +2949,7 @@ boot = function(lang)
 			Settings.JumpPower = 50
 			Settings.Gravity = 196
 			applySettings()
+			refreshHomeStats()
 			notify(L("resetDone"), C.Accent)
 		end,
 	})
@@ -2145,15 +3000,16 @@ boot = function(lang)
 	-- 联系作者：整张卡片可点，点了复制邮箱
 	local contactCard = new("TextButton", {
 		Name = "ContactCard",
-		Size = UDim2.new(1, 0, 0, 54),
+		Size = UDim2.new(1, 0, 0, 56),
 		Position = UDim2.new(0, 0, 0, 50),
 		BackgroundColor3 = C.Card,
 		BorderSizePixel = 0,
 		AutoButtonColor = false,
 		Text = "",
+		ClipsDescendants = true,
 		Parent = settingsPage,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = contactCard })
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = contactCard })
 	local contactStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = contactCard })
 
 	new("TextLabel", {
@@ -2170,12 +3026,12 @@ boot = function(lang)
 
 	new("TextLabel", {
 		Name = "ContactMail",
-		Size = UDim2.new(1, -28, 0, 18),
-		Position = UDim2.new(0, 14, 0, 26),
+		Size = UDim2.new(1, -28, 0, 20),
+		Position = UDim2.new(0, 14, 0, 27),
 		BackgroundTransparency = 1,
 		Text = CONFIG.Contact,
 		TextSize = 14,
-		Font = FONT_B,
+		Font = FONT_M,
 		TextColor3 = C.Accent,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = contactCard,
@@ -2194,13 +3050,14 @@ boot = function(lang)
 	})
 
 	contactCard.MouseEnter:Connect(function()
-		contactCard.BackgroundColor3 = C.Card2
-		contactStroke.Color = C.Accent
+		tween(contactCard, EASE.soft, { BackgroundColor3 = C.Card2 })
+		tween(contactStroke, EASE.soft, { Color = C.Accent })
 	end)
 	contactCard.MouseLeave:Connect(function()
-		contactCard.BackgroundColor3 = C.Card
-		contactStroke.Color = C.Stroke
+		tween(contactCard, EASE.soft, { BackgroundColor3 = C.Card })
+		tween(contactStroke, EASE.soft, { Color = C.Stroke })
 	end)
+	bindPress(contactCard, C.Accent)
 	contactCard.MouseButton1Click:Connect(function()
 		if copyText(CONFIG.Contact) then
 			notify(L("copied"), C.Green)
@@ -2210,18 +3067,22 @@ boot = function(lang)
 		end
 	end)
 
-	new("Frame", {
-		Size = UDim2.new(1, 0, 0, 1),
-		Position = UDim2.new(0, 0, 0, 118),
-		BackgroundColor3 = C.Stroke,
-		BorderSizePixel = 0,
-		Parent = settingsPage,
-	})
+	local function divider(y)
+		return new("Frame", {
+			Size = UDim2.new(1, 0, 0, 1),
+			Position = UDim2.new(0, 0, 0, y),
+			BackgroundColor3 = C.Stroke,
+			BorderSizePixel = 0,
+			Parent = settingsPage,
+		})
+	end
+
+	divider(120)
 
 	-- 语言切换：切完重启脚本
 	new("TextLabel", {
 		Size = UDim2.new(1, -140, 0, 16),
-		Position = UDim2.new(0, 0, 0, 132),
+		Position = UDim2.new(0, 0, 0, 134),
 		BackgroundTransparency = 1,
 		Text = L("language"),
 		TextSize = 12,
@@ -2230,10 +3091,9 @@ boot = function(lang)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = settingsPage,
 	})
-
 	new("TextLabel", {
 		Size = UDim2.new(0, 140, 0, 16),
-		Position = UDim2.new(1, -140, 0, 132),
+		Position = UDim2.new(1, -140, 0, 134),
 		BackgroundTransparency = 1,
 		Text = L("langHint"),
 		TextSize = 10,
@@ -2252,14 +3112,15 @@ boot = function(lang)
 		local btn = new("TextButton", {
 			Name = "Lang_" .. opt.key,
 			Size = UDim2.new(0, 150, 0, 42),
-			Position = UDim2.new(0, (i - 1) * 158, 0, 156),
+			Position = UDim2.new(0, (i - 1) * 158, 0, 158),
 			BackgroundColor3 = active and C.Card2 or C.Card,
 			BorderSizePixel = 0,
 			AutoButtonColor = false,
 			Text = "",
+			ClipsDescendants = true,
 			Parent = settingsPage,
 		})
-		new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = btn })
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = btn })
 		local stroke = new("UIStroke", {
 			Color = active and C.Accent or C.Stroke,
 			Thickness = active and 2 or 1,
@@ -2282,8 +3143,7 @@ boot = function(lang)
 		})
 
 		if not active then
-			btn.MouseEnter:Connect(function() btn.BackgroundColor3 = C.Card2 end)
-			btn.MouseLeave:Connect(function() btn.BackgroundColor3 = C.Card end)
+			bindHover(btn, { Bg = { C.Card, C.Card2 }, Stroke = stroke, StrokeOn = C.Stroke2 })
 		end
 
 		btn.MouseButton1Click:Connect(function()
@@ -2292,6 +3152,41 @@ boot = function(lang)
 			restart(opt.key)
 		end)
 	end
+
+	divider(214)
+
+	-- 音效开关
+	new("TextLabel", {
+		Size = UDim2.new(1, -140, 0, 16),
+		Position = UDim2.new(0, 0, 0, 228),
+		BackgroundTransparency = 1,
+		Text = L("sound"),
+		TextSize = 12,
+		Font = FONT_N,
+		TextColor3 = C.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = settingsPage,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(0, 140, 0, 16),
+		Position = UDim2.new(1, -140, 0, 228),
+		BackgroundTransparency = 1,
+		Text = L("soundHint"),
+		TextSize = 10,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = settingsPage,
+	})
+	createSwitch(settingsPage, {
+		Name = "SoundSwitch",
+		Position = UDim2.new(1, -40, 0, 225),
+		Default = CONFIG.Sound,
+		OnChange = function(v)
+			CONFIG.Sound = v
+			if v then playSfx("sfx_notify", CONFIG.SoundNotify) end
+		end,
+	})
 
 	--========================== 飞行（独立窗口） ==========================
 	local flyNavBtn = addNav("fly", L("navFly"), 3, function() openFlyWindow() end)
@@ -2306,7 +3201,7 @@ boot = function(lang)
 		Visible = false,
 		Parent = guiMain,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flyWin })
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = flyWin })
 	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyWin })
 
 	local flyScale = new("UIScale", { Scale = 1, Parent = flyWin })
@@ -2319,7 +3214,7 @@ boot = function(lang)
 		BorderSizePixel = 0,
 		Parent = flyWin,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flyHeader })
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = flyHeader })
 	new("Frame", {
 		Size = UDim2.new(1, 0, 0, 12),
 		Position = UDim2.new(0, 0, 1, -12),
@@ -2333,6 +3228,26 @@ boot = function(lang)
 		BackgroundColor3 = C.Stroke,
 		BorderSizePixel = 0,
 		Parent = flyHeader,
+	})
+
+	-- 飞行中才亮的一条"运行中"细线（真实状态，不是装饰）
+	local flyPulse = new("Frame", {
+		Name = "FlyPulse",
+		Size = UDim2.new(0, 120, 0, 2),
+		Position = UDim2.new(0, 14, 0, 41),
+		BackgroundColor3 = C.Green,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ZIndex = 2,
+		Parent = flyWin,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyPulse })
+	new("UIGradient", {
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = flyPulse,
 	})
 
 	createLogo(flyHeader, {
@@ -2384,16 +3299,10 @@ boot = function(lang)
 	})
 	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = flyMinBtn })
 	local flyMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyMinBtn })
-	flyMinBtn.MouseEnter:Connect(function()
-		flyMinBtn.BackgroundColor3 = C.Card2
-		flyMinBtn.TextColor3 = C.Text
-		flyMinStroke.Color = C.Dim
-	end)
-	flyMinBtn.MouseLeave:Connect(function()
-		flyMinBtn.BackgroundColor3 = C.Card
-		flyMinBtn.TextColor3 = C.Sub
-		flyMinStroke.Color = C.Stroke
-	end)
+	bindHover(flyMinBtn, {
+		Bg = { C.Card, C.Card2 }, Stroke = flyMinStroke, StrokeOn = C.Stroke2,
+		Label = flyMinBtn, LabelOn = C.Text,
+	})
 
 	-- 关闭：结束飞行（走落地保护）+ 收起窗口，不留胶囊
 	local flyCloseBtn = new("TextButton", {
@@ -2412,16 +3321,10 @@ boot = function(lang)
 	})
 	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = flyCloseBtn })
 	local flyCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyCloseBtn })
-	flyCloseBtn.MouseEnter:Connect(function()
-		flyCloseBtn.BackgroundColor3 = C.Red
-		flyCloseBtn.TextColor3 = C.White
-		flyCloseStroke.Color = C.Red
-	end)
-	flyCloseBtn.MouseLeave:Connect(function()
-		flyCloseBtn.BackgroundColor3 = C.Card
-		flyCloseBtn.TextColor3 = C.Sub
-		flyCloseStroke.Color = C.Stroke
-	end)
+	bindHover(flyCloseBtn, {
+		Bg = { C.Card, C.Red }, Stroke = flyCloseStroke, StrokeOn = C.Red,
+		Label = flyCloseBtn, LabelOn = C.White,
+	})
 
 	makeDraggable(flyWin, flyHeader, function() return flyScale.Scale end)
 
@@ -2461,11 +3364,11 @@ boot = function(lang)
 
 	local speedLabel = new("TextLabel", {
 		Size = UDim2.new(0, 100, 0, 16),
-		Position = UDim2.new(1, -100, 0, 58),
+		Position = UDim2.new(1, -100, 0, 57),
 		BackgroundTransparency = 1,
 		Text = fmtSpeed(CONFIG.FlySpeed),
-		TextSize = 12,
-		Font = FONT_B,
+		TextSize = 14,
+		Font = FONT_M,
 		TextColor3 = C.Accent,
 		TextXAlignment = Enum.TextXAlignment.Right,
 		Parent = flyBody,
@@ -2483,13 +3386,17 @@ boot = function(lang)
 		end,
 	})
 
-	new("Frame", {
-		Size = UDim2.new(1, 0, 0, 1),
-		Position = UDim2.new(0, 0, 0, 112),
-		BackgroundColor3 = C.Stroke,
-		BorderSizePixel = 0,
-		Parent = flyBody,
-	})
+	local function flyDivider(y)
+		return new("Frame", {
+			Size = UDim2.new(1, 0, 0, 1),
+			Position = UDim2.new(0, 0, 0, y),
+			BackgroundColor3 = C.Stroke,
+			BorderSizePixel = 0,
+			Parent = flyBody,
+		})
+	end
+
+	flyDivider(112)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, -60, 0, 16),
@@ -2524,13 +3431,7 @@ boot = function(lang)
 		Parent = flyBody,
 	})
 
-	new("Frame", {
-		Size = UDim2.new(1, 0, 0, 1),
-		Position = UDim2.new(0, 0, 0, 166),
-		BackgroundColor3 = C.Stroke,
-		BorderSizePixel = 0,
-		Parent = flyBody,
-	})
+	flyDivider(166)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, -60, 0, 16),
@@ -2565,13 +3466,7 @@ boot = function(lang)
 		Parent = flyBody,
 	})
 
-	new("Frame", {
-		Size = UDim2.new(1, 0, 0, 1),
-		Position = UDim2.new(0, 0, 0, 220),
-		BackgroundColor3 = C.Stroke,
-		BorderSizePixel = 0,
-		Parent = flyBody,
-	})
+	flyDivider(220)
 
 	local hints = {
 		{ L("hintMobile"), L("hintMobileV") },
@@ -2581,19 +3476,19 @@ boot = function(lang)
 	for i, h in ipairs(hints) do
 		local y = 232 + (i - 1) * 22
 		new("TextLabel", {
-			Size = UDim2.new(0, 34, 0, 16),
+			Size = UDim2.new(0, 40, 0, 16),
 			Position = UDim2.new(0, 0, 0, y),
 			BackgroundTransparency = 1,
 			Text = h[1],
 			TextSize = 11,
-			Font = FONT_B,
+			Font = FONT_M,
 			TextColor3 = C.Accent,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = flyBody,
 		})
 		new("TextLabel", {
-			Size = UDim2.new(1, -40, 0, 16),
-			Position = UDim2.new(0, 40, 0, y),
+			Size = UDim2.new(1, -46, 0, 16),
+			Position = UDim2.new(0, 46, 0, y),
 			BackgroundTransparency = 1,
 			Text = h[2],
 			TextSize = 11,
@@ -2614,19 +3509,38 @@ boot = function(lang)
 		Visible = false,
 		Parent = flyWin,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flySplash })
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = flySplash })
+
+	local splashGlow = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 150),
+		Position = UDim2.new(0, 0, 0, -90),
+		BackgroundColor3 = C.Accent,
+		BackgroundTransparency = 0.88,
+		BorderSizePixel = 0,
+		ZIndex = 30,
+		Parent = flySplash,
+	})
+	new("UIGradient", {
+		Rotation = 90,
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = splashGlow,
+	})
 
 	local splashLogo = createLogo(flySplash, {
-		Size = UDim2.new(0, 52, 0, 52),
-		Position = UDim2.new(0.5, 0, 0.5, -34),
+		Size = UDim2.new(0, 54, 0, 54),
+		Position = UDim2.new(0.5, 0, 0.5, -36),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Radius = 15,
-		TextSize = 26,
+		Radius = 16,
+		TextSize = 27,
 	})
 	splashLogo.ZIndex = 31
+	local splashLogoScale = new("UIScale", { Scale = 1, Parent = splashLogo })
 
 	local splashTitle = new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 20),
+		Size = UDim2.new(1, 0, 0, 22),
 		Position = UDim2.new(0.5, 0, 0.5, 14),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		BackgroundTransparency = 1,
@@ -2665,48 +3579,38 @@ boot = function(lang)
 		splashBusy = true
 		flySplash.Visible = true
 		flySplash.BackgroundTransparency = 0
+		splashGlow.BackgroundTransparency = 0.88
 		splashBar.Size = UDim2.new(0, 0, 1, 0)
 		splashTitle.TextTransparency = 0
+		splashLogo.BackgroundTransparency = 0
 		splashLogo.Visible = true
 
+		-- 图标先缩小再弹回来，标题跟上，进度条扫过
+		splashLogoScale.Scale = 0.6
+		tween(splashLogoScale, EASE.pop, { Scale = 1 })
+		slideIn(splashTitle, 8, 0.06, 0.3)
+
 		task.spawn(function()
-			TweenService:Create(
-				splashBar,
-				TweenInfo.new(0.42, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-				{ Size = UDim2.new(1, 0, 1, 0) }
-			):Play()
-			task.wait(0.5)
+			TweenService:Create(splashBar,
+				TweenInfo.new(0.44, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+				{ Size = UDim2.new(1, 0, 1, 0) }):Play()
+			task.wait(0.52)
 
 			local fade = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 			TweenService:Create(flySplash, fade, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(splashGlow, fade, { BackgroundTransparency = 1 }):Play()
 			TweenService:Create(splashTitle, fade, { TextTransparency = 1 }):Play()
 			TweenService:Create(splashLogo, fade, { BackgroundTransparency = 1 }):Play()
 			for _, d in ipairs(splashLogo:GetDescendants()) do
 				if d:IsA("ImageLabel") then
 					TweenService:Create(d, fade, { ImageTransparency = 1 }):Play()
-				elseif d:IsA("TextLabel") then
-					TweenService:Create(d, fade, { TextTransparency = 1 }):Play()
-				elseif d:IsA("Frame") then
-					TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
 				end
 			end
-			for _, d in ipairs(splashBarBg:GetDescendants()) do
-				if d:IsA("Frame") then
-					TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
-				end
-			end
-			TweenService:Create(splashBarBg, fade, { BackgroundTransparency = 1 }):Play()
-
 			task.wait(0.26)
 			flySplash.Visible = false
-			flySplash.BackgroundTransparency = 0
-			splashTitle.TextTransparency = 0
 			splashLogo.BackgroundTransparency = 0
-			splashBarBg.BackgroundTransparency = 0
-			splashBar.BackgroundTransparency = 0
 			for _, d in ipairs(splashLogo:GetDescendants()) do
-				if d:IsA("ImageLabel") then d.ImageTransparency = 0
-				elseif d:IsA("TextLabel") then d.TextTransparency = 0 end
+				if d:IsA("ImageLabel") then d.ImageTransparency = 0 end
 			end
 			splashBusy = false
 		end)
@@ -2725,8 +3629,9 @@ boot = function(lang)
 		Parent = guiMain,
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = reopen })
-	new("UIStroke", { Color = C.Accent2, Thickness = 1, Parent = reopen })
+	local reopenStroke = new("UIStroke", { Color = C.Accent2, Thickness = 1, Parent = reopen })
 	local reopenScale = new("UIScale", { Scale = 1, Parent = reopen })
+	bindHover(reopen, { Stroke = reopenStroke, StrokeOn = C.Accent, Scale = reopenScale, ScaleOn = 1.08 })
 
 	do
 		local asset = getIconAsset()
@@ -2765,8 +3670,9 @@ boot = function(lang)
 		Parent = guiMain,
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyReopen })
-	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyReopen })
+	local flyReopenStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyReopen })
 	local flyReopenScale = new("UIScale", { Scale = 1, Parent = flyReopen })
+	bindHover(flyReopen, { Stroke = flyReopenStroke, StrokeOn = C.Stroke2, Scale = flyReopenScale, ScaleOn = 1.06 })
 
 	local flyReopenDot = new("Frame", {
 		Size = UDim2.new(0, 7, 0, 7),
@@ -3360,20 +4266,38 @@ boot = function(lang)
 	end
 
 	-- 状态同步到所有界面元素
+	-- 飞行中顶栏那条细线的呼吸动画：只在开关切换时起停，不重复叠加
+	local flyPulseTween = nil
+
 	local function syncFlyUI()
 		local on = Fly.Enabled
 
 		flyDot.BackgroundColor3 = on and C.Green or C.Dim
 		flyCardState.Text = on and L("stateOn") or L("stateOff")
 		flyCardState.TextColor3 = on and C.Green or C.Dim
-		flyCardStroke.Color = on and C.Green or C.Stroke
+		tween(flyCardStroke, EASE.soft, { Color = on and C.Green or C.Stroke })
 
+		-- 状态点只在真的在飞的时候才出现
 		navItems.fly.dot.BackgroundColor3 = on and C.Green or C.Dim
+		navItems.fly.dot.BackgroundTransparency = on and 0 or 1
 		flyReopenDot.BackgroundColor3 = on and C.Green or C.Dim
+		flyReopenDot.BackgroundTransparency = on and 0 or 0.4
+
+		if on and not flyPulseTween then
+			flyPulse.BackgroundTransparency = 0.15
+			flyPulseTween = TweenService:Create(flyPulse,
+				TweenInfo.new(1.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+				{ BackgroundTransparency = 0.78 })
+			flyPulseTween:Play()
+		elseif not on and flyPulseTween then
+			flyPulseTween:Cancel()
+			flyPulseTween = nil
+			flyPulse.BackgroundTransparency = 1
+		end
 
 		flyToggleLabel.Text = on and L("flyOff") or L("flyOn")
-		flyToggle.BackgroundColor3 = on and C.Green or C.Accent
-		flyToggleStroke.Color = on and C.Green or C.Accent
+		tween(flyToggle, EASE.soft, { BackgroundColor3 = on and C.Green or C.Accent })
+		tween(flyToggleStroke, EASE.soft, { Color = on and C.Green or C.Accent })
 		flyWinState.Text = on and L("flyFlying") or L("flyStopped")
 		flyWinState.TextColor3 = on and C.Green or C.Dim
 	end
@@ -3467,6 +4391,134 @@ boot = function(lang)
 	--  主窗口 ✕ = 结束进程
 	--  停飞行 → 撤伤害保护 → 断开所有连接 → 还原改过的属性 → 销毁界面
 	--=====================================================================
+	-- 全屏告别层：关掉之后还留 2 秒，配 error 音效和"期待下次注入"
+	local function showFarewell()
+		local gui = new("ScreenGui", {
+			Name = "O_X_HUB_Exit",
+			IgnoreGuiInset = true,
+			ResetOnSpawn = false,
+			DisplayOrder = 100003,
+			ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+			Parent = GUI_PARENT,
+		})
+
+		local bg = new("Frame", {
+			Name = "FarewellBg",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundColor3 = C.Void,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = gui,
+		})
+
+		local card = new("Frame", {
+			Name = "FarewellCard",
+			Size = UDim2.new(0, 420, 0, 262),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			BackgroundColor3 = C.Window,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = bg,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = card })
+		local cardStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Transparency = 1, Parent = card })
+		local cardScale = new("UIScale", { Scale = 0.94, Parent = card })
+
+		local logo = createLogo(card, {
+			Size = UDim2.new(0, 76, 0, 76),
+			Position = UDim2.new(0.5, 0, 0, 26),
+			AnchorPoint = Vector2.new(0.5, 0),
+			Radius = 22,
+			TextSize = 36,
+		})
+		local logoScale = new("UIScale", { Scale = 0.6, Parent = logo })
+
+		local title = new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Position = UDim2.new(0, 0, 0, 112),
+			BackgroundTransparency = 1,
+			Text = CONFIG.Title,
+			TextSize = 24,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			Parent = card,
+		})
+
+		local closing = new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 16),
+			Position = UDim2.new(0, 0, 0, 150),
+			BackgroundTransparency = 1,
+			Text = L("closing"),
+			TextSize = 11,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			Parent = card,
+		})
+
+		local farewell = new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 28),
+			Position = UDim2.new(0, 0, 0, 172),
+			BackgroundTransparency = 1,
+			Text = L("farewell"),
+			TextSize = 22,
+			Font = FONT_B,
+			TextColor3 = C.Accent,
+			Parent = card,
+		})
+
+		local track = new("Frame", {
+			Size = UDim2.new(0, 200, 0, 4),
+			Position = UDim2.new(0.5, -100, 0, 216),
+			BackgroundColor3 = C.Card2,
+			BorderSizePixel = 0,
+			Parent = card,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = track })
+		local bar = new("Frame", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundColor3 = C.Accent,
+			BorderSizePixel = 0,
+			Parent = track,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
+		new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Parent = bar })
+
+		-- 入场
+		TweenService:Create(bg, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ BackgroundTransparency = 0 }):Play()
+		TweenService:Create(card, TweenInfo.new(0.34, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ BackgroundTransparency = 0 }):Play()
+		TweenService:Create(cardStroke, TweenInfo.new(0.34, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ Transparency = 0 }):Play()
+		tween(cardScale, EASE.pop, { Scale = 1 })
+		tween(logoScale, EASE.pop, { Scale = 1 })
+		slideIn(title, 10, 0.05, 0.3)
+		slideIn(closing, 10, 0.11, 0.3)
+		slideIn(farewell, 12, 0.17, 0.34)
+		slideIn(track, 10, 0.23, 0.3)
+		tween(bar, TweenInfo.new(1.5, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 1, 0) })
+
+		-- 出场
+		task.delay(1.9, function()
+			local fade = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			TweenService:Create(bg, fade, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(card, fade, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(cardStroke, fade, { Transparency = 1 }):Play()
+			TweenService:Create(title, fade, { TextTransparency = 1 }):Play()
+			TweenService:Create(closing, fade, { TextTransparency = 1 }):Play()
+			TweenService:Create(farewell, fade, { TextTransparency = 1 }):Play()
+			TweenService:Create(track, fade, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(logo, fade, { BackgroundTransparency = 1 }):Play()
+			for _, d in ipairs(logo:GetDescendants()) do
+				if d:IsA("ImageLabel") then
+					TweenService:Create(d, fade, { ImageTransparency = 1 }):Play()
+				end
+			end
+			task.delay(0.45, function() pcall(function() gui:Destroy() end) end)
+		end)
+	end
+
 	unloadAll = function(instant)
 		if SHUTDOWN then return end
 		SHUTDOWN = true
@@ -3502,20 +4554,42 @@ boot = function(lang)
 			_G.O_X_HUB_LOADED = nil
 		end
 
+		-- 重启：立刻收干净，不放动画也不出声
 		if instant then
 			kill()
 			return
 		end
 
-		pcall(function()
-			local t = TweenService:Create(
-				uiScale,
-				TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-				{ Scale = 0.86 }
-			)
-			t:Play()
+		-- 正常关闭：error 音效 + 抖一下 + 全屏告别
+		playSfx("sfx_close", CONFIG.SoundClose)
+		releaseSfxFolder()
+
+		local basePos = window.Position
+		local baseScale = uiScale.Scale
+		task.spawn(function()
+			for i = 1, 4 do
+				local dx = (i % 2 == 1) and 7 or -5
+				window.Position = UDim2.new(basePos.X.Scale, basePos.X.Offset + dx,
+					basePos.Y.Scale, basePos.Y.Offset - 2)
+				uiScale.Scale = baseScale * (1 + 0.012 * ((i % 2 == 1) and 1 or -1))
+				task.wait(0.05)
+			end
+			window.Position = basePos
+			uiScale.Scale = baseScale
+
+			pcall(function()
+				local t = TweenService:Create(
+					uiScale,
+					TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+					{ Scale = baseScale * 0.86 }
+				)
+				t:Play()
+			end)
+			task.wait(0.16)
+
+			kill()
+			showFarewell()
 		end)
-		task.delay(0.16, kill)
 	end
 
 	ShutdownRequest = function()
@@ -3529,16 +4603,21 @@ boot = function(lang)
 	--=====================================================================
 	createLoadingScreen(nil, function()
 		applySettings()
+		refreshHomeStats()
 		guiMain.Enabled = true
-		fadeIn(guiMain, 0.35)
-		uiScale.Scale = math.clamp(computeScale(WIN_W, WIN_H) * 0.88, 0.5, 1)
+		fadeIn(guiMain, 0.32)
+
+		-- 窗口从略小弹回原尺寸，顶栏 / 侧栏 / 内容依次落下
+		uiScale.Scale = math.clamp(computeScale(WIN_W, WIN_H) * 0.9, 0.5, 1)
 		TweenService:Create(
 			uiScale,
-			TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 			{ Scale = computeScale(WIN_W, WIN_H) }
 		):Play()
-		task.wait(0.15)
-		notify(string.format(L("loaded"), CONFIG.Title, CONFIG.Version), C.Accent)
+		staggerIn({ header, sidebar, content }, 12, 0.07, 0.36)
+
+		task.wait(0.3)
+		notify(string.format(L("welcome"), CONFIG.Title), C.Accent)
 	end)
 end
 
