@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.7.0
+--  Version : 1.7.1
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -64,7 +64,6 @@ local LOCALES = {
 		-- 服务器面板
 		srvTabTp     = "传送",
 		srvTabFarm   = "农场",
-		srvTabMain   = "主要",
 
 		tpTitle      = "传送",
 		tpSub        = "选一个地点，再点下面的按钮过去",
@@ -86,47 +85,14 @@ local LOCALES = {
 		farmOff      = "自动获胜已关闭",
 		farmHint     = "开启期间角色会被按在出生点。游戏开局把你传去场地，也会被立刻拉回来。",
 
-		mainTitle    = "主要",
-		mainSub      = "道具 / 破坏 / 角色 / 玩家",
 
-		mainTools    = "道具",
-		mainChaos    = "破坏",
-		mainChar     = "角色",
-		mainPlayers  = "玩家",
 
-		mainBalloon  = "获取气球",
-		mainBalloonD = "把地图上那个气球道具拿到手",
-		mainBalloonOk= "气球到手了",
-		mainNoBalloon= "这一局地图上没刷气球",
 
-		mainBh       = "创造黑洞",
-		mainBhD      = "在身前开一个洞，附近的玩家和建筑都会被吸进去",
-		mainBhOn     = "黑洞已开启  ·  附近的东西正在被吸进去",
-		mainBhOff    = "黑洞已关闭",
 
-		mainClear    = "清空地图",
-		mainClearD   = "删掉场上所有建筑（角色保留）",
-		mainCleared  = "清掉了 %d 个部件",
 
-		mainGod      = "无敌",
-		mainGodD     = "血量锁死，灾害打不动你",
-		mainGodOn    = "无敌已开启",
-		mainGodOff   = "无敌已关闭",
 
-		mainNoclip   = "穿墙",
-		mainNoclipD  = "身体不再和任何东西碰撞",
-		mainNoclipOn = "穿墙已开启",
-		mainNoclipOff= "穿墙已关闭",
 
-		mainIJump    = "无限跳跃",
-		mainIJumpD   = "空中也能一直跳",
-		mainIJumpOn  = "无限跳跃已开启",
-		mainIJumpOff = "无限跳跃已关闭",
 
-		mainBring    = "把所有人拉过来",
-		mainBringD   = "把所有其他玩家传送到你身边",
-		mainBringOk  = "拉过来 %d 个玩家",
-		mainBringNone= "场上没有别的玩家",
 
 		-- 主页
 		homeWelcome  = "欢迎使用 %s",
@@ -221,7 +187,6 @@ local LOCALES = {
 
 		srvTabTp     = "Teleport",
 		srvTabFarm   = "Farm",
-		srvTabMain   = "Main",
 
 		tpTitle      = "Teleport",
 		tpSub        = "Pick a place, then hit the button below",
@@ -243,47 +208,14 @@ local LOCALES = {
 		farmOff      = "Auto win off",
 		farmHint     = "While on, you are pinned to spawn. If the round sends you to the field, you get pulled right back.",
 
-		mainTitle    = "Main",
-		mainSub      = "Items / Chaos / Character / Players",
 
-		mainTools    = "ITEMS",
-		mainChaos    = "CHAOS",
-		mainChar     = "CHARACTER",
-		mainPlayers  = "PLAYERS",
 
-		mainBalloon  = "Get balloon",
-		mainBalloonD = "Grab the balloon item off the map",
-		mainBalloonOk= "Balloon grabbed",
-		mainNoBalloon= "No balloon on the map this round",
 
-		mainBh       = "Black hole",
-		mainBhD      = "Opens a hole in front of you that pulls in players and buildings",
-		mainBhOn     = "Black hole on  ·  everything nearby is being pulled in",
-		mainBhOff    = "Black hole off",
 
-		mainClear    = "Clear the map",
-		mainClearD   = "Deletes every building (characters stay)",
-		mainCleared  = "Removed %d parts",
 
-		mainGod      = "God mode",
-		mainGodD     = "Health locked, disasters cannot hurt you",
-		mainGodOn    = "God mode on",
-		mainGodOff   = "God mode off",
 
-		mainNoclip   = "Noclip",
-		mainNoclipD  = "Your body stops colliding with anything",
-		mainNoclipOn = "Noclip on",
-		mainNoclipOff= "Noclip off",
 
-		mainIJump    = "Infinite jump",
-		mainIJumpD   = "Keep jumping even in mid air",
-		mainIJumpOn  = "Infinite jump on",
-		mainIJumpOff = "Infinite jump off",
 
-		mainBring    = "Bring everyone",
-		mainBringD   = "Teleports every other player next to you",
-		mainBringOk  = "Brought %d players",
-		mainBringNone= "Nobody else is here",
 
 		homeWelcome  = "Welcome to %s",
 		homeSub      = "Executor script suite  ·  %s",
@@ -369,7 +301,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.7.0",
+	Version = "v1.7.1",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -2918,13 +2850,6 @@ boot = function(lang)
 	local SrvTeleportRequest = function() end
 	local SrvAutoWinRequest = function() end
 	local SrvCloseRequest = function() end
-	local MainBalloonRequest = function() end
-	local MainBlackholeRequest = function() end
-	local MainClearRequest = function() end
-	local MainGodRequest = function() end
-	local MainNoclipRequest = function() end
-	local MainIJumpRequest = function() end
-	local MainBringRequest = function() end
 	local FlyToggleRequest = function() end
 	-- 伤害保护总开关（速度回零模块在下面才定义，这里先占位，免得闭包绑到全局）
 	local ShieldRequest = function() end
@@ -4535,147 +4460,6 @@ boot = function(lang)
 		Parent = farmPage,
 	})
 
-	-- ---------- 页面：主要 ----------
-	local mainPage = srvAddPage("main")
-	srvAddNav("main", L("srvTabMain"), 3)
-
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 22),
-		Position = UDim2.new(0, 0, 0, 2),
-		BackgroundTransparency = 1,
-		Text = L("mainTitle"),
-		TextSize = 16,
-		Font = FONT_B,
-		TextColor3 = C.Text,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = mainPage,
-	})
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0, 0, 0, 26),
-		BackgroundTransparency = 1,
-		Text = L("mainSub"),
-		TextSize = 11,
-		Font = FONT_N,
-		TextColor3 = C.Dim,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = mainPage,
-	})
-
-	-- 功能列表：项目多，用滚动框
-	local mainScroll = new("ScrollingFrame", {
-		Name = "MainScroll",
-		Size = UDim2.new(1, 0, 1, -48),
-		Position = UDim2.new(0, 0, 0, 48),
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		ScrollBarThickness = 3,
-		ScrollBarImageColor3 = C.Stroke2,
-		CanvasSize = UDim2.new(0, 0, 0, 470),
-		ScrollingDirection = Enum.ScrollingDirection.Y,
-		Parent = mainPage,
-	})
-
-	local mainY = 0
-	local function mainSection(title)
-		new("TextLabel", {
-			Size = UDim2.new(1, -10, 0, 18),
-			Position = UDim2.new(0, 2, 0, mainY + 6),
-			BackgroundTransparency = 1,
-			Text = title,
-			TextSize = 10,
-			Font = FONT_B,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = mainScroll,
-		})
-		mainY = mainY + 26
-	end
-
-	-- 一行功能：名字 + 说明 + 右边的开关 / 按钮
-	local function mainRow(key, name, desc, kind, onToggle, onPress)
-		local row = new("Frame", {
-			Name = "Main_" .. key,
-			Size = UDim2.new(1, -10, 0, 52),
-			Position = UDim2.new(0, 0, 0, mainY),
-			BackgroundColor3 = C.Card,
-			BorderSizePixel = 0,
-			Parent = mainScroll,
-		})
-		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = row })
-		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = row })
-
-		new("TextLabel", {
-			Size = UDim2.new(1, -104, 0, 18),
-			Position = UDim2.new(0, 14, 0, 9),
-			BackgroundTransparency = 1,
-			Text = name,
-			TextSize = 13,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = row,
-		})
-		new("TextLabel", {
-			Size = UDim2.new(1, -104, 0, 26),
-			Position = UDim2.new(0, 14, 0, 27),
-			BackgroundTransparency = 1,
-			Text = desc,
-			TextSize = 10,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextYAlignment = Enum.TextYAlignment.Top,
-			TextWrapped = true,
-			Parent = row,
-		})
-
-		if kind == "toggle" then
-			createSwitch(row, {
-				Name = "Sw_" .. key,
-				Position = UDim2.new(1, -54, 0, 15),
-				Default = false,
-				OnChange = onToggle,
-			})
-		else
-			createButton(row, {
-				Name = "Btn_" .. key,
-				Size = UDim2.new(0, 76, 0, 28),
-				Position = UDim2.new(1, -90, 0, 12),
-				Text = L("srvOpen"),
-				TextSize = 12,
-				Radius = R.ctl,
-				OnClick = onPress,
-			})
-		end
-
-		mainY = mainY + 58
-		return row
-	end
-
-	mainSection(L("mainTools"))
-	mainRow("Balloon", L("mainBalloon"), L("mainBalloonD"), "button", nil,
-		function() MainBalloonRequest() end)
-
-	mainSection(L("mainChaos"))
-	mainRow("Blackhole", L("mainBh"), L("mainBhD"), "toggle",
-		function(v) MainBlackholeRequest(v) end)
-	mainRow("ClearMap", L("mainClear"), L("mainClearD"), "button", nil,
-		function() MainClearRequest() end)
-
-	mainSection(L("mainChar"))
-	mainRow("God", L("mainGod"), L("mainGodD"), "toggle", function(v) MainGodRequest(v) end)
-	mainRow("Noclip", L("mainNoclip"), L("mainNoclipD"), "toggle",
-		function(v) MainNoclipRequest(v) end)
-	mainRow("InfiniteJump", L("mainIJump"), L("mainIJumpD"), "toggle",
-		function(v) MainIJumpRequest(v) end)
-
-	mainSection(L("mainPlayers"))
-	mainRow("BringAll", L("mainBring"), L("mainBringD"), "button", nil,
-		function() MainBringRequest() end)
-
-	mainScroll.CanvasSize = UDim2.new(0, 0, 0, mainY + 8)
-
 	srvShow("tp")
 
 	-- 服务器窗口的开场动画（共用 helper）
@@ -5590,395 +5374,6 @@ boot = function(lang)
 		closeSrvWindow()
 	end
 
-	--========================== 主要页：七个功能 ==========================
-	local MAIN = { God = false, Noclip = false, IJump = false }
-	local godConn, noclipConn, iJumpConn
-
-	-- ---------- 获取气球 ----------
-	-- NDS 的回合道具是"走到跟前自动拾取"。所以先在地图上找到它，
-	-- 再用 firetouchinterest 假装碰了一下（拿不到这个函数就直接站上去）。
-	local function findByName(keyword, wantPart)
-		local hit = nil
-		local function scan(root)
-			if hit or not root then return end
-			local ok, list = pcall(function() return root:GetDescendants() end)
-			if not ok or type(list) ~= "table" then return end
-			for _, d in ipairs(list) do
-				if hit then return end
-				local okN, nm = pcall(function() return string.lower(d.Name) end)
-				if okN and type(nm) == "string" and string.find(nm, keyword, 1, true) then
-					if d:IsA("Tool") or (wantPart and d:IsA("BasePart")) then
-						hit = d
-					end
-				end
-			end
-		end
-		pcall(function() scan(workspace) end)
-		if not hit then pcall(function() scan(game:GetService("ReplicatedStorage")) end) end
-		return hit
-	end
-
-	MainBalloonRequest = function()
-		local char, root = ndsChar()
-		if not root then notify(L("tpNoChar"), C.Red) return end
-
-		local item = findByName("balloon", true)
-		if not item then
-			notify(L("mainNoBalloon"), C.Red)
-			return
-		end
-
-		-- 是 Tool 就克隆一份塞背包；是地图上的部件就"碰"一下让游戏自己发
-		if item:IsA("Tool") then
-			local pack = LocalPlayer:FindFirstChild("Backpack")
-			local ok = pack and pcall(function()
-				local c = item:Clone()
-				c.Parent = pack
-			end)
-			notify(ok and L("mainBalloonOk") or L("mainNoBalloon"), ok and C.Green or C.Red)
-			return
-		end
-
-		local touch = execFn("firetouchinterest")
-		local done = false
-		if touch then
-			done = pcall(touch, root, item, 0)
-			pcall(touch, root, item, 1)
-		end
-		if not done then
-			done = pcall(function()
-				root.CFrame = CFrame.new(item.Position + Vector3.new(0, 3, 0))
-			end)
-		end
-		notify(done and L("mainBalloonOk") or L("mainNoBalloon"), done and C.Green or C.Red)
-	end
-
-	-- ---------- 创造黑洞 ----------
-	-- 思路跟社区脚本一致：在中心放一个 Attachment，
-	-- 给附近每个未锚定部件挂 AlignPosition + Torque 往中心拽，新生成的部件也一起接上。
-	local BH = { On = false, Folder = nil, Attach = nil, RingA = nil, RingB = nil,
-	             Targets = {}, ConnAdd = nil, ConnRun = nil }
-
-	local function bhForget(part)
-		for _, nm in ipairs({ "O_X_BH_Attach", "O_X_BH_Align", "O_X_BH_Torque" }) do
-			local c = part:FindFirstChild(nm)
-			if c then pcall(function() c:Destroy() end) end
-		end
-	end
-
-	local function bhStop()
-		if BH.ConnAdd then pcall(function() BH.ConnAdd:Disconnect() end) BH.ConnAdd = nil end
-		if BH.ConnRun then pcall(function() BH.ConnRun:Disconnect() end) BH.ConnRun = nil end
-		for _, part in ipairs(BH.Targets) do
-			if part and part.Parent then bhForget(part) end
-		end
-		BH.Targets = {}
-		if BH.Folder then pcall(function() BH.Folder:Destroy() end) end
-		BH.Folder, BH.Attach, BH.RingA, BH.RingB = nil, nil, nil, nil
-		BH.On = false
-	end
-
-	local function bhForce(part)
-		if not BH.On or not BH.Attach then return end
-		if not part:IsA("BasePart") or part.Anchored or not part.Parent then return end
-		local char = LocalPlayer.Character
-		if char and part:IsDescendantOf(char) then return end      -- 自己不被吸走
-		if part:FindFirstChild("O_X_BH_Align") then return end
-
-		local ok = pcall(function()
-			local attach = Instance.new("Attachment")
-			attach.Name = "O_X_BH_Attach"
-			attach.Parent = part
-
-			local align = Instance.new("AlignPosition")
-			align.Name = "O_X_BH_Align"
-			align.MaxForce = 9e9
-			align.MaxVelocity = math.huge
-			align.Responsiveness = 200
-			align.Attachment0 = attach
-			align.Attachment1 = BH.Attach
-			align.Parent = part
-
-			local torque = Instance.new("Torque")
-			torque.Name = "O_X_BH_Torque"
-			torque.Torque = Vector3.new(1e6, 1e6, 1e5)
-			torque.Attachment0 = attach
-			torque.Parent = part
-
-			part.CanCollide = false
-		end)
-		if ok then table.insert(BH.Targets, part) end
-	end
-
-	local function bhStart()
-		local _, root = ndsChar()
-		if not root then return false end
-		bhStop()
-
-		local pos = root.Position + Vector3.new(0, 6, 0)
-		pcall(function()
-			pos = root.Position + root.CFrame.LookVector * 24 + Vector3.new(0, 6, 0)
-		end)
-
-		local ok = pcall(function()
-			local folder = Instance.new("Folder")
-			folder.Name = "O_X_HUB_BlackHole"
-			folder.Parent = workspace
-
-			local core = Instance.new("Part")
-			core.Name = "Core"
-			core.Shape = Enum.PartType.Ball
-			core.Size = Vector3.new(9, 9, 9)
-			core.Position = pos
-			core.Anchored = true
-			core.CanCollide = false
-			core.Material = Enum.Material.SmoothPlastic
-			core.Color = Color3.fromRGB(6, 6, 10)
-			core.Parent = folder
-
-			local ringA = Instance.new("Part")
-			ringA.Name = "RingA"
-			ringA.Shape = Enum.PartType.Cylinder
-			ringA.Size = Vector3.new(0.5, 17, 17)
-			ringA.Orientation = Vector3.new(0, 0, 90)
-			ringA.Position = pos
-			ringA.Anchored = true
-			ringA.CanCollide = false
-			ringA.Material = Enum.Material.Neon
-			ringA.Color = C.Accent
-			ringA.Parent = folder
-
-			local ringB = Instance.new("Part")
-			ringB.Name = "RingB"
-			ringB.Shape = Enum.PartType.Cylinder
-			ringB.Size = Vector3.new(0.5, 17, 17)
-			ringB.Orientation = Vector3.new(90, 0, 0)
-			ringB.Position = pos
-			ringB.Anchored = true
-			ringB.CanCollide = false
-			ringB.Material = Enum.Material.Neon
-			ringB.Color = C.Accent2
-			ringB.Parent = folder
-
-			local light = Instance.new("PointLight")
-			light.Brightness = 4
-			light.Range = 44
-			light.Color = C.Accent
-			light.Parent = core
-
-			local attach = Instance.new("Attachment")
-			attach.Name = "Pull"
-			attach.Parent = core
-
-			BH.Folder, BH.Attach, BH.RingA, BH.RingB = folder, attach, ringA, ringB
-		end)
-		if not ok then return false end
-
-		BH.On = true
-
-		-- 尽量把附近的网络所有权抢过来，不然只有自己客户端看得见
-		local setRadius = execFn("setsimulationradius")
-		if setRadius then pcall(setRadius, math.huge) end
-
-		for _, d in ipairs(workspace:GetDescendants()) do bhForce(d) end
-		BH.ConnAdd = workspace.DescendantAdded:Connect(function(d) bhForce(d) end)
-		track(BH.ConnAdd)
-
-		BH.ConnRun = RunService.RenderStepped:Connect(function()
-			if not BH.On or not BH.RingA then return end
-			local t = os.clock()
-			pcall(function()
-				BH.RingA.Orientation = Vector3.new(0, (t * 120) % 360, 90)
-				BH.RingB.Orientation = Vector3.new((t * 90) % 360, 0, 90)
-			end)
-		end)
-		track(BH.ConnRun)
-		return true
-	end
-
-	MainBlackholeRequest = function(on)
-		if on then
-			if bhStart() then
-				notify(L("mainBhOn"), C.Green)
-			else
-				notify(L("tpNoChar"), C.Red)
-			end
-		else
-			bhStop()
-			notify(L("mainBhOff"), C.Red)
-		end
-	end
-
-	-- ---------- 清空地图 ----------
-	MainClearRequest = function()
-		local char = LocalPlayer.Character
-		local n = 0
-		for _, d in ipairs(workspace:GetDescendants()) do
-			if d:IsA("BasePart") then
-				local mine = char and d:IsDescendantOf(char)
-				local isBh = BH.Folder and d:IsDescendantOf(BH.Folder)
-				if not mine and not isBh then
-					pcall(function() d:Destroy() end)
-					n = n + 1
-				end
-			end
-		end
-		notify(string.format(L("mainCleared"), n), C.Green)
-	end
-
-	-- ---------- 无敌 ----------
-	-- 开之前先把原来的血量记下来，关掉时还原（不然关完还是满血）
-	local function setGod(on)
-		MAIN.God = on and true or false
-		if godConn then pcall(function() godConn:Disconnect() end) godConn = nil end
-
-		if not MAIN.God then
-			local hum = getHumanoid()
-			if hum and MAIN.GodOldMax then
-				pcall(function()
-					hum.MaxHealth = MAIN.GodOldMax
-					hum.Health = MAIN.GodOldHp or MAIN.GodOldMax
-				end)
-			end
-			MAIN.GodOldMax, MAIN.GodOldHp = nil, nil
-			notify(L("mainGodOff"), C.Red)
-			return
-		end
-
-		local hum = getHumanoid()
-		if hum then
-			local okMax, mx = pcall(function() return hum.MaxHealth end)
-			local okHp, hp = pcall(function() return hum.Health end)
-			MAIN.GodOldMax = (okMax and type(mx) == "number") and mx or 100
-			MAIN.GodOldHp  = (okHp and type(hp) == "number") and hp or MAIN.GodOldMax
-		end
-
-		godConn = RunService.Heartbeat:Connect(function()
-			if SHUTDOWN or not MAIN.God then return end
-			local h = getHumanoid()
-			if not h then return end
-			pcall(function()
-				h.MaxHealth = math.huge
-				h.Health = math.huge
-			end)
-		end)
-		track(godConn)
-		notify(L("mainGodOn"), C.Green)
-	end
-	MainGodRequest = setGod
-
-	-- ---------- 穿墙 ----------
-	-- 记下"本来是能碰撞的"那些部件，关掉时恢复，否则会一直往地下掉
-	local function setNoclip(on)
-		MAIN.Noclip = on and true or false
-		if noclipConn then pcall(function() noclipConn:Disconnect() end) noclipConn = nil end
-
-		if not MAIN.Noclip then
-			for part in pairs(MAIN.NoclipSaved or {}) do
-				if part and part.Parent then
-					pcall(function() part.CanCollide = true end)
-				end
-			end
-			MAIN.NoclipSaved = {}
-			notify(L("mainNoclipOff"), C.Red)
-			return
-		end
-
-		MAIN.NoclipSaved = {}
-		noclipConn = RunService.Heartbeat:Connect(function()
-			if SHUTDOWN or not MAIN.Noclip then return end
-			local char = LocalPlayer.Character
-			if not char then return end
-			for _, d in ipairs(char:GetDescendants()) do
-				if d:IsA("BasePart") and d.CanCollide then
-					MAIN.NoclipSaved[d] = true
-					pcall(function() d.CanCollide = false end)
-				end
-			end
-		end)
-		track(noclipConn)
-		notify(L("mainNoclipOn"), C.Green)
-	end
-	MainNoclipRequest = setNoclip
-
-	-- ---------- 无限跳跃 ----------
-	local function setIJump(on)
-		MAIN.IJump = on and true or false
-		if iJumpConn then pcall(function() iJumpConn:Disconnect() end) iJumpConn = nil end
-		if MAIN.IJump then
-			iJumpConn = UserInputService.JumpRequest:Connect(function()
-				if SHUTDOWN or not MAIN.IJump then return end
-				local hum = getHumanoid()
-				if hum then
-					pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
-				end
-			end)
-			track(iJumpConn)
-		end
-		notify(MAIN.IJump and L("mainIJumpOn") or L("mainIJumpOff"), MAIN.IJump and C.Green or C.Red)
-	end
-	MainIJumpRequest = setIJump
-
-	-- ---------- 把所有人拉过来 ----------
-	MainBringRequest = function()
-		local _, root = ndsChar()
-		if not root then notify(L("tpNoChar"), C.Red) return end
-
-		local n = 0
-		local ok, list = pcall(function() return Players:GetPlayers() end)
-		if ok and type(list) == "table" then
-			for _, plr in ipairs(list) do
-				if plr ~= LocalPlayer then
-					local c = plr.Character
-					local r = c and c:FindFirstChild("HumanoidRootPart")
-					if r then
-						local target = root.Position + Vector3.new(n * 4 - 2, 3, 0)
-						if pcall(function() r.CFrame = CFrame.new(target) end) then
-							n = n + 1
-						end
-					end
-				end
-			end
-		end
-		if n > 0 then
-			notify(string.format(L("mainBringOk"), n), C.Green)
-		else
-			notify(L("mainBringNone"), C.Red)
-		end
-	end
-
-	-- 关闭脚本时把这一页开的东西全收掉
-	local function mainReset()
-		if BH.On or BH.Folder then bhStop() end
-		for _, c in ipairs({ godConn, noclipConn, iJumpConn }) do
-			if c then pcall(function() c:Disconnect() end) end
-		end
-		godConn, noclipConn, iJumpConn = nil, nil, nil
-		MAIN.God, MAIN.Noclip, MAIN.IJump = false, false, false
-
-		-- 无敌改过的血量还原
-		local hum = getHumanoid()
-		if hum and MAIN.GodOldMax then
-			pcall(function()
-				hum.MaxHealth = MAIN.GodOldMax
-				hum.Health = MAIN.GodOldHp or MAIN.GodOldMax
-			end)
-		end
-		MAIN.GodOldMax, MAIN.GodOldHp = nil, nil
-
-		-- 穿墙关掉时该恢复的碰撞恢复
-		for part in pairs(MAIN.NoclipSaved or {}) do
-			if part and part.Parent then
-				pcall(function() part.CanCollide = true end)
-			end
-		end
-		MAIN.NoclipSaved = {}
-	end
-
-
-
-
-
 	-- 快捷键
 	track(UserInputService.InputBegan:Connect(function(input, processed)
 		if SHUTDOWN or processed then return end
@@ -6145,8 +5540,6 @@ boot = function(lang)
 
 		-- 自动获胜还在跑的话先断掉，不然关掉之后它还会一直把你往出生点拉
 		pcall(function() SrvAutoWinRequest(false) end)
-		-- 主要页开的东西（黑洞 / 无敌 / 穿墙 / 无限跳跃）也一起收掉
-		pcall(mainReset)
 
 		-- 1. 停飞行。走缓降流程，别让玩家直接摔死
 		pcall(function() Fly:SetEnabled(false) end)
