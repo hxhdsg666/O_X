@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.3.0
+--  Version : 1.3.1
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -32,7 +32,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.3.0",
+	Version = "v1.3.1",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -68,8 +68,11 @@ local CONFIG = {
 	SoftLandTimeout   = 20,    -- 兜底：最多缓降这么久
 
 	-- ---------- 图标 ----------
-	-- 内联的图标会写到执行器工作目录，再用 getcustomasset 转成可用资源
-	IconFile = "oxhub_icon.jpg",
+	-- 内联的图标会写到执行器工作目录，再用 getcustomasset 转成可用资源。
+	-- ⚠️ 文件名必须带内容哈希！写死文件名的话，换图后执行器里残留的旧文件
+	--    会让"已存在就跳过写入"直接跳过，getcustomasset 也按文件名缓存 → 永远显示旧图
+	IconPrefix = "oxhub_icon_",
+	IconFile   = "oxhub_icon.jpg",   -- 老版本用过的固定名，启动时顺手清掉
 }
 
 --========================== 主题色 ==========================
@@ -370,6 +373,15 @@ end
 
 local ICON_ASSET, ICON_TRIED = nil, false
 
+-- 内容哈希（djb2）—— 只用来拼文件名，不做安全用途
+local function contentHash(s)
+	local h = 5381
+	for i = 1, #s do
+		h = (h * 33 + string.byte(s, i)) % 4294967296
+	end
+	return string.format("%08x", h)
+end
+
 local function getIconAsset()
 	if ICON_TRIED then return ICON_ASSET end
 	ICON_TRIED = true
@@ -377,21 +389,47 @@ local function getIconAsset()
 	local writeFile = execFn("writefile")
 	local getCustom = execFn("getcustomasset") or execFn("getsynasset")
 	local isFile    = execFn("isfile")
+	local delFile   = execFn("delfile")
+	local listFiles = execFn("listfiles")
 
 	if not writeFile or not getCustom then
 		return nil
 	end
 
 	local ok, res = pcall(function()
-		local name = CONFIG.IconFile
+		local data = b64decode(ICON_B64)
+
+		-- 文件名里带内容哈希：换了图就是另一个文件，
+		-- 既不会被"已存在就跳过"挡住，也绕开了 getcustomasset 按文件名做的缓存
+		local name = CONFIG.IconPrefix .. contentHash(data) .. ".jpg"
+
+		-- 清掉历史遗留：老版本写死的固定名 + 以前其它哈希留下的旧图标
+		if delFile then
+			pcall(delFile, CONFIG.IconFile)
+			if listFiles then
+				local okL, files = pcall(listFiles)
+				if okL and type(files) == "table" then
+					for _, f in ipairs(files) do
+						local p = tostring(f)
+						local base = p:match("([^/\\]+)$") or p
+						if base ~= name and base:sub(1, #CONFIG.IconPrefix) == CONFIG.IconPrefix then
+							pcall(delFile, p)
+						end
+					end
+				end
+			end
+		end
+
 		local need = true
 		if isFile then
 			local okF, has = pcall(isFile, name)
+			-- 同名 = 同内容，可以放心跳过
 			if okF and has then need = false end
 		end
 		if need then
-			writeFile(name, b64decode(ICON_B64))
+			writeFile(name, data)
 		end
+
 		local asset = getCustom(name)
 		if type(asset) ~= "string" or asset == "" then
 			error("图标资源转换失败")
