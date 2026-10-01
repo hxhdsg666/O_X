@@ -67,7 +67,8 @@ local LOCALES = {
 		denyJoin     = "加入对应服务器",
 		joinOk       = "正在加入「%s」  ·  落地后会自动重新执行脚本",
 		joinNoQueue  = "正在加入「%s」  ·  这个执行器不支持传送后自动执行，落地后请手动再注入一次",
-		joinFail     = "加入失败：%s  ·  Place ID 已复制到剪贴板，请手动加入",
+		joinFail     = "加入失败：%s  ·  游戏链接已复制到剪贴板，请用浏览器打开",
+		joinSilent   = "传送未生效（执行器或 Roblox 拦截了）  ·  游戏链接已复制，请用浏览器打开",
 
 		-- 服务器面板
 		srvTabTp     = "传送",
@@ -203,7 +204,8 @@ local LOCALES = {
 		denyJoin     = "Join that game",
 		joinOk       = "Joining %s  ·  the script re-runs automatically on arrival",
 		joinNoQueue  = "Joining %s  ·  this executor cannot auto-run after teleport, inject again on arrival",
-		joinFail     = "Join failed: %s  ·  Place ID copied to clipboard, please join manually",
+		joinFail     = "Join failed: %s  ·  game link copied to clipboard, open it in your browser",
+		joinSilent   = "Teleport silently rejected by executor or Roblox  ·  game link copied, open it in your browser",
 
 		srvTabTp     = "Teleport",
 		srvTabFarm   = "Farm",
@@ -325,7 +327,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.8.1",
+	Version = "v1.8.2",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -2208,6 +2210,10 @@ local function joinPlace(id, name)
 		end)
 	end
 
+	-- 记下当前 Place ID，3 秒后用来验证传送是否真的发生了
+	-- （执行器 / Roblox 反作弊会静默忽略 Teleport 请求，pcall 不会报错）
+	local beforePlace = (pcall(function() return game.PlaceId end)) and game.PlaceId or nil
+
 	-- 先尝试不带 player 的传送（某些执行器在这个模式下更稳定）
 	local ok, err = pcall(function() TeleportService:Teleport(id) end)
 	if not ok then
@@ -2215,22 +2221,35 @@ local function joinPlace(id, name)
 		ok, err = pcall(function() TeleportService:Teleport(id, LocalPlayer) end)
 	end
 
-	if ok then
-		notify(string.format(queued and L("joinOk") or L("joinNoQueue"), tostring(name)), C.Accent)
-	else
-		-- pcall 就抛了，连请求都没发出去
-		notify(string.format(L("joinFail"), tostring(err or "Teleport rejected")), C.Amber)
-		-- 把 Place ID 写进剪贴板，用户可以手动去加入
+	local function copyGameLink()
 		pcall(function()
 			local clip = execFn("setclipboard") or execFn("toclipboard")
-			if clip then clip(tostring(id)) end
+			if clip then clip("https://www.roblox.com/games/" .. tostring(id)) end
 		end)
 	end
 
-	-- 3 秒后不管成没成，把一次性监听器断掉，避免泄漏
-	task.delay(3, function()
-		if failConn then pcall(function() failConn:Disconnect() end) end
-	end)
+	if ok then
+		notify(string.format(queued and L("joinOk") or L("joinNoQueue"), tostring(name)), C.Accent)
+		-- 验证：传送成功玩家会进入新 place、脚本会被卸载；
+		-- 如果 3 秒后还在原 place，说明请求被静默忽略
+		task.delay(3, function()
+			if SHUTDOWN then return end
+			local afterPlace = (pcall(function() return game.PlaceId end)) and game.PlaceId or nil
+			if beforePlace and afterPlace == beforePlace then
+				notify(L("joinSilent"), C.Amber)
+				copyGameLink()
+			end
+			if failConn then pcall(function() failConn:Disconnect() end) end
+		end)
+	else
+		-- pcall 就抛了，连请求都没发出去
+		notify(string.format(L("joinFail"), tostring(err or "Teleport rejected")), C.Amber)
+		copyGameLink()
+		-- 也设个 3 秒定时把监听器关掉
+		task.delay(3, function()
+			if failConn then pcall(function() failConn:Disconnect() end) end
+		end)
+	end
 end
 
 local function showDenyModal(titleText, bodyText, noteText, placeId, serverName)
