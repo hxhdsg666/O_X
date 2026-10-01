@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.5.0
+--  Version : 1.5.1
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -221,7 +221,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.5.0",
+	Version = "v1.5.1",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -761,48 +761,6 @@ local function dumpClipboardCandidates()
 	end)
 end
 
--- 整体淡入
-local function fadeIn(root, dur)
-	local info = TweenInfo.new(dur or 0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	for _, d in ipairs(root:GetDescendants()) do
-		if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
-			local tt = d.TextTransparency
-			if tt < 1 then
-				d.TextTransparency = 1
-				TweenService:Create(d, info, { TextTransparency = tt }):Play()
-			end
-			local bt = d.BackgroundTransparency
-			if bt < 1 then
-				d.BackgroundTransparency = 1
-				TweenService:Create(d, info, { BackgroundTransparency = bt }):Play()
-			end
-		elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
-			local it = d.ImageTransparency
-			if it < 1 then
-				d.ImageTransparency = 1
-				TweenService:Create(d, info, { ImageTransparency = it }):Play()
-			end
-			local bt = d.BackgroundTransparency
-			if bt < 1 then
-				d.BackgroundTransparency = 1
-				TweenService:Create(d, info, { BackgroundTransparency = bt }):Play()
-			end
-		elseif d:IsA("Frame") or d:IsA("ScrollingFrame") then
-			local bt = d.BackgroundTransparency
-			if bt < 1 then
-				d.BackgroundTransparency = 1
-				TweenService:Create(d, info, { BackgroundTransparency = bt }):Play()
-			end
-		elseif d:IsA("UIStroke") then
-			local st = d.Transparency
-			if st < 1 then
-				d.Transparency = 1
-				TweenService:Create(d, info, { Transparency = st }):Play()
-			end
-		end
-	end
-end
-
 -- 拖拽。scaleFn 用来抵消 UIScale —— 否则缩放后拖拽会"跟不上手"
 -- 所有全局连接的登记处 —— 主窗口 ✕ 关掉时要能把它们全断开
 local GLOBAL_CONNS = {}
@@ -936,6 +894,25 @@ end
 -- 记住每个元素"本来该在哪"：反复入场（切页 / 重启）时不会越滑越偏
 local BASE_POS = setmetatable({}, { __mode = "k" })
 
+-- 正在做入场动画的元素：它的"目标透明度"必须沿用第一次记下来的值。
+-- 否则动画叠加时（比如先整体淡入、再逐项入场）会把"中途被藏起来的状态"
+-- 当成目标，tween 完元素就永远不显示了。
+local IN_FLIGHT = setmetatable({}, { __mode = "k" })
+
+local function snapshotAlpha(d)
+	local live = IN_FLIGHT[d]
+	if live then return live end
+	local e = { d = d, bg = d.BackgroundTransparency }
+	if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+		e.tx = d.TextTransparency
+	end
+	if d:IsA("ImageLabel") or d:IsA("ImageButton") then
+		e.im = d.ImageTransparency
+	end
+	IN_FLIGHT[d] = e
+	return e
+end
+
 local function slideIn(obj, dy, waitSec, dur)
 	if not obj then return end
 	local base = BASE_POS[obj]
@@ -943,13 +920,23 @@ local function slideIn(obj, dy, waitSec, dur)
 		base = obj.Position
 		BASE_POS[obj] = base
 	end
-	local snap = alphaSnapshot(obj)
+
+	local snap = {}
+	local function cap(d)
+		if not d:IsA("GuiObject") then return end
+		snap[#snap + 1] = snapshotAlpha(d)
+	end
+	cap(obj)
+	for _, d in ipairs(obj:GetDescendants()) do cap(d) end
+
 	obj.Position = UDim2.new(base.X.Scale, base.X.Offset, base.Y.Scale, base.Y.Offset + (dy or 10))
 	setAlpha(snap, 1)
+
+	local total = dur or 0.34
 	task.spawn(function()
 		if waitSec and waitSec > 0 then task.wait(waitSec) end
 		if not obj.Parent then return end
-		local info = TweenInfo.new(dur or 0.34, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+		local info = TweenInfo.new(total, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 		TweenService:Create(obj, info, { Position = base }):Play()
 		for _, e in ipairs(snap) do
 			local props = {}
@@ -957,6 +944,13 @@ local function slideIn(obj, dy, waitSec, dur)
 			if e.im ~= nil then props.ImageTransparency = e.im end
 			if e.bg ~= nil then props.BackgroundTransparency = e.bg end
 			TweenService:Create(e.d, info, props):Play()
+		end
+	end)
+
+	-- 这一批 tween 跑完才解除标记（动画中途再入场就能续用同一份快照）
+	task.delay(total + 0.06, function()
+		for _, e in ipairs(snap) do
+			if IN_FLIGHT[e.d] == e then IN_FLIGHT[e.d] = nil end
 		end
 	end)
 end
@@ -4605,8 +4599,11 @@ boot = function(lang)
 		applySettings()
 		refreshHomeStats()
 		guiMain.Enabled = true
-		fadeIn(guiMain, 0.32)
 
+		-- ⚠️ 这里只能有一套入场动画。
+		-- 之前是 fadeIn(guiMain) + staggerIn(...) 同一帧叠着跑，staggerIn 的快照会读到
+		-- fadeIn 刚置上去的"全透明"，于是把全透明当成目标 → 界面再也不显示文字。
+		-- 窗口从略小弹回原尺寸 + 顶栏 / 侧栏 / 内容依次落下，这一套就够了。
 		-- 窗口从略小弹回原尺寸，顶栏 / 侧栏 / 内容依次落下
 		uiScale.Scale = math.clamp(computeScale(WIN_W, WIN_H) * 0.9, 0.5, 1)
 		TweenService:Create(
