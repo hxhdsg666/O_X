@@ -1,14 +1,17 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.3.1
+--  Version : 1.4.0
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
 --    loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/O_X_HUB.lua"))()
 --
 --  说明：
+--    · 注入后第一屏是语言选择（英文 / 中文），选完才进加载动画
+--    · 界面文案跟随所选语言；只有 "O_X HUB" 这个名字两种语言都不翻译
 --    · 主窗口做成软件样式：右上角 － 最小化成图标 / ✕ 结束整个脚本
---    · 左侧是功能列表：主页 / 通用（速度·跳跃·重力）/ 飞行
+--    · 左侧是功能列表：主页 / 通用（速度·跳跃·重力）/ 飞行 / 设置
+--    · 设置页：联系作者（点一下复制邮箱）+ 语言切换（切换后脚本重启）
 --    · 主窗口、飞行窗口、悬浮图标都可以拖动移动
 --    · 飞行是独立窗口：－ 收成胶囊，✕ 只结束飞行
 --    · 飞行开启后角色进入飞行状态，官方摇杆 / WASD 直接控制方向，
@@ -29,10 +32,182 @@ if _G.O_X_HUB_LOADED then
 	pcall(_G.O_X_HUB_LOADED, true)
 end
 
+--========================== 语言包 ==========================
+-- 约定：`O_X HUB` 这个名字两种语言都不翻译，所以它不放进语言包。
+-- 英文模式下界面上不允许出现任何中文（有断言在测）。
+local LOCALES = {
+	zh = {
+		-- 加载动画
+		loading      = "正在启动...",
+		boot1        = "初始化运行环境...",
+		boot2        = "加载核心模块...",
+		boot3        = "注入界面组件...",
+		boot4        = "接管移动控制...",
+		boot5        = "启动完成",
+		loaded       = "%s 加载完成  ·  %s",
+
+		-- 侧栏
+		navGroup     = "功能列表",
+		navHome      = "主页",
+		navGeneral   = "通用",
+		navFly       = "飞行",
+		navSettings  = "设置",
+
+		-- 主页
+		homeWelcome  = "欢迎使用 %s",
+		homeSub      = "执行器脚本合集  ·  %s",
+		cardFlyTitle = "飞行",
+		cardFlyDesc  = "官方摇杆 / WASD 直接控制  ·  自动悬停",
+		cardGenTitle = "通用",
+		cardGenDesc  = "移动速度  ·  跳跃高度  ·  重力",
+		homeHint     = "左侧切换功能页。飞行是独立窗口，可以单独最小化或关闭。",
+
+		-- 通用设置
+		genTitle     = "通用设置",
+		genSub       = "改动立即生效，复活后自动重新应用",
+		walkSpeed    = "移动速度",
+		jumpPower    = "跳跃高度",
+		gravity      = "重力",
+		resetBtn     = "恢复默认",
+		resetDone    = "已恢复默认属性",
+		gravityWarn  = "重力改动影响整个服务器画面，慎调",
+
+		-- 飞行窗口
+		flyTitle     = "O_X 飞行",
+		flyStopped   = "已停止",
+		flyFlying    = "飞行中",
+		flyOn        = "开启飞行",
+		flyOff       = "关闭飞行",
+		flySpeed     = "飞行速度",
+		shieldTitle  = "伤害保护",
+		shieldDesc   = "速度回零：撞到东西、落地都不掉血",
+		softTitle    = "落地缓降",
+		softDesc     = "关飞行后缓降到贴地才放手",
+		hintMobile   = "手机",
+		hintMobileV  = "摇杆控制方向，滑动屏幕转向；抬头 + 前进即上升",
+		hintPC       = "电脑",
+		hintPCV      = "WASD 移动  ·  空格上升  ·  Ctrl / Shift 下降",
+		hintKey      = "开关",
+		hintKeyV     = "按 F 键，或点上面的按钮",
+		flyCapsule   = "飞行",
+		stateOn      = "已开启",
+		stateOff     = "已关闭",
+
+		-- 提示条
+		noChar       = "角色未加载，无法起飞",
+		flyOnMsg     = "飞行已开启  ·  速度 %s",
+		flyOffMsg    = "飞行已关闭",
+		softLandMsg  = "缓降中  ·  落地后自动交回操作",
+		shieldOnMsg  = "伤害保护已开启  ·  飞行中撞东西 / 落地都不掉血",
+		shieldOffMsg = "伤害保护已关闭",
+
+		-- 设置页
+		setTitle     = "设置",
+		setSub       = "联系作者与语言设置",
+		contact      = "联系作者",
+		contactHint  = "点一下复制邮箱",
+		copied       = "邮箱已复制到剪贴板",
+		copyFail     = "复制失败，请手动复制：%s",
+		language     = "语言",
+		langHint     = "切换后脚本会重启",
+		langSwitched = "已切换为 %s，正在重启...",
+		langNameZh   = "中文",
+		langNameEn   = "英文",
+	},
+
+	en = {
+		loading      = "Starting...",
+		boot1        = "Initializing environment...",
+		boot2        = "Loading core modules...",
+		boot3        = "Building interface...",
+		boot4        = "Taking over movement...",
+		boot5        = "Ready",
+		loaded       = "%s loaded  ·  %s",
+
+		navGroup     = "FEATURES",
+		navHome      = "Home",
+		navGeneral   = "General",
+		navFly       = "Fly",
+		navSettings  = "Settings",
+
+		homeWelcome  = "Welcome to %s",
+		homeSub      = "Executor script suite  ·  %s",
+		cardFlyTitle = "Flight",
+		cardFlyDesc  = "Official joystick / WASD  ·  Auto hover",
+		cardGenTitle = "General",
+		cardGenDesc  = "Walk speed  ·  Jump power  ·  Gravity",
+		homeHint     = "Switch pages from the sidebar. Flight opens in its own window.",
+
+		genTitle     = "General settings",
+		genSub       = "Changes apply instantly and reapply after respawn",
+		walkSpeed    = "Walk speed",
+		jumpPower    = "Jump power",
+		gravity      = "Gravity",
+		resetBtn     = "Reset to default",
+		resetDone    = "Settings restored",
+		gravityWarn  = "Gravity affects the whole server, change with care",
+
+		flyTitle     = "O_X Flight",
+		flyStopped   = "Stopped",
+		flyFlying    = "Flying",
+		flyOn        = "Start flight",
+		flyOff       = "Stop flight",
+		flySpeed     = "Flight speed",
+		shieldTitle  = "Damage shield",
+		shieldDesc   = "Zeroes velocity: no damage on impact or landing",
+		softTitle    = "Soft landing",
+		softDesc     = "Descends gently, releases once grounded",
+		hintMobile   = "Mobile",
+		hintMobileV  = "Joystick to move, swipe to turn; look up + forward to ascend",
+		hintPC       = "PC",
+		hintPCV      = "WASD to move  ·  Space up  ·  Ctrl / Shift down",
+		hintKey      = "Toggle",
+		hintKeyV     = "Press F, or click the button above",
+		flyCapsule   = "Fly",
+		stateOn      = "On",
+		stateOff     = "Off",
+
+		noChar       = "Character not loaded, cannot take off",
+		flyOnMsg     = "Flight on  ·  speed %s",
+		flyOffMsg    = "Flight off",
+		softLandMsg  = "Descending  ·  control returns on landing",
+		shieldOnMsg  = "Damage shield on  ·  no damage on impact or landing",
+		shieldOffMsg = "Damage shield off",
+
+		setTitle     = "Settings",
+		setSub       = "Contact and language",
+		contact      = "Contact",
+		contactHint  = "Click to copy the address",
+		copied       = "Address copied to clipboard",
+		copyFail     = "Copy failed, please copy manually: %s",
+		language     = "Language",
+		langHint     = "Switching restarts the script",
+		langSwitched = "Switched to %s, restarting...",
+		langNameZh   = "Chinese",
+		langNameEn   = "English",
+	},
+}
+
+-- 当前语言（boot 时设定）。切换语言 = 重启整个界面，所以它放在 boot 外面。
+local LANG = "zh"
+
+-- 取词：当前语言没有就退回中文包，再没有就直接显示 key（方便发现漏翻）
+local function L(key, ...)
+	local pack = LOCALES[LANG] or LOCALES.zh
+	local str  = pack[key]
+	if str == nil then str = LOCALES.zh[key] end
+	if str == nil then return key end
+	if select("#", ...) > 0 then
+		local ok, out = pcall(string.format, str, ...)
+		if ok then return out end
+	end
+	return str
+end
+
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.3.1",
+	Version = "v1.4.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -67,12 +242,15 @@ local CONFIG = {
 	SoftLandSettle    = 0.12,  -- 站稳后等这么久（让物理速度彻底归零）再放开控制
 	SoftLandTimeout   = 20,    -- 兜底：最多缓降这么久
 
-	-- ---------- 图标 ----------
-	-- 内联的图标会写到执行器工作目录，再用 getcustomasset 转成可用资源。
+	-- ---------- 图标 / 内联资源 ----------
+	-- 内联资源会写到执行器工作目录，再用 getcustomasset 转成可用资源。
 	-- ⚠️ 文件名必须带内容哈希！写死文件名的话，换图后执行器里残留的旧文件
 	--    会让"已存在就跳过写入"直接跳过，getcustomasset 也按文件名缓存 → 永远显示旧图
-	IconPrefix = "oxhub_icon_",
-	IconFile   = "oxhub_icon.jpg",   -- 老版本用过的固定名，启动时顺手清掉
+	AssetPrefix = "oxhub_",
+	IconFile    = "oxhub_icon.jpg",   -- 老版本用过的固定名，启动时顺手清掉
+
+	-- ---------- 联系方式 ----------
+	Contact = "oxhub@atomicmail.io",
 }
 
 --========================== 主题色 ==========================
@@ -97,8 +275,10 @@ local C = {
 local FONT_N = Enum.Font.GothamMedium
 local FONT_B = Enum.Font.GothamBold
 
--- 图标资源（160x160 JPEG，base64 内联，运行时写入执行器工作目录后转成可用资源）
-local ICON_B64 = [==[
+-- 内联资源：图标 + 两面国旗（base64，运行时落盘再 getcustomasset）
+-- 统一放一张表里，加资源只要往这里塞一条
+local ASSET_B64 = {
+	icon    = [==[
 /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEEx
 NDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7
 Ozs7Ozs7Ozs7Ozs7Ozv/wAARCACgAKADASIAAhEBAxEB/8QAGwAAAQUBAQAAAAAAAAAAAAAABAECAwUGBwD/xAA1EAACAQMD
@@ -148,7 +328,26 @@ j1BHp/NLLIVkKZ/BgY/at7bxvHcNb+q4bC2xG4ZmXIIrmeqardanOWLMSxwB61Fa+Nd6LLc3ErBbfakQ
 q3iQ+KUeeV85J2rx/cGtM8+t1kb2wngJWbyybQ+w+h5FU07FTtHFbrVIYbv6xt4ZVLQySCIheuASnH8VmNa0mWzvvu4Rm3sf
 C4yXAJH/AFQvRnOKFsjNRMWJzii5LeVXKeG29RkrjkCh3RlLKykFTg+xpDIRIVrzSk+tedscVESPWsPTg3OcV4yVGW7A0gyT
 wKwdSh92PanUkceB5utP2CgD/9k=
-]==]
+]==],
+	flag_us = [==[
+iVBORw0KGgoAAAANSUhEUgAAAHgAAABQCAIAAABd+SbeAAABnklEQVR42u3bwU3DQBCFYRtRCbQAp9gl0Ep8o4+0AiUk4kIN
+nCnDHCxZVtZRBMi7zvh7N0Yc2F+zs/OeTN3s9tXK9Pr9UYXT3fSH4+kw+0ul6mFB03Kqm90+bai26WYbLU895Oioxxk9HHs4
+anqvc9bjz2hzeXHQx9Ohbbq26c7OX6oeeXRcarQ8czl8s9eze3SpeR0YtPWunGFJ52ae+uYMy3ijz6720nWGhWFhWG50dExP
+O223nPVNGJb0OpeqMyw5DEvwGb0ewyL4FzD9Xfezxx6v+dnztWh91MvXZ0zQ04ZKH6uc9cDrxxr3aKESLRD8lwqYtrJHp09W
+5vpW9miGhWEJalhKBUwbCv4FSQwLw1IJ/n+fdRRf70JmHb5U8qWSPdqXSkKlG3kMh4mZBvN56uOf8f74bI+2R/9jdGT+9Otq
+PbIFLw43/Dc09ujSwX/lHzqtd0DT5dHR9z0KOhpoAhrobT+Gbw9PKOhooAlooIEmoGUdpKOBBpqAlnWQjgYaaAIaaAJa1qGj
+CWigCWhZh44moIEmoIEGmhbVDxSCQ6gv5jfkAAAAAElFTkSuQmCC
+]==],
+	flag_cn = [==[
+iVBORw0KGgoAAAANSUhEUgAAAHgAAABQCAIAAABd+SbeAAABiUlEQVR42u3b3U2EQBQGUCEUQAs+Wgv12s7SwpbgAwnZABlZ
+ZkC5c77skzFEz4yXOz82j6/+Q85PiyA+9Of3E/TpslUpXw09Dn1tvnM6FeOaNNd3HZvQ49Cb0Scqh/ctU6OrLbg36DrGoZ8+
+tY1Ze+V0fvVNW8dzP/4ynC1K1dlX3Hi12xL8f0MX/9NePDBe6ej+/CeopHU5UqPXNEVK6qLoTy1KfOhSE+0trGC4u2p0kV+4
+noVfgdJxbGojfrvrOEBGOetluGdqIy7QR/+KSPk2K8PAPXVbUMGu6T1m9DRO82gFG7Yus0fO51g/YfpKsIq/t+tIH0Hl73Ce
+tKy/cenYPB/JR1k8odL96D17/PMAeCVmzejNiZy/hbSuy9Mn3mi1xZfUiW9OnwqmTxRdoHGvw5mhK2GuhCkdgUrHzgYGdO6V
+MH30FXO52s3rxn9lae9AC2jQoAU0aAENGrSABi2gQYMW0KAFNGjQAhq0gAYNWkCDFtCgQQto0AIaNGgBDVpAgwYtoEPkBwXU
+pb8MT+3nAAAAAElFTkSuQmCC
+]==],
+}
 
 --========================== 工具函数 ==========================
 
@@ -371,20 +570,36 @@ local function b64decode(data)
 	return table.concat(out)
 end
 
-local ICON_ASSET, ICON_TRIED = nil, false
-
--- 内容哈希（djb2）—— 只用来拼文件名，不做安全用途
+-- 内容哈希（djb2）—— 只用来拼文件名，不做安全用途。
+-- 这里手写十六进制：hash 经常超过 2^31，string.format("%x", ...) 在部分运行时
+-- （数值走双精度/32 位位运算的那种）会报 "number has no integer representation"。
+local HEX_DIGITS = "0123456789abcdef"
 local function contentHash(s)
 	local h = 5381
 	for i = 1, #s do
 		h = (h * 33 + string.byte(s, i)) % 4294967296
 	end
-	return string.format("%08x", h)
+	local out = {}
+	for i = 7, 0, -1 do
+		local d = math.floor(h / (16 ^ i)) % 16
+		out[#out + 1] = HEX_DIGITS:sub(d + 1, d + 1)
+	end
+	return table.concat(out)
 end
 
-local function getIconAsset()
-	if ICON_TRIED then return ICON_ASSET end
-	ICON_TRIED = true
+-- 资源缓存（放在 boot 外面：重启语言时不用重新落盘）
+--   TRIED[key] = true 表示"试过了"，CACHE[key] 为 nil 就是这台执行器用不了
+local ASSET_TRIED, ASSET_CACHE = {}, {}
+
+-- 各资源的文件扩展名（getcustomasset 靠它判断类型）
+local ASSET_EXT = { icon = "jpg", flag_us = "png", flag_cn = "png" }
+
+local function getAsset(key)
+	if ASSET_TRIED[key] then return ASSET_CACHE[key] end
+	ASSET_TRIED[key] = true
+
+	local b64 = ASSET_B64[key]
+	if not b64 then return nil end
 
 	local writeFile = execFn("writefile")
 	local getCustom = execFn("getcustomasset") or execFn("getsynasset")
@@ -397,22 +612,24 @@ local function getIconAsset()
 	end
 
 	local ok, res = pcall(function()
-		local data = b64decode(ICON_B64)
+		local data = b64decode(b64)
+		local ext  = ASSET_EXT[key] or "png"
 
 		-- 文件名里带内容哈希：换了图就是另一个文件，
 		-- 既不会被"已存在就跳过"挡住，也绕开了 getcustomasset 按文件名做的缓存
-		local name = CONFIG.IconPrefix .. contentHash(data) .. ".jpg"
+		local prefix = CONFIG.AssetPrefix .. key .. "_"
+		local name   = prefix .. contentHash(data) .. "." .. ext
 
-		-- 清掉历史遗留：老版本写死的固定名 + 以前其它哈希留下的旧图标
+		-- 清掉历史遗留：老版本写死的固定名 + 以前其它哈希留下的同名资源
 		if delFile then
-			pcall(delFile, CONFIG.IconFile)
+			if key == "icon" and CONFIG.IconFile then pcall(delFile, CONFIG.IconFile) end
 			if listFiles then
 				local okL, files = pcall(listFiles)
 				if okL and type(files) == "table" then
 					for _, f in ipairs(files) do
 						local p = tostring(f)
 						local base = p:match("([^/\\]+)$") or p
-						if base ~= name and base:sub(1, #CONFIG.IconPrefix) == CONFIG.IconPrefix then
+						if base ~= name and base:sub(1, #prefix) == prefix then
 							pcall(delFile, p)
 						end
 					end
@@ -432,16 +649,23 @@ local function getIconAsset()
 
 		local asset = getCustom(name)
 		if type(asset) ~= "string" or asset == "" then
-			error("图标资源转换失败")
+			error("资源转换失败: " .. key)
 		end
 		return asset
 	end)
 
 	if ok and type(res) == "string" then
-		ICON_ASSET = res
+		ASSET_CACHE[key] = res
+	else
+		-- 写不进去也不能把整个脚本拖垮：界面会自动退回代码画的 LOGO
+		pcall(function()
+			print("[O_X HUB] 资源不可用 " .. tostring(key) .. " -> " .. tostring(res))
+		end)
 	end
-	return ICON_ASSET
+	return ASSET_CACHE[key]
 end
+
+local function getIconAsset() return getAsset("icon") end
 
 -- 统一的 LOGO：有图标就用图标，没有就代码画一个
 local function createLogo(parent, opts)
@@ -483,6 +707,42 @@ local function createLogo(parent, opts)
 		})
 	end
 	return holder
+end
+
+-- 国旗图标：拿不到资源就退回一个文字色块，界面不会开天窗
+local function createFlag(parent, assetKey, size, pos, anchor, radius, fallbackText)
+	local box = new("Frame", {
+		Size = size,
+		Position = pos,
+		AnchorPoint = anchor or Vector2.new(0, 0),
+		BackgroundColor3 = C.Card2,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		Parent = parent,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, radius or 5), Parent = box })
+
+	local asset = getAsset(assetKey)
+	if asset then
+		new("ImageLabel", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Image = asset,
+			ScaleType = Enum.ScaleType.Crop,
+			Parent = box,
+		})
+	else
+		new("TextLabel", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Text = fallbackText or "",
+			TextSize = 15,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			Parent = box,
+		})
+	end
+	return box
 end
 
 --========================== 角色工具 ==========================
@@ -707,31 +967,18 @@ local function createSwitch(parent, opts)
 	return holder
 end
 
---========================== 提示条 ==========================
+--========================== 运行期状态 ==========================
 -- 卸载标记：关掉之后所有还在跑的异步逻辑（缓降、提示、复活恢复）都要安静退出
 local SHUTDOWN = false
 
--- 单独一个 ScreenGui，主窗口隐藏时提示依然能弹出来
-local notifyGui = new("ScreenGui", {
-	Name = "O_X_HUB_Notify",
-	IgnoreGuiInset = true,
-	ResetOnSpawn = false,
-	DisplayOrder = 100001,
-	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-	Parent = GUI_PARENT,
-})
+-- 下面这几个每次 boot 都会重建，所以在外面先声明成 upvalue，boot 里再赋值
+local notifyGui, notifyHolder, notify
+local boot, unloadAll, restart
 
-local notifyHolder = new("Frame", {
-	Name = "NotifyHolder",
-	Size = UDim2.new(0, 300, 0, 46),
-	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 22),
-	BackgroundTransparency = 1,
-	ZIndex = 50,
-	Parent = notifyGui,
-})
-
-local function notify(text, color)
+--========================== 提示条 ==========================
+-- 单独一个 ScreenGui（不挂在主 GUI 下），这样主窗口隐藏时提示照样能弹。
+-- 它在 boot 里创建，所以这里只写函数体。
+notify = function(text, color)
 	if SHUTDOWN then return end
 	local box = new("Frame", {
 		Size = UDim2.fromScale(1, 1),
@@ -848,7 +1095,7 @@ local function createLoadingScreen(opts, onDone)
 		Position = UDim2.new(0.5, 0, 0, 108),
 		AnchorPoint = Vector2.new(0.5, 0),
 		BackgroundTransparency = 1,
-		Text = opts.Subtitle or "正在启动...",
+		Text = opts.Subtitle or L("loading"),
 		TextSize = 13,
 		Font = FONT_N,
 		TextColor3 = C.Sub,
@@ -926,11 +1173,11 @@ local function createLoadingScreen(opts, onDone)
 	end
 
 	local stages = opts.Stages or {
-		{ "初始化运行环境...", 18,  0.36 },
-		{ "加载核心模块...",   42,  0.44 },
-		{ "注入界面组件...",   68,  0.44 },
-		{ "接管移动控制...",   90,  0.34 },
-		{ "启动完成",          100, 0.26 },
+		{ L("boot1"), 18,  0.36 },
+		{ L("boot2"), 42,  0.44 },
+		{ L("boot3"), 68,  0.44 },
+		{ L("boot4"), 90,  0.34 },
+		{ L("boot5"), 100, 0.26 },
 	}
 
 	task.spawn(function()
@@ -961,1876 +1208,2278 @@ local function createLoadingScreen(opts, onDone)
 end
 
 --=====================================================================
---  二、主界面
+--  一·五、语言选择（注入后的第一屏）
+--  两种语言都要露脸，所以这一屏不做翻译，中英并排写
 --=====================================================================
-local WIN_W, WIN_H   = 520, 380
-local SIDEBAR_W      = 132
-local HEADER_H       = 46
+local LANG_CHOICES = {
+	{ key = "en", flag = "flag_us", name = "English", desc = "English" },
+	{ key = "zh", flag = "flag_cn", name = "中文",    desc = "简体中文" },
+}
 
-local FLY_W, FLY_H   = 380, 356
-
-local guiMain = new("ScreenGui", {
-	Name = "O_X_HUB",
-	IgnoreGuiInset = true,
-	ResetOnSpawn = false,
-	DisplayOrder = 99999,
-	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-	Enabled = false,
-	Parent = GUI_PARENT,
-})
-
-local function computeScale(w, h)
-	local cam = workspace.CurrentCamera
-	if not cam then return 1 end
-	local vp = cam.ViewportSize
-	local s = math.min(vp.X / (w + 60), vp.Y / (h + 60), 1)
-	return math.clamp(s, 0.55, 1)
-end
-
---========================== 主窗口 ==========================
-local window = new("Frame", {
-	Name = "Window",
-	Size = UDim2.new(0, WIN_W, 0, WIN_H),
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.5),
-	BackgroundColor3 = C.Window,
-	BorderSizePixel = 0,
-	Parent = guiMain,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = window })
-new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = window })
-
-local uiScale = new("UIScale", { Scale = 1, Parent = window })
-
--- 顶栏
-local header = new("Frame", {
-	Name = "Header",
-	Size = UDim2.new(1, 0, 0, HEADER_H),
-	BackgroundColor3 = C.Window,
-	BorderSizePixel = 0,
-	Parent = window,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = header })
-new("Frame", {
-	Size = UDim2.new(1, 0, 0, 14),
-	Position = UDim2.new(0, 0, 1, -14),
-	BackgroundColor3 = C.Window,
-	BorderSizePixel = 0,
-	Parent = header,
-})
-new("Frame", {
-	Size = UDim2.new(1, -24, 0, 1),
-	Position = UDim2.new(0, 12, 1, -1),
-	BackgroundColor3 = C.Stroke,
-	BorderSizePixel = 0,
-	Parent = header,
-})
-
-createLogo(header, {
-	Size = UDim2.new(0, 26, 0, 26),
-	Position = UDim2.new(0, 14, 0.5, 0),
-	AnchorPoint = Vector2.new(0, 0.5),
-	Radius = 8,
-	TextSize = 15,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(0, 140, 1, 0),
-	Position = UDim2.new(0, 48, 0, 0),
-	BackgroundTransparency = 1,
-	Text = CONFIG.Title,
-	TextSize = 15,
-	Font = FONT_B,
-	TextColor3 = C.Text,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = header,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(0, 80, 1, 0),
-	Position = UDim2.new(1, -158, 0, 0),
-	BackgroundTransparency = 1,
-	Text = CONFIG.Version,
-	TextSize = 11,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Right,
-	Parent = header,
-})
-
--- 最小化：只是把窗口缩成一个悬浮图标，什么都不结束
-local minBtn = new("TextButton", {
-	Name = "Minimize",
-	Size = UDim2.new(0, 28, 0, 28),
-	Position = UDim2.new(1, -72, 0.5, 0),
-	AnchorPoint = Vector2.new(0, 0.5),
-	BackgroundColor3 = C.Card,
-	BorderSizePixel = 0,
-	AutoButtonColor = false,
-	Text = "－",
-	TextSize = 15,
-	Font = FONT_B,
-	TextColor3 = C.Sub,
-	Parent = header,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = minBtn })
-local minStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = minBtn })
-minBtn.MouseEnter:Connect(function()
-	minBtn.BackgroundColor3 = C.Card2
-	minBtn.TextColor3 = C.Text
-	minStroke.Color = C.Dim
-end)
-minBtn.MouseLeave:Connect(function()
-	minBtn.BackgroundColor3 = C.Card
-	minBtn.TextColor3 = C.Sub
-	minStroke.Color = C.Stroke
-end)
-
--- 关闭：真的结束 —— 停飞行、撤伤害保护、断开所有连接、销毁整个界面
-local closeBtn = new("TextButton", {
-	Name = "Close",
-	Size = UDim2.new(0, 28, 0, 28),
-	Position = UDim2.new(1, -38, 0.5, 0),
-	AnchorPoint = Vector2.new(0, 0.5),
-	BackgroundColor3 = C.Card,
-	BorderSizePixel = 0,
-	AutoButtonColor = false,
-	Text = "✕",
-	TextSize = 14,
-	Font = FONT_B,
-	TextColor3 = C.Sub,
-	Parent = header,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = closeBtn })
-local closeStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = closeBtn })
-closeBtn.MouseEnter:Connect(function()
-	closeBtn.BackgroundColor3 = C.Red
-	closeBtn.TextColor3 = C.White
-	closeStroke.Color = C.Red
-end)
-closeBtn.MouseLeave:Connect(function()
-	closeBtn.BackgroundColor3 = C.Card
-	closeBtn.TextColor3 = C.Sub
-	closeStroke.Color = C.Stroke
-end)
-
-makeDraggable(window, header, function() return uiScale.Scale end)
-
--- 侧边栏
-local sidebar = new("Frame", {
-	Name = "Sidebar",
-	Size = UDim2.new(0, SIDEBAR_W, 1, -HEADER_H - 12),
-	Position = UDim2.new(0, 10, 0, HEADER_H + 6),
-	BackgroundColor3 = C.Side,
-	BorderSizePixel = 0,
-	Parent = window,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = sidebar })
-
-new("TextLabel", {
-	Size = UDim2.new(1, -16, 0, 14),
-	Position = UDim2.new(0, 14, 0, 8),
-	BackgroundTransparency = 1,
-	Text = "功能列表",
-	TextSize = 10,
-	Font = FONT_B,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = sidebar,
-})
-
--- 内容区
-local content = new("Frame", {
-	Name = "Content",
-	Size = UDim2.new(1, -(SIDEBAR_W + 32), 1, -HEADER_H - 12),
-	Position = UDim2.new(0, SIDEBAR_W + 22, 0, HEADER_H + 6),
-	BackgroundTransparency = 1,
-	Parent = window,
-})
-
---========================== 页面系统 ==========================
-local pages = {}
-local navItems = {}
-
-local function addPage(key)
-	local page = new("Frame", {
-		Name = "Page_" .. key,
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		Visible = false,
-		Parent = content,
+local function createLanguageScreen(onPick)
+	local gui = new("ScreenGui", {
+		Name = "O_X_HUB_Language",
+		IgnoreGuiInset = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 100002,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		Parent = GUI_PARENT,
 	})
-	pages[key] = page
-	return page
+
+	local bg = new("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = C.Bg,
+		BorderSizePixel = 0,
+		Parent = gui,
+	})
+
+	-- 顶部光晕，跟加载页一个味道
+	local glow = new("Frame", {
+		Size = UDim2.new(1, 0, 0, 260),
+		Position = UDim2.new(0, 0, 0, -190),
+		BackgroundColor3 = C.Accent,
+		BackgroundTransparency = 0.9,
+		BorderSizePixel = 0,
+		Parent = bg,
+	})
+	new("UIGradient", {
+		Rotation = 90,
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = glow,
+	})
+
+	local card = new("Frame", {
+		Name = "LangCard",
+		Size = UDim2.new(0, 430, 0, 372),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Parent = bg,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 18), Parent = card })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = card })
+
+	-- 中间：醒目的图标 + O_X HUB（这个名字不翻译）
+	createLogo(card, {
+		Size = UDim2.new(0, 104, 0, 104),
+		Position = UDim2.new(0.5, 0, 0, 34),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Radius = 28,
+		TextSize = 50,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 34),
+		Position = UDim2.new(0.5, 0, 0, 152),
+		AnchorPoint = Vector2.new(0.5, 0),
+		BackgroundTransparency = 1,
+		Text = CONFIG.Title,
+		TextSize = 28,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		Parent = card,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0.5, 0, 0, 190),
+		AnchorPoint = Vector2.new(0.5, 0),
+		BackgroundTransparency = 1,
+		Text = "选择语言  /  Select language",
+		TextSize = 12,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		Parent = card,
+	})
+
+	local row = new("Frame", {
+		Name = "LangRow",
+		Size = UDim2.new(0, 316, 0, 106),
+		Position = UDim2.new(0.5, 0, 0, 228),
+		AnchorPoint = Vector2.new(0.5, 0),
+		BackgroundTransparency = 1,
+		Parent = card,
+	})
+
+	local picking = false
+	local function pick(key)
+		if picking then return end
+		picking = true
+		TweenService:Create(
+			card,
+			TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{ BackgroundTransparency = 1 }
+		):Play()
+		TweenService:Create(
+			bg,
+			TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{ BackgroundTransparency = 1 }
+		):Play()
+		task.delay(0.22, function()
+			pcall(function() gui:Destroy() end)
+			onPick(key)
+		end)
+	end
+
+	for i, opt in ipairs(LANG_CHOICES) do
+		local btn = new("TextButton", {
+			Name = "Pick_" .. opt.key,
+			Size = UDim2.new(0, 150, 0, 106),
+			Position = UDim2.new(0, (i - 1) * 166, 0, 0),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			Parent = row,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 12), Parent = btn })
+		local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = btn })
+
+		-- 兜底文字用语言代码，不放汉字：英文模式下界面里一个汉字都不许有
+		createFlag(btn, opt.flag, UDim2.new(0, 64, 0, 42), UDim2.new(0.5, 0, 0, 16),
+			Vector2.new(0.5, 0), 6, opt.key == "zh" and "ZH" or "EN")
+
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			Position = UDim2.new(0, 0, 0, 66),
+			BackgroundTransparency = 1,
+			Text = opt.name,
+			TextSize = 15,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			Parent = btn,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 86),
+			BackgroundTransparency = 1,
+			Text = opt.desc,
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			Parent = btn,
+		})
+
+		btn.MouseEnter:Connect(function()
+			btn.BackgroundColor3 = C.Card2
+			stroke.Color = C.Accent
+		end)
+		btn.MouseLeave:Connect(function()
+			btn.BackgroundColor3 = C.Card
+			stroke.Color = C.Stroke
+		end)
+		btn.MouseButton1Click:Connect(function() pick(opt.key) end)
+	end
 end
 
-local function showPage(key)
-	for k, page in pairs(pages) do
-		page.Visible = (k == key)
+--=====================================================================
+--  二、主界面
+--  整个界面（含飞行窗口、悬浮图标、所有连接）都装在 boot 里。
+--  切换语言 = 把旧的整份卸掉 + 再用新语言跑一次 boot，也就是"重启"。
+--=====================================================================
+boot = function(lang)
+	LANG = lang
+	SHUTDOWN = false
+	GLOBAL_CONNS = {}
+
+	-- 提示条 GUI（跟主界面一起重建）
+	notifyGui = new("ScreenGui", {
+		Name = "O_X_HUB_Notify",
+		IgnoreGuiInset = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 100001,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		Parent = GUI_PARENT,
+	})
+
+	notifyHolder = new("Frame", {
+		Name = "NotifyHolder",
+		Size = UDim2.new(0, 300, 0, 46),
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 22),
+		BackgroundTransparency = 1,
+		ZIndex = 50,
+		Parent = notifyGui,
+	})
+
+	local WIN_W, WIN_H   = 520, 380
+	local SIDEBAR_W      = 132
+	local HEADER_H       = 46
+
+	local FLY_W, FLY_H   = 380, 356
+
+	local guiMain = new("ScreenGui", {
+		Name = "O_X_HUB",
+		IgnoreGuiInset = true,
+		ResetOnSpawn = false,
+		DisplayOrder = 99999,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		Enabled = false,
+		Parent = GUI_PARENT,
+	})
+
+	local function computeScale(w, h)
+		local cam = workspace.CurrentCamera
+		if not cam then return 1 end
+		local vp = cam.ViewportSize
+		local s = math.min(vp.X / (w + 60), vp.Y / (h + 60), 1)
+		return math.clamp(s, 0.55, 1)
 	end
-	for k, item in pairs(navItems) do
-		if pages[k] then
-			local active = (k == key)
-			item.bar.BackgroundTransparency = active and 0 or 1
-			item.label.TextColor3 = active and C.Text or C.Sub
-			item.btn.BackgroundColor3 = active and C.Card or C.Side
+
+	--========================== 主窗口 ==========================
+	local window = new("Frame", {
+		Name = "Window",
+		Size = UDim2.new(0, WIN_W, 0, WIN_H),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Parent = guiMain,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = window })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = window })
+
+	local uiScale = new("UIScale", { Scale = 1, Parent = window })
+
+	-- 顶栏
+	local header = new("Frame", {
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, HEADER_H),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Parent = window,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = header })
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 14),
+		Position = UDim2.new(0, 0, 1, -14),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Parent = header,
+	})
+	new("Frame", {
+		Size = UDim2.new(1, -24, 0, 1),
+		Position = UDim2.new(0, 12, 1, -1),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = header,
+	})
+
+	createLogo(header, {
+		Size = UDim2.new(0, 26, 0, 26),
+		Position = UDim2.new(0, 14, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Radius = 8,
+		TextSize = 15,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(0, 140, 1, 0),
+		Position = UDim2.new(0, 48, 0, 0),
+		BackgroundTransparency = 1,
+		Text = CONFIG.Title,
+		TextSize = 15,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = header,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(0, 80, 1, 0),
+		Position = UDim2.new(1, -158, 0, 0),
+		BackgroundTransparency = 1,
+		Text = CONFIG.Version,
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = header,
+	})
+
+	-- 最小化：只是把窗口缩成一个悬浮图标，什么都不结束
+	local minBtn = new("TextButton", {
+		Name = "Minimize",
+		Size = UDim2.new(0, 28, 0, 28),
+		Position = UDim2.new(1, -72, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "－",
+		TextSize = 15,
+		Font = FONT_B,
+		TextColor3 = C.Sub,
+		Parent = header,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = minBtn })
+	local minStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = minBtn })
+	minBtn.MouseEnter:Connect(function()
+		minBtn.BackgroundColor3 = C.Card2
+		minBtn.TextColor3 = C.Text
+		minStroke.Color = C.Dim
+	end)
+	minBtn.MouseLeave:Connect(function()
+		minBtn.BackgroundColor3 = C.Card
+		minBtn.TextColor3 = C.Sub
+		minStroke.Color = C.Stroke
+	end)
+
+	-- 关闭：真的结束 —— 停飞行、撤伤害保护、断开所有连接、销毁整个界面
+	local closeBtn = new("TextButton", {
+		Name = "Close",
+		Size = UDim2.new(0, 28, 0, 28),
+		Position = UDim2.new(1, -38, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "✕",
+		TextSize = 14,
+		Font = FONT_B,
+		TextColor3 = C.Sub,
+		Parent = header,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = closeBtn })
+	local closeStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = closeBtn })
+	closeBtn.MouseEnter:Connect(function()
+		closeBtn.BackgroundColor3 = C.Red
+		closeBtn.TextColor3 = C.White
+		closeStroke.Color = C.Red
+	end)
+	closeBtn.MouseLeave:Connect(function()
+		closeBtn.BackgroundColor3 = C.Card
+		closeBtn.TextColor3 = C.Sub
+		closeStroke.Color = C.Stroke
+	end)
+
+	makeDraggable(window, header, function() return uiScale.Scale end)
+
+	-- 侧边栏
+	local sidebar = new("Frame", {
+		Name = "Sidebar",
+		Size = UDim2.new(0, SIDEBAR_W, 1, -HEADER_H - 12),
+		Position = UDim2.new(0, 10, 0, HEADER_H + 6),
+		BackgroundColor3 = C.Side,
+		BorderSizePixel = 0,
+		Parent = window,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = sidebar })
+
+	new("TextLabel", {
+		Size = UDim2.new(1, -16, 0, 14),
+		Position = UDim2.new(0, 14, 0, 8),
+		BackgroundTransparency = 1,
+		Text = L("navGroup"),
+		TextSize = 10,
+		Font = FONT_B,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = sidebar,
+	})
+
+	-- 内容区
+	local content = new("Frame", {
+		Name = "Content",
+		Size = UDim2.new(1, -(SIDEBAR_W + 32), 1, -HEADER_H - 12),
+		Position = UDim2.new(0, SIDEBAR_W + 22, 0, HEADER_H + 6),
+		BackgroundTransparency = 1,
+		Parent = window,
+	})
+
+	--========================== 页面系统 ==========================
+	local pages = {}
+	local navItems = {}
+
+	local function addPage(key)
+		local page = new("Frame", {
+			Name = "Page_" .. key,
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Visible = false,
+			Parent = content,
+		})
+		pages[key] = page
+		return page
+	end
+
+	local function showPage(key)
+		for k, page in pairs(pages) do
+			page.Visible = (k == key)
+		end
+		for k, item in pairs(navItems) do
+			if pages[k] then
+				local active = (k == key)
+				item.bar.BackgroundTransparency = active and 0 or 1
+				item.label.TextColor3 = active and C.Text or C.Sub
+				item.btn.BackgroundColor3 = active and C.Card or C.Side
+			end
 		end
 	end
-end
 
-local function addNav(key, text, order, onClick)
-	local y = 30 + (order - 1) * 32
-	local btn = new("TextButton", {
-		Name = "Nav_" .. key,
-		Size = UDim2.new(1, -16, 0, 28),
-		Position = UDim2.new(0, 8, 0, y),
-		BackgroundColor3 = C.Side,
+	local function addNav(key, text, order, onClick)
+		local y = 30 + (order - 1) * 32
+		local btn = new("TextButton", {
+			Name = "Nav_" .. key,
+			Size = UDim2.new(1, -16, 0, 28),
+			Position = UDim2.new(0, 8, 0, y),
+			BackgroundColor3 = C.Side,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			Parent = sidebar,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = btn })
+
+		local bar = new("Frame", {
+			Size = UDim2.new(0, 3, 0, 14),
+			Position = UDim2.new(0, 0, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Accent,
+			BorderSizePixel = 0,
+			BackgroundTransparency = 1,
+			Parent = btn,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
+
+		local label = new("TextLabel", {
+			Size = UDim2.new(1, -40, 1, 0),
+			Position = UDim2.new(0, 16, 0, 0),
+			BackgroundTransparency = 1,
+			Text = text,
+			TextSize = 13,
+			Font = FONT_N,
+			TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = btn,
+		})
+
+		-- 右侧小圆点（飞行开着的时候亮绿）
+		local dot = new("Frame", {
+			Size = UDim2.new(0, 6, 0, 6),
+			Position = UDim2.new(1, -14, 0.5, 0),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundColor3 = C.Dim,
+			BorderSizePixel = 0,
+			Parent = btn,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+
+		btn.MouseButton1Click:Connect(function()
+			if onClick then
+				onClick()
+			else
+				showPage(key)
+			end
+		end)
+		btn.MouseEnter:Connect(function()
+			if not pages[key] or not pages[key].Visible then btn.BackgroundColor3 = C.Card end
+		end)
+		btn.MouseLeave:Connect(function()
+			if not pages[key] or not pages[key].Visible then btn.BackgroundColor3 = C.Side end
+		end)
+
+		navItems[key] = { btn = btn, bar = bar, label = label, dot = dot }
+		return btn
+	end
+
+	-- 飞行窗口的开窗函数、飞行开关（都在后面定义，这里先占位）
+	local openFlyWindow = function() end
+	local FlyToggleRequest = function() end
+	-- 伤害保护总开关（速度回零模块在下面才定义，这里先占位，免得闭包绑到全局）
+	local ShieldRequest = function() end
+	-- 主窗口 ✕ = 结束整个脚本；飞行窗口 ✕ = 只结束飞行（都在后面接上）
+	local ShutdownRequest = function() end
+	local FlyCloseRequest = function() end
+
+	--========================== 主页 ==========================
+	local home = addPage("home")
+	addNav("home", L("navHome"), 1)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 24),
+		Position = UDim2.new(0, 0, 0, 6),
+		BackgroundTransparency = 1,
+		Text = string.format(L("homeWelcome"), CONFIG.Title),
+		TextSize = 19,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = home,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0, 0, 0, 32),
+		BackgroundTransparency = 1,
+		Text = string.format(L("homeSub"), CONFIG.Version),
+		TextSize = 12,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = home,
+	})
+
+	-- 飞行状态卡片
+	local flyCard = new("TextButton", {
+		Name = "FlyCard",
+		Size = UDim2.new(1, 0, 0, 64),
+		Position = UDim2.new(0, 0, 0, 60),
+		BackgroundColor3 = C.Card,
 		BorderSizePixel = 0,
 		AutoButtonColor = false,
 		Text = "",
-		Parent = sidebar,
+		Parent = home,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = btn })
+	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = flyCard })
+	local flyCardStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyCard })
 
-	local bar = new("Frame", {
-		Size = UDim2.new(0, 3, 0, 14),
-		Position = UDim2.new(0, 0, 0.5, 0),
-		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundColor3 = C.Accent,
-		BorderSizePixel = 0,
-		BackgroundTransparency = 1,
-		Parent = btn,
-	})
-	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
-
-	local label = new("TextLabel", {
-		Size = UDim2.new(1, -40, 1, 0),
-		Position = UDim2.new(0, 16, 0, 0),
-		BackgroundTransparency = 1,
-		Text = text,
-		TextSize = 13,
-		Font = FONT_N,
-		TextColor3 = C.Sub,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = btn,
-	})
-
-	-- 右侧小圆点（飞行开着的时候亮绿）
-	local dot = new("Frame", {
-		Size = UDim2.new(0, 6, 0, 6),
-		Position = UDim2.new(1, -14, 0.5, 0),
-		AnchorPoint = Vector2.new(0.5, 0.5),
+	local flyDot = new("Frame", {
+		Size = UDim2.new(0, 8, 0, 8),
+		Position = UDim2.new(0, 16, 0, 20),
 		BackgroundColor3 = C.Dim,
 		BorderSizePixel = 0,
-		Parent = btn,
+		Parent = flyCard,
 	})
-	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyDot })
 
-	btn.MouseButton1Click:Connect(function()
-		if onClick then
-			onClick()
-		else
-			showPage(key)
-		end
-	end)
-	btn.MouseEnter:Connect(function()
-		if not pages[key] or not pages[key].Visible then btn.BackgroundColor3 = C.Card end
-	end)
-	btn.MouseLeave:Connect(function()
-		if not pages[key] or not pages[key].Visible then btn.BackgroundColor3 = C.Side end
-	end)
-
-	navItems[key] = { btn = btn, bar = bar, label = label, dot = dot }
-	return btn
-end
-
--- 飞行窗口的开窗函数、飞行开关（都在后面定义，这里先占位）
-local openFlyWindow = function() end
-local FlyToggleRequest = function() end
--- 伤害保护总开关（速度回零模块在下面才定义，这里先占位，免得闭包绑到全局）
-local ShieldRequest = function() end
--- 主窗口 ✕ = 结束整个脚本；飞行窗口 ✕ = 只结束飞行（都在后面接上）
-local ShutdownRequest = function() end
-local FlyCloseRequest = function() end
-
---========================== 主页 ==========================
-local home = addPage("home")
-addNav("home", "主页", 1)
-
-new("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 24),
-	Position = UDim2.new(0, 0, 0, 6),
-	BackgroundTransparency = 1,
-	Text = "欢迎使用 " .. CONFIG.Title,
-	TextSize = 19,
-	Font = FONT_B,
-	TextColor3 = C.Text,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = home,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 16),
-	Position = UDim2.new(0, 0, 0, 32),
-	BackgroundTransparency = 1,
-	Text = "执行器脚本合集  ·  " .. CONFIG.Version,
-	TextSize = 12,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = home,
-})
-
--- 飞行状态卡片
-local flyCard = new("TextButton", {
-	Name = "FlyCard",
-	Size = UDim2.new(1, 0, 0, 64),
-	Position = UDim2.new(0, 0, 0, 60),
-	BackgroundColor3 = C.Card,
-	BorderSizePixel = 0,
-	AutoButtonColor = false,
-	Text = "",
-	Parent = home,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = flyCard })
-local flyCardStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyCard })
-
-local flyDot = new("Frame", {
-	Size = UDim2.new(0, 8, 0, 8),
-	Position = UDim2.new(0, 16, 0, 20),
-	BackgroundColor3 = C.Dim,
-	BorderSizePixel = 0,
-	Parent = flyCard,
-})
-new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyDot })
-
-new("TextLabel", {
-	Size = UDim2.new(1, -100, 0, 18),
-	Position = UDim2.new(0, 32, 0, 14),
-	BackgroundTransparency = 1,
-	Text = "飞行",
-	TextSize = 15,
-	Font = FONT_B,
-	TextColor3 = C.Text,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyCard,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(1, -100, 0, 16),
-	Position = UDim2.new(0, 32, 0, 34),
-	BackgroundTransparency = 1,
-	Text = "官方摇杆 / WASD 直接控制  ·  自动悬停",
-	TextSize = 11,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyCard,
-})
-
-local flyCardState = new("TextLabel", {
-	Size = UDim2.new(0, 70, 1, 0),
-	Position = UDim2.new(1, -80, 0, 0),
-	BackgroundTransparency = 1,
-	Text = "已关闭",
-	TextSize = 12,
-	Font = FONT_B,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Right,
-	Parent = flyCard,
-})
-
-flyCard.MouseEnter:Connect(function() flyCard.BackgroundColor3 = C.Card2 end)
-flyCard.MouseLeave:Connect(function() flyCard.BackgroundColor3 = C.Card end)
-flyCard.MouseButton1Click:Connect(function() openFlyWindow() end)
-
--- 通用设置卡片
-local genCard = new("TextButton", {
-	Name = "GeneralCard",
-	Size = UDim2.new(1, 0, 0, 64),
-	Position = UDim2.new(0, 0, 0, 132),
-	BackgroundColor3 = C.Card,
-	BorderSizePixel = 0,
-	AutoButtonColor = false,
-	Text = "",
-	Parent = home,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = genCard })
-new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = genCard })
-
-new("TextLabel", {
-	Size = UDim2.new(1, -24, 0, 18),
-	Position = UDim2.new(0, 16, 0, 14),
-	BackgroundTransparency = 1,
-	Text = "通用",
-	TextSize = 15,
-	Font = FONT_B,
-	TextColor3 = C.Text,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = genCard,
-})
-new("TextLabel", {
-	Size = UDim2.new(1, -24, 0, 16),
-	Position = UDim2.new(0, 16, 0, 34),
-	BackgroundTransparency = 1,
-	Text = "移动速度  ·  跳跃高度  ·  重力",
-	TextSize = 11,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = genCard,
-})
-genCard.MouseEnter:Connect(function() genCard.BackgroundColor3 = C.Card2 end)
-genCard.MouseLeave:Connect(function() genCard.BackgroundColor3 = C.Card end)
-genCard.MouseButton1Click:Connect(function() showPage("general") end)
-
-new("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 32),
-	Position = UDim2.new(0, 0, 0, 208),
-	BackgroundTransparency = 1,
-	Text = "左侧切换功能页。飞行是独立窗口，可以单独最小化或关闭。",
-	TextSize = 12,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextYAlignment = Enum.TextYAlignment.Top,
-	TextWrapped = true,
-	Parent = home,
-})
-
---========================== 通用设置 ==========================
-local general = addPage("general")
-addNav("general", "通用", 2)
-
-new("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 20),
-	Position = UDim2.new(0, 0, 0, 4),
-	BackgroundTransparency = 1,
-	Text = "通用设置",
-	TextSize = 17,
-	Font = FONT_B,
-	TextColor3 = C.Text,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = general,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 14),
-	Position = UDim2.new(0, 0, 0, 26),
-	BackgroundTransparency = 1,
-	Text = "改动立即生效，复活后自动重新应用",
-	TextSize = 11,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = general,
-})
-
--- 一行设置 = 标题 + 数值 + 滑块
-local function addSettingRow(y, opts)
 	new("TextLabel", {
-		Size = UDim2.new(1, -80, 0, 16),
-		Position = UDim2.new(0, 0, 0, y),
+		Size = UDim2.new(1, -100, 0, 18),
+		Position = UDim2.new(0, 32, 0, 14),
 		BackgroundTransparency = 1,
-		Text = opts.Label,
+		Text = L("cardFlyTitle"),
+		TextSize = 15,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = flyCard,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(1, -100, 0, 16),
+		Position = UDim2.new(0, 32, 0, 34),
+		BackgroundTransparency = 1,
+		Text = L("cardFlyDesc"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = flyCard,
+	})
+
+	local flyCardState = new("TextLabel", {
+		Size = UDim2.new(0, 70, 1, 0),
+		Position = UDim2.new(1, -80, 0, 0),
+		BackgroundTransparency = 1,
+		Text = L("stateOff"),
+		TextSize = 12,
+		Font = FONT_B,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = flyCard,
+	})
+
+	flyCard.MouseEnter:Connect(function() flyCard.BackgroundColor3 = C.Card2 end)
+	flyCard.MouseLeave:Connect(function() flyCard.BackgroundColor3 = C.Card end)
+	flyCard.MouseButton1Click:Connect(function() openFlyWindow() end)
+
+	-- 通用设置卡片
+	local genCard = new("TextButton", {
+		Name = "GeneralCard",
+		Size = UDim2.new(1, 0, 0, 64),
+		Position = UDim2.new(0, 0, 0, 132),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "",
+		Parent = home,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = genCard })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = genCard })
+
+	new("TextLabel", {
+		Size = UDim2.new(1, -24, 0, 18),
+		Position = UDim2.new(0, 16, 0, 14),
+		BackgroundTransparency = 1,
+		Text = L("cardGenTitle"),
+		TextSize = 15,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = genCard,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, -24, 0, 16),
+		Position = UDim2.new(0, 16, 0, 34),
+		BackgroundTransparency = 1,
+		Text = L("cardGenDesc"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = genCard,
+	})
+	genCard.MouseEnter:Connect(function() genCard.BackgroundColor3 = C.Card2 end)
+	genCard.MouseLeave:Connect(function() genCard.BackgroundColor3 = C.Card end)
+	genCard.MouseButton1Click:Connect(function() showPage("general") end)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 32),
+		Position = UDim2.new(0, 0, 0, 208),
+		BackgroundTransparency = 1,
+		Text = L("homeHint"),
 		TextSize = 12,
 		Font = FONT_N,
-		TextColor3 = C.Sub,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextWrapped = true,
+		Parent = home,
+	})
+
+	--========================== 通用设置 ==========================
+	local general = addPage("general")
+	addNav("general", L("navGeneral"), 2)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 20),
+		Position = UDim2.new(0, 0, 0, 4),
+		BackgroundTransparency = 1,
+		Text = L("genTitle"),
+		TextSize = 17,
+		Font = FONT_B,
+		TextColor3 = C.Text,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = general,
 	})
 
-	local valueLabel = new("TextLabel", {
-		Size = UDim2.new(0, 80, 0, 16),
-		Position = UDim2.new(1, -80, 0, y),
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 14),
+		Position = UDim2.new(0, 0, 0, 26),
 		BackgroundTransparency = 1,
-		Text = opts.Format(opts.Default),
+		Text = L("genSub"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = general,
+	})
+
+	-- 一行设置 = 标题 + 数值 + 滑块
+	local function addSettingRow(y, opts)
+		new("TextLabel", {
+			Size = UDim2.new(1, -80, 0, 16),
+			Position = UDim2.new(0, 0, 0, y),
+			BackgroundTransparency = 1,
+			Text = opts.Label,
+			TextSize = 12,
+			Font = FONT_N,
+			TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = general,
+		})
+
+		local valueLabel = new("TextLabel", {
+			Size = UDim2.new(0, 80, 0, 16),
+			Position = UDim2.new(1, -80, 0, y),
+			BackgroundTransparency = 1,
+			Text = opts.Format(opts.Default),
+			TextSize = 12,
+			Font = FONT_B,
+			TextColor3 = C.Accent,
+			TextXAlignment = Enum.TextXAlignment.Right,
+			Parent = general,
+		})
+
+		local setValue = createSlider(general, {
+			Position = UDim2.new(0, 0, 0, y + 20),
+			Min = opts.Min,
+			Max = opts.Max,
+			Default = opts.Default,
+			Log = opts.Log,
+			OnChange = function(v)
+				valueLabel.Text = opts.Format(v)
+				opts.OnChange(v)
+			end,
+		})
+
+		return setValue, valueLabel
+	end
+
+	-- 角色属性（nil = 不覆盖）
+	local Settings = {
+		WalkSpeed = nil,
+		JumpPower = nil,
+		Gravity   = nil,
+	}
+
+	local function applySettings()
+		local hum = getHumanoid()
+		if hum then
+			if Settings.WalkSpeed then
+				pcall(function() hum.WalkSpeed = Settings.WalkSpeed end)
+			end
+			if Settings.JumpPower then
+				pcall(function()
+					hum.UseJumpPower = true
+					hum.JumpPower = Settings.JumpPower
+				end)
+			end
+		end
+		if Settings.Gravity then
+			pcall(function() workspace.Gravity = Settings.Gravity end)
+		end
+	end
+
+	-- 读当前值做滑块默认值
+	local function currentWalk()
+		local hum = getHumanoid()
+		local ok, v = pcall(function() return hum.WalkSpeed end)
+		if ok and type(v) == "number" then return v end
+		return 16
+	end
+	local function currentJump()
+		local hum = getHumanoid()
+		local ok, v = pcall(function() return hum.JumpPower end)
+		if ok and type(v) == "number" and v > 0 then return v end
+		return 50
+	end
+	local function currentGravity()
+		local ok, v = pcall(function() return workspace.Gravity end)
+		if ok and type(v) == "number" then return v end
+		return 196.2
+	end
+
+	local walkDef, jumpDef, gravDef = currentWalk(), currentJump(), currentGravity()
+
+	local setWalk, walkLabel = addSettingRow(52, {
+		Label = L("walkSpeed"),
+		Min = 8, Max = 500,
+		Default = math.clamp(walkDef, 8, 500),
+		Format = function(v) return string.format("%d", math.floor(v + 0.5)) end,
+		OnChange = function(v)
+			Settings.WalkSpeed = v
+			applySettings()
+		end,
+	})
+
+	local setJump, jumpLabel = addSettingRow(108, {
+		Label = L("jumpPower"),
+		Min = 0, Max = 500,
+		Default = math.clamp(jumpDef, 0, 500),
+		Format = function(v) return string.format("%d", math.floor(v + 0.5)) end,
+		OnChange = function(v)
+			Settings.JumpPower = v
+			applySettings()
+		end,
+	})
+
+	local setGrav, gravLabel = addSettingRow(164, {
+		Label = L("gravity"),
+		Min = 0, Max = 500,
+		Default = math.clamp(gravDef, 0, 500),
+		Format = function(v) return string.format("%d", math.floor(v + 0.5)) end,
+		OnChange = function(v)
+			Settings.Gravity = v
+			applySettings()
+		end,
+	})
+
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 1),
+		Position = UDim2.new(0, 0, 0, 222),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = general,
+	})
+
+	local resetBtn, resetLabel = createButton(general, {
+		Name = "ResetSettings",
+		Size = UDim2.new(0, 96, 0, 30),
+		Position = UDim2.new(0, 0, 0, 236),
+		Text = L("resetBtn"),
+		TextSize = 12,
+		Radius = 8,
+		OnClick = function()
+			setWalk(16)
+			setJump(50)
+			setGrav(196)
+			Settings.WalkSpeed = 16
+			Settings.JumpPower = 50
+			Settings.Gravity = 196
+			applySettings()
+			notify(L("resetDone"), C.Accent)
+		end,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(1, -110, 0, 30),
+		Position = UDim2.new(0, 106, 0, 236),
+		BackgroundTransparency = 1,
+		Text = L("gravityWarn"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Center,
+		TextWrapped = true,
+		Parent = general,
+	})
+
+	--========================== 设置 ==========================
+	-- 跟主页一样是个 page（不新开窗口）
+	local settingsPage = addPage("settings")
+	addNav("settings", L("navSettings"), 4)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 20),
+		Position = UDim2.new(0, 0, 0, 4),
+		BackgroundTransparency = 1,
+		Text = L("setTitle"),
+		TextSize = 17,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = settingsPage,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 14),
+		Position = UDim2.new(0, 0, 0, 26),
+		BackgroundTransparency = 1,
+		Text = L("setSub"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = settingsPage,
+	})
+
+	-- 联系作者：整张卡片可点，点了复制邮箱
+	local contactCard = new("TextButton", {
+		Name = "ContactCard",
+		Size = UDim2.new(1, 0, 0, 54),
+		Position = UDim2.new(0, 0, 0, 50),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "",
+		Parent = settingsPage,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 10), Parent = contactCard })
+	local contactStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = contactCard })
+
+	new("TextLabel", {
+		Size = UDim2.new(0, 140, 0, 14),
+		Position = UDim2.new(0, 14, 0, 9),
+		BackgroundTransparency = 1,
+		Text = L("contact"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = contactCard,
+	})
+
+	new("TextLabel", {
+		Name = "ContactMail",
+		Size = UDim2.new(1, -28, 0, 18),
+		Position = UDim2.new(0, 14, 0, 26),
+		BackgroundTransparency = 1,
+		Text = CONFIG.Contact,
+		TextSize = 14,
+		Font = FONT_B,
+		TextColor3 = C.Accent,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = contactCard,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(0, 110, 1, 0),
+		Position = UDim2.new(1, -124, 0, 0),
+		BackgroundTransparency = 1,
+		Text = L("contactHint"),
+		TextSize = 10,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = contactCard,
+	})
+
+	contactCard.MouseEnter:Connect(function()
+		contactCard.BackgroundColor3 = C.Card2
+		contactStroke.Color = C.Accent
+	end)
+	contactCard.MouseLeave:Connect(function()
+		contactCard.BackgroundColor3 = C.Card
+		contactStroke.Color = C.Stroke
+	end)
+	contactCard.MouseButton1Click:Connect(function()
+		local fn = execFn("setclipboard") or execFn("toclipboard")
+		if not fn then
+			notify(string.format(L("copyFail"), CONFIG.Contact), C.Red)
+			return
+		end
+		local ok = pcall(fn, CONFIG.Contact)
+		if ok then
+			notify(L("copied"), C.Green)
+		else
+			notify(string.format(L("copyFail"), CONFIG.Contact), C.Red)
+		end
+	end)
+
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 1),
+		Position = UDim2.new(0, 0, 0, 118),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = settingsPage,
+	})
+
+	-- 语言切换：切完重启脚本
+	new("TextLabel", {
+		Size = UDim2.new(1, -140, 0, 16),
+		Position = UDim2.new(0, 0, 0, 132),
+		BackgroundTransparency = 1,
+		Text = L("language"),
+		TextSize = 12,
+		Font = FONT_N,
+		TextColor3 = C.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = settingsPage,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(0, 140, 0, 16),
+		Position = UDim2.new(1, -140, 0, 132),
+		BackgroundTransparency = 1,
+		Text = L("langHint"),
+		TextSize = 10,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = settingsPage,
+	})
+
+	local LANG_BUTTONS = {
+		{ key = "zh", name = L("langNameZh"), flag = "flag_cn", fallback = "ZH" },
+		{ key = "en", name = L("langNameEn"), flag = "flag_us", fallback = "EN" },
+	}
+	for i, opt in ipairs(LANG_BUTTONS) do
+		local active = (opt.key == LANG)
+		local btn = new("TextButton", {
+			Name = "Lang_" .. opt.key,
+			Size = UDim2.new(0, 150, 0, 42),
+			Position = UDim2.new(0, (i - 1) * 158, 0, 156),
+			BackgroundColor3 = active and C.Card2 or C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			Parent = settingsPage,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = btn })
+		local stroke = new("UIStroke", {
+			Color = active and C.Accent or C.Stroke,
+			Thickness = active and 2 or 1,
+			Parent = btn,
+		})
+
+		createFlag(btn, opt.flag, UDim2.new(0, 30, 0, 20), UDim2.new(0, 12, 0.5, 0),
+			Vector2.new(0, 0.5), 4, opt.fallback)
+
+		new("TextLabel", {
+			Size = UDim2.new(1, -54, 1, 0),
+			Position = UDim2.new(0, 50, 0, 0),
+			BackgroundTransparency = 1,
+			Text = opt.name,
+			TextSize = 13,
+			Font = FONT_B,
+			TextColor3 = active and C.Text or C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = btn,
+		})
+
+		if not active then
+			btn.MouseEnter:Connect(function() btn.BackgroundColor3 = C.Card2 end)
+			btn.MouseLeave:Connect(function() btn.BackgroundColor3 = C.Card end)
+		end
+
+		btn.MouseButton1Click:Connect(function()
+			if opt.key == LANG then return end
+			notify(string.format(L("langSwitched"), opt.name), C.Accent)
+			restart(opt.key)
+		end)
+	end
+
+	--========================== 飞行（独立窗口） ==========================
+	local flyNavBtn = addNav("fly", L("navFly"), 3, function() openFlyWindow() end)
+
+	local flyWin = new("Frame", {
+		Name = "FlyWindow",
+		Size = UDim2.new(0, FLY_W, 0, FLY_H),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Visible = false,
+		Parent = guiMain,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flyWin })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyWin })
+
+	local flyScale = new("UIScale", { Scale = 1, Parent = flyWin })
+
+	-- 飞行窗口顶栏
+	local flyHeader = new("Frame", {
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, 42),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Parent = flyWin,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flyHeader })
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 12),
+		Position = UDim2.new(0, 0, 1, -12),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		Parent = flyHeader,
+	})
+	new("Frame", {
+		Size = UDim2.new(1, -24, 0, 1),
+		Position = UDim2.new(0, 12, 1, -1),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = flyHeader,
+	})
+
+	createLogo(flyHeader, {
+		Size = UDim2.new(0, 22, 0, 22),
+		Position = UDim2.new(0, 14, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Radius = 7,
+		TextSize = 13,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(0, 120, 1, 0),
+		Position = UDim2.new(0, 44, 0, 0),
+		BackgroundTransparency = 1,
+		Text = L("flyTitle"),
+		TextSize = 14,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = flyHeader,
+	})
+
+	local flyWinState = new("TextLabel", {
+		Size = UDim2.new(0, 64, 1, 0),
+		Position = UDim2.new(1, -142, 0, 0),
+		BackgroundTransparency = 1,
+		Text = L("flyStopped"),
+		TextSize = 11,
+		Font = FONT_B,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = flyHeader,
+	})
+
+	-- 最小化：收成侧边胶囊
+	local flyMinBtn = new("TextButton", {
+		Name = "Minimize",
+		Size = UDim2.new(0, 26, 0, 26),
+		Position = UDim2.new(1, -70, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "－",
+		TextSize = 14,
+		Font = FONT_B,
+		TextColor3 = C.Sub,
+		Parent = flyHeader,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = flyMinBtn })
+	local flyMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyMinBtn })
+	flyMinBtn.MouseEnter:Connect(function()
+		flyMinBtn.BackgroundColor3 = C.Card2
+		flyMinBtn.TextColor3 = C.Text
+		flyMinStroke.Color = C.Dim
+	end)
+	flyMinBtn.MouseLeave:Connect(function()
+		flyMinBtn.BackgroundColor3 = C.Card
+		flyMinBtn.TextColor3 = C.Sub
+		flyMinStroke.Color = C.Stroke
+	end)
+
+	-- 关闭：结束飞行（走落地保护）+ 收起窗口，不留胶囊
+	local flyCloseBtn = new("TextButton", {
+		Name = "Close",
+		Size = UDim2.new(0, 26, 0, 26),
+		Position = UDim2.new(1, -38, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "✕",
+		TextSize = 13,
+		Font = FONT_B,
+		TextColor3 = C.Sub,
+		Parent = flyHeader,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = flyCloseBtn })
+	local flyCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyCloseBtn })
+	flyCloseBtn.MouseEnter:Connect(function()
+		flyCloseBtn.BackgroundColor3 = C.Red
+		flyCloseBtn.TextColor3 = C.White
+		flyCloseStroke.Color = C.Red
+	end)
+	flyCloseBtn.MouseLeave:Connect(function()
+		flyCloseBtn.BackgroundColor3 = C.Card
+		flyCloseBtn.TextColor3 = C.Sub
+		flyCloseStroke.Color = C.Stroke
+	end)
+
+	makeDraggable(flyWin, flyHeader, function() return flyScale.Scale end)
+
+	-- 飞行窗口内容
+	local flyBody = new("Frame", {
+		Size = UDim2.new(1, -32, 1, -42 - 14),
+		Position = UDim2.new(0, 16, 0, 42 + 6),
+		BackgroundTransparency = 1,
+		Parent = flyWin,
+	})
+
+	local flyToggle, flyToggleLabel, flyToggleStroke = createButton(flyBody, {
+		Name = "FlyToggle",
+		Size = UDim2.new(1, 0, 0, 42),
+		Position = UDim2.new(0, 0, 0, 4),
+		Text = L("flyOn"),
+		TextSize = 15,
+		Style = "primary",
+		TextColor3 = C.White,
+		StrokeColor = C.Accent,
+		OnClick = function()
+			FlyToggleRequest()
+		end,
+	})
+
+	new("TextLabel", {
+		Size = UDim2.new(0, 120, 0, 16),
+		Position = UDim2.new(0, 0, 0, 58),
+		BackgroundTransparency = 1,
+		Text = L("flySpeed"),
+		TextSize = 12,
+		Font = FONT_N,
+		TextColor3 = C.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = flyBody,
+	})
+
+	local speedLabel = new("TextLabel", {
+		Size = UDim2.new(0, 100, 0, 16),
+		Position = UDim2.new(1, -100, 0, 58),
+		BackgroundTransparency = 1,
+		Text = fmtSpeed(CONFIG.FlySpeed),
 		TextSize = 12,
 		Font = FONT_B,
 		TextColor3 = C.Accent,
 		TextXAlignment = Enum.TextXAlignment.Right,
-		Parent = general,
+		Parent = flyBody,
 	})
 
-	local setValue = createSlider(general, {
-		Position = UDim2.new(0, 0, 0, y + 20),
-		Min = opts.Min,
-		Max = opts.Max,
-		Default = opts.Default,
-		Log = opts.Log,
+	createSlider(flyBody, {
+		Position = UDim2.new(0, 0, 0, 80),
+		Min = CONFIG.MinSpeed,
+		Max = CONFIG.MaxSpeed,
+		Default = CONFIG.FlySpeed,
+		Log = true,   -- 对数刻度：0.01 ~ 3000 跨 5 个数量级，线性滑块够不到低速段
 		OnChange = function(v)
-			valueLabel.Text = opts.Format(v)
-			opts.OnChange(v)
+			flySpeed = v
+			speedLabel.Text = fmtSpeed(v)
 		end,
 	})
 
-	return setValue, valueLabel
-end
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 1),
+		Position = UDim2.new(0, 0, 0, 112),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = flyBody,
+	})
 
--- 角色属性（nil = 不覆盖）
-local Settings = {
-	WalkSpeed = nil,
-	JumpPower = nil,
-	Gravity   = nil,
-}
-
-local function applySettings()
-	local hum = getHumanoid()
-	if hum then
-		if Settings.WalkSpeed then
-			pcall(function() hum.WalkSpeed = Settings.WalkSpeed end)
-		end
-		if Settings.JumpPower then
-			pcall(function()
-				hum.UseJumpPower = true
-				hum.JumpPower = Settings.JumpPower
-			end)
-		end
-	end
-	if Settings.Gravity then
-		pcall(function() workspace.Gravity = Settings.Gravity end)
-	end
-end
-
--- 读当前值做滑块默认值
-local function currentWalk()
-	local hum = getHumanoid()
-	local ok, v = pcall(function() return hum.WalkSpeed end)
-	if ok and type(v) == "number" then return v end
-	return 16
-end
-local function currentJump()
-	local hum = getHumanoid()
-	local ok, v = pcall(function() return hum.JumpPower end)
-	if ok and type(v) == "number" and v > 0 then return v end
-	return 50
-end
-local function currentGravity()
-	local ok, v = pcall(function() return workspace.Gravity end)
-	if ok and type(v) == "number" then return v end
-	return 196.2
-end
-
-local walkDef, jumpDef, gravDef = currentWalk(), currentJump(), currentGravity()
-
-local setWalk, walkLabel = addSettingRow(52, {
-	Label = "移动速度",
-	Min = 8, Max = 500,
-	Default = math.clamp(walkDef, 8, 500),
-	Format = function(v) return string.format("%d", math.floor(v + 0.5)) end,
-	OnChange = function(v)
-		Settings.WalkSpeed = v
-		applySettings()
-	end,
-})
-
-local setJump, jumpLabel = addSettingRow(108, {
-	Label = "跳跃高度",
-	Min = 0, Max = 500,
-	Default = math.clamp(jumpDef, 0, 500),
-	Format = function(v) return string.format("%d", math.floor(v + 0.5)) end,
-	OnChange = function(v)
-		Settings.JumpPower = v
-		applySettings()
-	end,
-})
-
-local setGrav, gravLabel = addSettingRow(164, {
-	Label = "重力",
-	Min = 0, Max = 500,
-	Default = math.clamp(gravDef, 0, 500),
-	Format = function(v) return string.format("%d", math.floor(v + 0.5)) end,
-	OnChange = function(v)
-		Settings.Gravity = v
-		applySettings()
-	end,
-})
-
-new("Frame", {
-	Size = UDim2.new(1, 0, 0, 1),
-	Position = UDim2.new(0, 0, 0, 222),
-	BackgroundColor3 = C.Stroke,
-	BorderSizePixel = 0,
-	Parent = general,
-})
-
-local resetBtn, resetLabel = createButton(general, {
-	Name = "ResetSettings",
-	Size = UDim2.new(0, 96, 0, 30),
-	Position = UDim2.new(0, 0, 0, 236),
-	Text = "恢复默认",
-	TextSize = 12,
-	Radius = 8,
-	OnClick = function()
-		setWalk(16)
-		setJump(50)
-		setGrav(196)
-		Settings.WalkSpeed = 16
-		Settings.JumpPower = 50
-		Settings.Gravity = 196
-		applySettings()
-		notify("已恢复默认属性", C.Accent)
-	end,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(1, -110, 0, 30),
-	Position = UDim2.new(0, 106, 0, 236),
-	BackgroundTransparency = 1,
-	Text = "重力改动影响整个服务器画面，慎调",
-	TextSize = 11,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextYAlignment = Enum.TextYAlignment.Center,
-	TextWrapped = true,
-	Parent = general,
-})
-
---========================== 飞行（独立窗口） ==========================
-local flyNavBtn = addNav("fly", "飞行", 3, function() openFlyWindow() end)
-
-local flyWin = new("Frame", {
-	Name = "FlyWindow",
-	Size = UDim2.new(0, FLY_W, 0, FLY_H),
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.5),
-	BackgroundColor3 = C.Window,
-	BorderSizePixel = 0,
-	Visible = false,
-	Parent = guiMain,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flyWin })
-new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyWin })
-
-local flyScale = new("UIScale", { Scale = 1, Parent = flyWin })
-
--- 飞行窗口顶栏
-local flyHeader = new("Frame", {
-	Name = "Header",
-	Size = UDim2.new(1, 0, 0, 42),
-	BackgroundColor3 = C.Window,
-	BorderSizePixel = 0,
-	Parent = flyWin,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flyHeader })
-new("Frame", {
-	Size = UDim2.new(1, 0, 0, 12),
-	Position = UDim2.new(0, 0, 1, -12),
-	BackgroundColor3 = C.Window,
-	BorderSizePixel = 0,
-	Parent = flyHeader,
-})
-new("Frame", {
-	Size = UDim2.new(1, -24, 0, 1),
-	Position = UDim2.new(0, 12, 1, -1),
-	BackgroundColor3 = C.Stroke,
-	BorderSizePixel = 0,
-	Parent = flyHeader,
-})
-
-createLogo(flyHeader, {
-	Size = UDim2.new(0, 22, 0, 22),
-	Position = UDim2.new(0, 14, 0.5, 0),
-	AnchorPoint = Vector2.new(0, 0.5),
-	Radius = 7,
-	TextSize = 13,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(0, 120, 1, 0),
-	Position = UDim2.new(0, 44, 0, 0),
-	BackgroundTransparency = 1,
-	Text = "O_X 飞行",
-	TextSize = 14,
-	Font = FONT_B,
-	TextColor3 = C.Text,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyHeader,
-})
-
-local flyWinState = new("TextLabel", {
-	Size = UDim2.new(0, 64, 1, 0),
-	Position = UDim2.new(1, -142, 0, 0),
-	BackgroundTransparency = 1,
-	Text = "已停止",
-	TextSize = 11,
-	Font = FONT_B,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Right,
-	Parent = flyHeader,
-})
-
--- 最小化：收成侧边胶囊
-local flyMinBtn = new("TextButton", {
-	Name = "Minimize",
-	Size = UDim2.new(0, 26, 0, 26),
-	Position = UDim2.new(1, -70, 0.5, 0),
-	AnchorPoint = Vector2.new(0, 0.5),
-	BackgroundColor3 = C.Card,
-	BorderSizePixel = 0,
-	AutoButtonColor = false,
-	Text = "－",
-	TextSize = 14,
-	Font = FONT_B,
-	TextColor3 = C.Sub,
-	Parent = flyHeader,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = flyMinBtn })
-local flyMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyMinBtn })
-flyMinBtn.MouseEnter:Connect(function()
-	flyMinBtn.BackgroundColor3 = C.Card2
-	flyMinBtn.TextColor3 = C.Text
-	flyMinStroke.Color = C.Dim
-end)
-flyMinBtn.MouseLeave:Connect(function()
-	flyMinBtn.BackgroundColor3 = C.Card
-	flyMinBtn.TextColor3 = C.Sub
-	flyMinStroke.Color = C.Stroke
-end)
-
--- 关闭：结束飞行（走落地保护）+ 收起窗口，不留胶囊
-local flyCloseBtn = new("TextButton", {
-	Name = "Close",
-	Size = UDim2.new(0, 26, 0, 26),
-	Position = UDim2.new(1, -38, 0.5, 0),
-	AnchorPoint = Vector2.new(0, 0.5),
-	BackgroundColor3 = C.Card,
-	BorderSizePixel = 0,
-	AutoButtonColor = false,
-	Text = "✕",
-	TextSize = 13,
-	Font = FONT_B,
-	TextColor3 = C.Sub,
-	Parent = flyHeader,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = flyCloseBtn })
-local flyCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyCloseBtn })
-flyCloseBtn.MouseEnter:Connect(function()
-	flyCloseBtn.BackgroundColor3 = C.Red
-	flyCloseBtn.TextColor3 = C.White
-	flyCloseStroke.Color = C.Red
-end)
-flyCloseBtn.MouseLeave:Connect(function()
-	flyCloseBtn.BackgroundColor3 = C.Card
-	flyCloseBtn.TextColor3 = C.Sub
-	flyCloseStroke.Color = C.Stroke
-end)
-
-makeDraggable(flyWin, flyHeader, function() return flyScale.Scale end)
-
--- 飞行窗口内容
-local flyBody = new("Frame", {
-	Size = UDim2.new(1, -32, 1, -42 - 14),
-	Position = UDim2.new(0, 16, 0, 42 + 6),
-	BackgroundTransparency = 1,
-	Parent = flyWin,
-})
-
-local flyToggle, flyToggleLabel, flyToggleStroke = createButton(flyBody, {
-	Name = "FlyToggle",
-	Size = UDim2.new(1, 0, 0, 42),
-	Position = UDim2.new(0, 0, 0, 4),
-	Text = "开启飞行",
-	TextSize = 15,
-	Style = "primary",
-	TextColor3 = C.White,
-	StrokeColor = C.Accent,
-	OnClick = function()
-		FlyToggleRequest()
-	end,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(0, 120, 0, 16),
-	Position = UDim2.new(0, 0, 0, 58),
-	BackgroundTransparency = 1,
-	Text = "飞行速度",
-	TextSize = 12,
-	Font = FONT_N,
-	TextColor3 = C.Sub,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyBody,
-})
-
-local speedLabel = new("TextLabel", {
-	Size = UDim2.new(0, 100, 0, 16),
-	Position = UDim2.new(1, -100, 0, 58),
-	BackgroundTransparency = 1,
-	Text = fmtSpeed(CONFIG.FlySpeed),
-	TextSize = 12,
-	Font = FONT_B,
-	TextColor3 = C.Accent,
-	TextXAlignment = Enum.TextXAlignment.Right,
-	Parent = flyBody,
-})
-
-createSlider(flyBody, {
-	Position = UDim2.new(0, 0, 0, 80),
-	Min = CONFIG.MinSpeed,
-	Max = CONFIG.MaxSpeed,
-	Default = CONFIG.FlySpeed,
-	Log = true,   -- 对数刻度：0.01 ~ 3000 跨 5 个数量级，线性滑块够不到低速段
-	OnChange = function(v)
-		flySpeed = v
-		speedLabel.Text = fmtSpeed(v)
-	end,
-})
-
-new("Frame", {
-	Size = UDim2.new(1, 0, 0, 1),
-	Position = UDim2.new(0, 0, 0, 112),
-	BackgroundColor3 = C.Stroke,
-	BorderSizePixel = 0,
-	Parent = flyBody,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(1, -60, 0, 16),
-	Position = UDim2.new(0, 0, 0, 124),
-	BackgroundTransparency = 1,
-	Text = "伤害保护",
-	TextSize = 12,
-	Font = FONT_N,
-	TextColor3 = C.Sub,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyBody,
-})
-
-createSwitch(flyBody, {
-	Name = "DamageShield",
-	Position = UDim2.new(1, -40, 0, 121),
-	Default = CONFIG.DamageShield,
-	OnChange = function(v)
-		ShieldRequest(v)
-	end,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 14),
-	Position = UDim2.new(0, 0, 0, 144),
-	BackgroundTransparency = 1,
-	Text = "速度回零：撞到东西、落地都不掉血",
-	TextSize = 11,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyBody,
-})
-
-new("Frame", {
-	Size = UDim2.new(1, 0, 0, 1),
-	Position = UDim2.new(0, 0, 0, 166),
-	BackgroundColor3 = C.Stroke,
-	BorderSizePixel = 0,
-	Parent = flyBody,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(1, -60, 0, 16),
-	Position = UDim2.new(0, 0, 0, 178),
-	BackgroundTransparency = 1,
-	Text = "落地缓降",
-	TextSize = 12,
-	Font = FONT_N,
-	TextColor3 = C.Sub,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyBody,
-})
-
-createSwitch(flyBody, {
-	Name = "SoftLand",
-	Position = UDim2.new(1, -40, 0, 175),
-	Default = CONFIG.SoftLand,
-	OnChange = function(v)
-		CONFIG.SoftLand = v
-	end,
-})
-
-new("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 14),
-	Position = UDim2.new(0, 0, 0, 198),
-	BackgroundTransparency = 1,
-	Text = "关飞行后缓降到贴地才放手",
-	TextSize = 11,
-	Font = FONT_N,
-	TextColor3 = C.Dim,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyBody,
-})
-
-new("Frame", {
-	Size = UDim2.new(1, 0, 0, 1),
-	Position = UDim2.new(0, 0, 0, 220),
-	BackgroundColor3 = C.Stroke,
-	BorderSizePixel = 0,
-	Parent = flyBody,
-})
-
-local hints = {
-	{ "手机", "摇杆控制方向，滑动屏幕转向；抬头 + 前进即上升" },
-	{ "电脑", "WASD 移动  ·  空格上升  ·  Ctrl / Shift 下降" },
-	{ "开关", "按 F 键，或点上面的按钮" },
-}
-for i, h in ipairs(hints) do
-	local y = 232 + (i - 1) * 22
 	new("TextLabel", {
-		Size = UDim2.new(0, 34, 0, 16),
-		Position = UDim2.new(0, 0, 0, y),
+		Size = UDim2.new(1, -60, 0, 16),
+		Position = UDim2.new(0, 0, 0, 124),
 		BackgroundTransparency = 1,
-		Text = h[1],
-		TextSize = 11,
-		Font = FONT_B,
-		TextColor3 = C.Accent,
+		Text = L("shieldTitle"),
+		TextSize = 12,
+		Font = FONT_N,
+		TextColor3 = C.Sub,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = flyBody,
 	})
+
+	createSwitch(flyBody, {
+		Name = "DamageShield",
+		Position = UDim2.new(1, -40, 0, 121),
+		Default = CONFIG.DamageShield,
+		OnChange = function(v)
+			ShieldRequest(v)
+		end,
+	})
+
 	new("TextLabel", {
-		Size = UDim2.new(1, -40, 0, 16),
-		Position = UDim2.new(0, 40, 0, y),
+		Size = UDim2.new(1, 0, 0, 14),
+		Position = UDim2.new(0, 0, 0, 144),
 		BackgroundTransparency = 1,
-		Text = h[2],
+		Text = L("shieldDesc"),
 		TextSize = 11,
 		Font = FONT_N,
 		TextColor3 = C.Dim,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = flyBody,
 	})
-end
 
--- 飞行窗口的启动动画（O_X 飞行）
-local flySplash = new("Frame", {
-	Name = "FlySplash",
-	Size = UDim2.fromScale(1, 1),
-	BackgroundColor3 = C.Window,
-	BorderSizePixel = 0,
-	ZIndex = 30,
-	Visible = false,
-	Parent = flyWin,
-})
-new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flySplash })
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 1),
+		Position = UDim2.new(0, 0, 0, 166),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = flyBody,
+	})
 
-local splashLogo = createLogo(flySplash, {
-	Size = UDim2.new(0, 52, 0, 52),
-	Position = UDim2.new(0.5, 0, 0.5, -34),
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Radius = 15,
-	TextSize = 26,
-})
-splashLogo.ZIndex = 31
+	new("TextLabel", {
+		Size = UDim2.new(1, -60, 0, 16),
+		Position = UDim2.new(0, 0, 0, 178),
+		BackgroundTransparency = 1,
+		Text = L("softTitle"),
+		TextSize = 12,
+		Font = FONT_N,
+		TextColor3 = C.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = flyBody,
+	})
 
-local splashTitle = new("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 20),
-	Position = UDim2.new(0.5, 0, 0.5, 14),
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundTransparency = 1,
-	Text = "O_X 飞行",
-	TextSize = 16,
-	Font = FONT_B,
-	TextColor3 = C.Text,
-	ZIndex = 31,
-	Parent = flySplash,
-})
+	createSwitch(flyBody, {
+		Name = "SoftLand",
+		Position = UDim2.new(1, -40, 0, 175),
+		Default = CONFIG.SoftLand,
+		OnChange = function(v)
+			CONFIG.SoftLand = v
+		end,
+	})
 
-local splashBarBg = new("Frame", {
-	Size = UDim2.new(0, 150, 0, 4),
-	Position = UDim2.new(0.5, 0, 0.5, 42),
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundColor3 = C.Card2,
-	BorderSizePixel = 0,
-	ZIndex = 31,
-	Parent = flySplash,
-})
-new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = splashBarBg })
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 14),
+		Position = UDim2.new(0, 0, 0, 198),
+		BackgroundTransparency = 1,
+		Text = L("softDesc"),
+		TextSize = 11,
+		Font = FONT_N,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = flyBody,
+	})
 
-local splashBar = new("Frame", {
-	Size = UDim2.new(0, 0, 1, 0),
-	BackgroundColor3 = C.Accent,
-	BorderSizePixel = 0,
-	ZIndex = 31,
-	Parent = splashBarBg,
-})
-new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = splashBar })
-new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Parent = splashBar })
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 1),
+		Position = UDim2.new(0, 0, 0, 220),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = flyBody,
+	})
 
-local splashBusy = false
-local function playFlySplash()
-	if splashBusy then return end
-	splashBusy = true
-	flySplash.Visible = true
-	flySplash.BackgroundTransparency = 0
-	splashBar.Size = UDim2.new(0, 0, 1, 0)
-	splashTitle.TextTransparency = 0
-	splashLogo.Visible = true
-
-	task.spawn(function()
-		TweenService:Create(
-			splashBar,
-			TweenInfo.new(0.42, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-			{ Size = UDim2.new(1, 0, 1, 0) }
-		):Play()
-		task.wait(0.5)
-
-		local fade = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		TweenService:Create(flySplash, fade, { BackgroundTransparency = 1 }):Play()
-		TweenService:Create(splashTitle, fade, { TextTransparency = 1 }):Play()
-		TweenService:Create(splashLogo, fade, { BackgroundTransparency = 1 }):Play()
-		for _, d in ipairs(splashLogo:GetDescendants()) do
-			if d:IsA("ImageLabel") then
-				TweenService:Create(d, fade, { ImageTransparency = 1 }):Play()
-			elseif d:IsA("TextLabel") then
-				TweenService:Create(d, fade, { TextTransparency = 1 }):Play()
-			elseif d:IsA("Frame") then
-				TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
-			end
-		end
-		for _, d in ipairs(splashBarBg:GetDescendants()) do
-			if d:IsA("Frame") then
-				TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
-			end
-		end
-		TweenService:Create(splashBarBg, fade, { BackgroundTransparency = 1 }):Play()
-
-		task.wait(0.26)
-		flySplash.Visible = false
-		flySplash.BackgroundTransparency = 0
-		splashTitle.TextTransparency = 0
-		splashLogo.BackgroundTransparency = 0
-		splashBarBg.BackgroundTransparency = 0
-		splashBar.BackgroundTransparency = 0
-		for _, d in ipairs(splashLogo:GetDescendants()) do
-			if d:IsA("ImageLabel") then d.ImageTransparency = 0
-			elseif d:IsA("TextLabel") then d.TextTransparency = 0 end
-		end
-		splashBusy = false
-	end)
-end
-
---========================== 悬浮图标（最小化后） ==========================
-local reopen = new("TextButton", {
-	Name = "Reopen",
-	Size = UDim2.new(0, 46, 0, 46),
-	Position = UDim2.new(0, 20, 0, 96),
-	BackgroundColor3 = C.Accent,
-	BorderSizePixel = 0,
-	AutoButtonColor = false,
-	Text = "",
-	Visible = false,
-	Parent = guiMain,
-})
-new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = reopen })
-new("UIStroke", { Color = C.Accent2, Thickness = 1, Parent = reopen })
-local reopenScale = new("UIScale", { Scale = 1, Parent = reopen })
-
-do
-	local asset = getIconAsset()
-	if asset then
-		local img = new("ImageLabel", {
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			Image = asset,
-			ScaleType = Enum.ScaleType.Crop,
-			Parent = reopen,
-		})
-		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = img })
-	else
+	local hints = {
+		{ L("hintMobile"), L("hintMobileV") },
+		{ L("hintPC"),     L("hintPCV") },
+		{ L("hintKey"),    L("hintKeyV") },
+	}
+	for i, h in ipairs(hints) do
+		local y = 232 + (i - 1) * 22
 		new("TextLabel", {
-			Size = UDim2.fromScale(1, 1),
+			Size = UDim2.new(0, 34, 0, 16),
+			Position = UDim2.new(0, 0, 0, y),
 			BackgroundTransparency = 1,
-			Text = "O",
-			TextSize = 19,
+			Text = h[1],
+			TextSize = 11,
 			Font = FONT_B,
-			TextColor3 = C.White,
-			Parent = reopen,
+			TextColor3 = C.Accent,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = flyBody,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -40, 0, 16),
+			Position = UDim2.new(0, 40, 0, y),
+			BackgroundTransparency = 1,
+			Text = h[2],
+			TextSize = 11,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = flyBody,
 		})
 	end
-end
 
--- 飞行窗口最小化后的悬浮胶囊
-local flyReopen = new("TextButton", {
-	Name = "FlyReopen",
-	Size = UDim2.new(0, 78, 0, 32),
-	Position = UDim2.new(0, 20, 0, 152),
-	BackgroundColor3 = C.Window,
-	BorderSizePixel = 0,
-	AutoButtonColor = false,
-	Text = "",
-	Visible = false,
-	Parent = guiMain,
-})
-new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyReopen })
-new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyReopen })
-local flyReopenScale = new("UIScale", { Scale = 1, Parent = flyReopen })
+	-- 飞行窗口的启动动画（O_X 飞行）
+	local flySplash = new("Frame", {
+		Name = "FlySplash",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		ZIndex = 30,
+		Visible = false,
+		Parent = flyWin,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, 14), Parent = flySplash })
 
-local flyReopenDot = new("Frame", {
-	Size = UDim2.new(0, 7, 0, 7),
-	Position = UDim2.new(0, 12, 0.5, 0),
-	AnchorPoint = Vector2.new(0, 0.5),
-	BackgroundColor3 = C.Dim,
-	BorderSizePixel = 0,
-	Parent = flyReopen,
-})
-new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyReopenDot })
-new("TextLabel", {
-	Size = UDim2.new(1, -28, 1, 0),
-	Position = UDim2.new(0, 24, 0, 0),
-	BackgroundTransparency = 1,
-	Text = "飞行",
-	TextSize = 12,
-	Font = FONT_B,
-	TextColor3 = C.Text,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = flyReopen,
-})
+	local splashLogo = createLogo(flySplash, {
+		Size = UDim2.new(0, 52, 0, 52),
+		Position = UDim2.new(0.5, 0, 0.5, -34),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Radius = 15,
+		TextSize = 26,
+	})
+	splashLogo.ZIndex = 31
 
-local function updateScale()
-	uiScale.Scale = computeScale(WIN_W, WIN_H)
-	flyScale.Scale = computeScale(FLY_W, FLY_H)
-	if reopen.Visible then reopenScale.Scale = uiScale.Scale end
-	if flyReopen.Visible then flyReopenScale.Scale = flyScale.Scale end
-end
-updateScale()
+	local splashTitle = new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 20),
+		Position = UDim2.new(0.5, 0, 0.5, 14),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundTransparency = 1,
+		Text = L("flyTitle"),
+		TextSize = 16,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		ZIndex = 31,
+		Parent = flySplash,
+	})
 
---========================== 窗口显隐 ==========================
--- 悬浮图标（主窗口的圆标 / 飞行胶囊）也能拖着走。
--- 带阈值：位移超过 6px 才算拖动，否则还是当点击，不会被拖拽吃掉
-local reopenDragged    = makeDraggable(reopen, reopen, nil, { threshold = 6, clamp = true })
-local flyReopenDragged = makeDraggable(flyReopen, flyReopen, nil, { threshold = 6, clamp = true })
+	local splashBarBg = new("Frame", {
+		Size = UDim2.new(0, 150, 0, 4),
+		Position = UDim2.new(0.5, 0, 0.5, 42),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = C.Card2,
+		BorderSizePixel = 0,
+		ZIndex = 31,
+		Parent = flySplash,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = splashBarBg })
 
-local function hideMain(collapse)
-	window.Visible = false
-	reopen.Visible = true
-	reopenScale.Scale = collapse and 0.4 or uiScale.Scale
-	TweenService:Create(
-		reopenScale,
-		TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Scale = uiScale.Scale }
-	):Play()
-end
+	local splashBar = new("Frame", {
+		Size = UDim2.new(0, 0, 1, 0),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		ZIndex = 31,
+		Parent = splashBarBg,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = splashBar })
+	new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Parent = splashBar })
 
-local function showMain()
-	reopen.Visible = false
-	window.Visible = true
-	window.Size = UDim2.new(0, WIN_W, 0, WIN_H)
-	uiScale.Scale = math.clamp(uiScale.Scale * 0.9, 0.5, 1)
-	TweenService:Create(
-		uiScale,
-		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Scale = computeScale(WIN_W, WIN_H) }
-	):Play()
-end
+	local splashBusy = false
+	local function playFlySplash()
+		if splashBusy then return end
+		splashBusy = true
+		flySplash.Visible = true
+		flySplash.BackgroundTransparency = 0
+		splashBar.Size = UDim2.new(0, 0, 1, 0)
+		splashTitle.TextTransparency = 0
+		splashLogo.Visible = true
 
--- － 只是缩成图标；✕ 是结束整个脚本（停飞行 + 撤保护 + 销毁界面）
-minBtn.MouseButton1Click:Connect(function() hideMain(true) end)
-closeBtn.MouseButton1Click:Connect(function() ShutdownRequest() end)
-reopen.MouseButton1Click:Connect(function()
-	if reopenDragged() then return end   -- 刚才是在拖它，不当点击
-	showMain()
-end)
+		task.spawn(function()
+			TweenService:Create(
+				splashBar,
+				TweenInfo.new(0.42, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{ Size = UDim2.new(1, 0, 1, 0) }
+			):Play()
+			task.wait(0.5)
 
-local function hideFly()
-	flyWin.Visible = false
-	flyReopen.Visible = true
-	flyReopenScale.Scale = 0.4
-	TweenService:Create(
-		flyReopenScale,
-		TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Scale = flyScale.Scale }
-	):Play()
-end
+			local fade = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			TweenService:Create(flySplash, fade, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(splashTitle, fade, { TextTransparency = 1 }):Play()
+			TweenService:Create(splashLogo, fade, { BackgroundTransparency = 1 }):Play()
+			for _, d in ipairs(splashLogo:GetDescendants()) do
+				if d:IsA("ImageLabel") then
+					TweenService:Create(d, fade, { ImageTransparency = 1 }):Play()
+				elseif d:IsA("TextLabel") then
+					TweenService:Create(d, fade, { TextTransparency = 1 }):Play()
+				elseif d:IsA("Frame") then
+					TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
+				end
+			end
+			for _, d in ipairs(splashBarBg:GetDescendants()) do
+				if d:IsA("Frame") then
+					TweenService:Create(d, fade, { BackgroundTransparency = 1 }):Play()
+				end
+			end
+			TweenService:Create(splashBarBg, fade, { BackgroundTransparency = 1 }):Play()
 
--- 真·关闭飞行窗口：连胶囊一起收掉，不留入口（要再开就去主页卡片 / 左侧「飞行」）
-local function closeFlyWindow()
-	flyWin.Visible = false
-	flyReopen.Visible = false
-end
-
-openFlyWindow = function()
-	if flyWin.Visible then
-		flyWin.Visible = true
-		return
+			task.wait(0.26)
+			flySplash.Visible = false
+			flySplash.BackgroundTransparency = 0
+			splashTitle.TextTransparency = 0
+			splashLogo.BackgroundTransparency = 0
+			splashBarBg.BackgroundTransparency = 0
+			splashBar.BackgroundTransparency = 0
+			for _, d in ipairs(splashLogo:GetDescendants()) do
+				if d:IsA("ImageLabel") then d.ImageTransparency = 0
+				elseif d:IsA("TextLabel") then d.TextTransparency = 0 end
+			end
+			splashBusy = false
+		end)
 	end
-	flyReopen.Visible = false
-	flyWin.Visible = true
-	flyScale.Scale = math.clamp(flyScale.Scale * 0.9, 0.5, 1)
-	TweenService:Create(
-		flyScale,
-		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Scale = computeScale(FLY_W, FLY_H) }
-	):Play()
-	playFlySplash()
-end
 
-flyMinBtn.MouseButton1Click:Connect(function() hideFly() end)
-flyCloseBtn.MouseButton1Click:Connect(function() FlyCloseRequest() end)
-flyReopen.MouseButton1Click:Connect(function()
-	if flyReopenDragged() then return end
-	openFlyWindow()
-end)
+	--========================== 悬浮图标（最小化后） ==========================
+	local reopen = new("TextButton", {
+		Name = "Reopen",
+		Size = UDim2.new(0, 46, 0, 46),
+		Position = UDim2.new(0, 20, 0, 96),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "",
+		Visible = false,
+		Parent = guiMain,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = reopen })
+	new("UIStroke", { Color = C.Accent2, Thickness = 1, Parent = reopen })
+	local reopenScale = new("UIScale", { Scale = 1, Parent = reopen })
 
-showPage("home")
+	do
+		local asset = getIconAsset()
+		if asset then
+			local img = new("ImageLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Image = asset,
+				ScaleType = Enum.ScaleType.Crop,
+				Parent = reopen,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = img })
+		else
+			new("TextLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Text = "O",
+				TextSize = 19,
+				Font = FONT_B,
+				TextColor3 = C.White,
+				Parent = reopen,
+			})
+		end
+	end
 
---=====================================================================
---  三、飞行模块
---=====================================================================
-local Fly = {
-	Enabled        = false,   -- 用户意图（复活后据此恢复）
-	Active         = false,   -- 运行态
-	BodyVelocity   = nil,
-	BodyGyro       = nil,
-	Connections    = {},
-	CancelSoftLand = nil,     -- 缓降的取消函数（重新起飞 / 复活时用）
-}
+	-- 飞行窗口最小化后的悬浮胶囊
+	local flyReopen = new("TextButton", {
+		Name = "FlyReopen",
+		Size = UDim2.new(0, 78, 0, 32),
+		Position = UDim2.new(0, 20, 0, 152),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "",
+		Visible = false,
+		Parent = guiMain,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyReopen })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyReopen })
+	local flyReopenScale = new("UIScale", { Scale = 1, Parent = flyReopen })
 
--- 读取官方移动输入。
--- 关键点：PlatformStand = true 之后 Humanoid.MoveDirection 恒为 0，
--- 必须从 PlayerModule 的控制器层拿原始输入 —— 摇杆 / WASD / 手柄都走这里。
-local _controls = nil
-local function getControls()
-	if _controls ~= nil then
+	local flyReopenDot = new("Frame", {
+		Size = UDim2.new(0, 7, 0, 7),
+		Position = UDim2.new(0, 12, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Dim,
+		BorderSizePixel = 0,
+		Parent = flyReopen,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyReopenDot })
+	new("TextLabel", {
+		Size = UDim2.new(1, -28, 1, 0),
+		Position = UDim2.new(0, 24, 0, 0),
+		BackgroundTransparency = 1,
+		Text = L("flyCapsule"),
+		TextSize = 12,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = flyReopen,
+	})
+
+	local function updateScale()
+		uiScale.Scale = computeScale(WIN_W, WIN_H)
+		flyScale.Scale = computeScale(FLY_W, FLY_H)
+		if reopen.Visible then reopenScale.Scale = uiScale.Scale end
+		if flyReopen.Visible then flyReopenScale.Scale = flyScale.Scale end
+	end
+	updateScale()
+
+	--========================== 窗口显隐 ==========================
+	-- 悬浮图标（主窗口的圆标 / 飞行胶囊）也能拖着走。
+	-- 带阈值：位移超过 6px 才算拖动，否则还是当点击，不会被拖拽吃掉
+	local reopenDragged    = makeDraggable(reopen, reopen, nil, { threshold = 6, clamp = true })
+	local flyReopenDragged = makeDraggable(flyReopen, flyReopen, nil, { threshold = 6, clamp = true })
+
+	local function hideMain(collapse)
+		window.Visible = false
+		reopen.Visible = true
+		reopenScale.Scale = collapse and 0.4 or uiScale.Scale
+		TweenService:Create(
+			reopenScale,
+			TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = uiScale.Scale }
+		):Play()
+	end
+
+	local function showMain()
+		reopen.Visible = false
+		window.Visible = true
+		window.Size = UDim2.new(0, WIN_W, 0, WIN_H)
+		uiScale.Scale = math.clamp(uiScale.Scale * 0.9, 0.5, 1)
+		TweenService:Create(
+			uiScale,
+			TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = computeScale(WIN_W, WIN_H) }
+		):Play()
+	end
+
+	-- － 只是缩成图标；✕ 是结束整个脚本（停飞行 + 撤保护 + 销毁界面）
+	minBtn.MouseButton1Click:Connect(function() hideMain(true) end)
+	closeBtn.MouseButton1Click:Connect(function() ShutdownRequest() end)
+	reopen.MouseButton1Click:Connect(function()
+		if reopenDragged() then return end   -- 刚才是在拖它，不当点击
+		showMain()
+	end)
+
+	local function hideFly()
+		flyWin.Visible = false
+		flyReopen.Visible = true
+		flyReopenScale.Scale = 0.4
+		TweenService:Create(
+			flyReopenScale,
+			TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = flyScale.Scale }
+		):Play()
+	end
+
+	-- 真·关闭飞行窗口：连胶囊一起收掉，不留入口（要再开就去主页卡片 / 左侧「飞行」）
+	local function closeFlyWindow()
+		flyWin.Visible = false
+		flyReopen.Visible = false
+	end
+
+	openFlyWindow = function()
+		if flyWin.Visible then
+			flyWin.Visible = true
+			return
+		end
+		flyReopen.Visible = false
+		flyWin.Visible = true
+		flyScale.Scale = math.clamp(flyScale.Scale * 0.9, 0.5, 1)
+		TweenService:Create(
+			flyScale,
+			TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = computeScale(FLY_W, FLY_H) }
+		):Play()
+		playFlySplash()
+	end
+
+	flyMinBtn.MouseButton1Click:Connect(function() hideFly() end)
+	flyCloseBtn.MouseButton1Click:Connect(function() FlyCloseRequest() end)
+	flyReopen.MouseButton1Click:Connect(function()
+		if flyReopenDragged() then return end
+		openFlyWindow()
+	end)
+
+	showPage("home")
+
+	--=====================================================================
+	--  三、飞行模块
+	--=====================================================================
+	local Fly = {
+		Enabled        = false,   -- 用户意图（复活后据此恢复）
+		Active         = false,   -- 运行态
+		BodyVelocity   = nil,
+		BodyGyro       = nil,
+		Connections    = {},
+		CancelSoftLand = nil,     -- 缓降的取消函数（重新起飞 / 复活时用）
+	}
+
+	-- 读取官方移动输入。
+	-- 关键点：PlatformStand = true 之后 Humanoid.MoveDirection 恒为 0，
+	-- 必须从 PlayerModule 的控制器层拿原始输入 —— 摇杆 / WASD / 手柄都走这里。
+	local _controls = nil
+	local function getControls()
+		if _controls ~= nil then
+			if _controls == false then return nil end
+			return _controls
+		end
+		local ok, controls = pcall(function()
+			local playerScripts = LocalPlayer:WaitForChild("PlayerScripts", 10)
+			if not playerScripts then return nil end
+			local playerModule = require(playerScripts:WaitForChild("PlayerModule", 10))
+			return playerModule:GetControls()
+		end)
+		_controls = (ok and controls) or false
 		if _controls == false then return nil end
 		return _controls
 	end
-	local ok, controls = pcall(function()
-		local playerScripts = LocalPlayer:WaitForChild("PlayerScripts", 10)
-		if not playerScripts then return nil end
-		local playerModule = require(playerScripts:WaitForChild("PlayerModule", 10))
-		return playerModule:GetControls()
-	end)
-	_controls = (ok and controls) or false
-	if _controls == false then return nil end
-	return _controls
-end
 
-local function readMoveInput()
-	local controls = getControls()
-	if controls then
-		local ok, mv = pcall(function() return controls:GetMoveVector() end)
-		if ok and typeof(mv) == "Vector3" and mv.Magnitude > 0.01 then
-			return mv
+	local function readMoveInput()
+		local controls = getControls()
+		if controls then
+			local ok, mv = pcall(function() return controls:GetMoveVector() end)
+			if ok and typeof(mv) == "Vector3" and mv.Magnitude > 0.01 then
+				return mv
+			end
 		end
+
+		-- 兜底：直接读键盘（PlayerModule 取不到时）
+		local x, z = 0, 0
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then z = z - 1 end
+		if UserInputService:IsKeyDown(Enum.KeyCode.S) then z = z + 1 end
+		if UserInputService:IsKeyDown(Enum.KeyCode.D) then x = x + 1 end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then x = x - 1 end
+		return Vector3.new(x, 0, z)
 	end
 
-	-- 兜底：直接读键盘（PlayerModule 取不到时）
-	local x, z = 0, 0
-	if UserInputService:IsKeyDown(Enum.KeyCode.W) then z = z - 1 end
-	if UserInputService:IsKeyDown(Enum.KeyCode.S) then z = z + 1 end
-	if UserInputService:IsKeyDown(Enum.KeyCode.D) then x = x + 1 end
-	if UserInputService:IsKeyDown(Enum.KeyCode.A) then x = x - 1 end
-	return Vector3.new(x, 0, z)
-end
-
-local function anyKeyDown(keys)
-	for _, k in ipairs(keys) do
-		if UserInputService:IsKeyDown(k) then return true end
-	end
-	return false
-end
-
--- 向下打射线，返回离地高度
-local _rayParams = nil
-local function getGroundDistance(root)
-	local ok, dist = pcall(function()
-		if not _rayParams then
-			_rayParams = RaycastParams.new()
-			local okE, exclude = pcall(function() return Enum.RaycastFilterType.Exclude end)
-			_rayParams.FilterType = okE and exclude or Enum.RaycastFilterType.Blacklist
-			_rayParams.FilterDescendantsInstances = { LocalPlayer.Character }
+	local function anyKeyDown(keys)
+		for _, k in ipairs(keys) do
+			if UserInputService:IsKeyDown(k) then return true end
 		end
-		local result = workspace:Raycast(root.Position, Vector3.new(0, -600, 0), _rayParams)
-		if result then
-			return (root.Position - result.Position).Magnitude
+		return false
+	end
+
+	-- 向下打射线，返回离地高度
+	local _rayParams = nil
+	local function getGroundDistance(root)
+		local ok, dist = pcall(function()
+			if not _rayParams then
+				_rayParams = RaycastParams.new()
+				local okE, exclude = pcall(function() return Enum.RaycastFilterType.Exclude end)
+				_rayParams.FilterType = okE and exclude or Enum.RaycastFilterType.Blacklist
+				_rayParams.FilterDescendantsInstances = { LocalPlayer.Character }
+			end
+			local result = workspace:Raycast(root.Position, Vector3.new(0, -600, 0), _rayParams)
+			if result then
+				return (root.Position - result.Position).Magnitude
+			end
+			return math.huge
+		end)
+		if ok and typeof(dist) == "number" then
+			return dist
 		end
 		return math.huge
-	end)
-	if ok and typeof(dist) == "number" then
-		return dist
 	end
-	return math.huge
-end
 
--- 角色"站稳时" root 中心离地多高 = 脚底到 root 的距离。
--- 缓降到这个高度再放开控制，角色就是站着而不是掉下来。
-local function getFootOffset(root)
-	local char = root.Parent
-	if not char then return 3 end
+	-- 角色"站稳时" root 中心离地多高 = 脚底到 root 的距离。
+	-- 缓降到这个高度再放开控制，角色就是站着而不是掉下来。
+	local function getFootOffset(root)
+		local char = root.Parent
+		if not char then return 3 end
 
-	local lowest = root.Position.Y
-	pcall(function()
-		for _, d in ipairs(char:GetDescendants()) do
-			if d:IsA("BasePart") then
-				local bottom = d.Position.Y - d.Size.Y * 0.5
-				if bottom < lowest then lowest = bottom end
-			end
-		end
-	end)
-
-	local off = root.Position.Y - lowest
-	-- 姿态异常（躺地上、挂在墙上）时给个保守值
-	if off < 0.5 or off > 12 then return 3 end
-	return off
-end
-
--- 屏蔽会触发摔伤判定的状态。
--- StateChanged 不会再抛 Freefall -> Landed / FallingDown，靠状态判定摔伤的服务器就抓不到。
--- 注意：SetStateEnabled 在客户端调用不会同步到服务端，但"状态变化"本身会同步，
--- 所以客户端不进这些状态，服务端也就看不到。
-local SHIELD_STATES = {
-	Enum.HumanoidStateType.Freefall,
-	Enum.HumanoidStateType.Landed,
-	Enum.HumanoidStateType.FallingDown,
-}
-
-local function setDamageShield(hum, on)
-	if not CONFIG.DamageShield then return end
-	for _, st in ipairs(SHIELD_STATES) do
-		pcall(function() hum:SetStateEnabled(st, not on) end)
-	end
-end
-
--- 贴地放手后，状态屏蔽再撑这么久才撤掉
-local SHIELD_TIME = 0.5
-
---=====================================================================
---  速度回零（防摔伤 / 防撞击伤害）
---
---  原理：服务端的伤害判定读的是"同步过去的角色速度"。
---  在 Heartbeat 末尾把 AssemblyLinearVelocity 清零、下一帧 RenderStepped 再还原，
---  中间这一段正好是网络同步窗口 —— 服务端读到的速度恒为 0。
---  角色的实际移动不受影响，因为物理步之前速度已经还原了。
---=====================================================================
-local Spoof = {
-	Active = false,
-	Gen    = 0,      -- 代数，防止"延迟停止"误杀新开的回零
-	Conns  = {},
-}
-
-function Spoof:Stop()
-	self.Gen = self.Gen + 1
-	if not self.Active then return end
-	self.Active = false
-	for _, c in ipairs(self.Conns) do
-		pcall(function() c:Disconnect() end)
-	end
-	self.Conns = {}
-end
-
-function Spoof:Start()
-	if not CONFIG.DamageShield or not CONFIG.VelocitySpoof then return end
-	self.Gen = self.Gen + 1
-	if self.Active then return end
-
-	self.Active = true
-	local saved = nil
-
-	local hb
-	hb = RunService.Heartbeat:Connect(function()
-		if not self.Active then
-			pcall(function() hb:Disconnect() end)
-			return
-		end
-		local root = getRoot()
-		if not root then return end
+		local lowest = root.Position.Y
 		pcall(function()
-			saved = root.AssemblyLinearVelocity
-			root.AssemblyLinearVelocity = Vector3.zero
-		end)
-	end)
-
-	local rs
-	rs = RunService.RenderStepped:Connect(function()
-		if not self.Active then
-			pcall(function() rs:Disconnect() end)
-			return
-		end
-		if not saved then return end
-		local root = getRoot()
-		if root then
-			pcall(function() root.AssemblyLinearVelocity = saved end)
-		end
-		saved = nil
-	end)
-
-	self.Conns = { hb, rs }
-end
-
--- 一直回零到角色落地，再多撑一会儿才停
-function Spoof:StopWhenGrounded()
-	if not self.Active then return end
-
-	local gen = self.Gen
-	local t0 = os.clock()
-
-	local conn
-	conn = RunService.Heartbeat:Connect(function()
-		if not self.Active then
-			pcall(function() conn:Disconnect() end)
-			return
-		end
-
-		local root = getRoot()
-		local hum  = getHumanoid()
-		local done = false
-
-		if not root or not root.Parent or not hum or not hum.Parent then
-			done = true
-		elseif getGroundDistance(root) - getFootOffset(root) <= CONFIG.SoftLandGap + 1 then
-			done = true
-		elseif os.clock() - t0 > 15 then
-			done = true
-		end
-
-		if done then
-			pcall(function() conn:Disconnect() end)
-			task.delay(CONFIG.VelocitySpoofHold, function()
-				-- 这中间要是又起飞了，就不能把新开的回零关掉
-				if Spoof.Gen == gen then Spoof:Stop() end
-			end)
-		end
-	end)
-
-	table.insert(self.Conns, conn)
-end
-
--- 完全撤掉伤害保护（复活 / 关脚本时用）
-function Fly:StopShield()
-	Spoof:Stop()
-	local hum = getHumanoid()
-	if hum then setDamageShield(hum, false) end
-end
-
-function Fly:BuildMovers(root)
-	if self.BodyVelocity then
-		pcall(function() self.BodyVelocity:Destroy() end)
-	end
-	if self.BodyGyro then
-		pcall(function() self.BodyGyro:Destroy() end)
-	end
-
-	self.BodyVelocity = new("BodyVelocity", {
-		Name = "O_X_HUB_Fly",
-		MaxForce = Vector3.new(9e9, 9e9, 9e9),
-		Velocity = Vector3.zero,
-		Parent = root,
-	})
-
-	self.BodyGyro = new("BodyGyro", {
-		Name = "O_X_HUB_Gyro",
-		MaxTorque = Vector3.new(9e9, 9e9, 9e9),
-		P = 10000,
-		D = 500,
-		CFrame = root.CFrame,
-		Parent = root,
-	})
-end
-
-function Fly:Update()
-	local root = getRoot()
-	if not root then return end
-
-	-- 抗反作弊：移动器被游戏删掉就重建
-	if not self.BodyVelocity or not self.BodyVelocity.Parent
-		or not self.BodyGyro or not self.BodyGyro.Parent then
-		self:BuildMovers(root)
-	end
-
-	local cam = workspace.CurrentCamera
-	if not cam then return end
-	local camCF = cam.CFrame
-
-	local mv = readMoveInput()
-	local dir = Vector3.zero
-
-	if mv.Magnitude > 0.01 then
-		-- mv.X = 左右，mv.Z = 前后
-		-- 用相机的 LookVector 而不是水平投影：抬头前进即上升，符合"飞行状态"的直觉
-		dir = (camCF.LookVector * (mv.Z * CONFIG.MoveZSign))
-			+ (camCF.RightVector * (mv.X * CONFIG.MoveXSign))
-		if dir.Magnitude > 0 then
-			dir = dir.Unit
-		end
-	end
-
-	-- 键盘垂直微调
-	if anyKeyDown(CONFIG.UpKeys) then
-		dir = dir + Vector3.new(0, 1, 0)
-	end
-	if anyKeyDown(CONFIG.DownKeys) then
-		dir = dir - Vector3.new(0, 1, 0)
-	end
-
-	if dir.Magnitude > 0 then
-		dir = dir.Unit
-	end
-
-	-- dir 为零向量时速度归零 = 悬停，重力被抵消，不会下坠
-	self.BodyVelocity.Velocity = dir * flySpeed
-	self.BodyGyro.CFrame = CFrame.new(root.Position, root.Position + camCF.LookVector)
-end
-
-function Fly:Start()
-	if self.Active then return end
-	local root, hum = getRoot(), getHumanoid()
-	if not root or not hum then return end
-
-	-- 还在缓降就直接打断，重新起飞
-	if self.CancelSoftLand then
-		local cancel = self.CancelSoftLand
-		self.CancelSoftLand = nil
-		pcall(cancel)
-	end
-
-	hum.PlatformStand = true
-	setDamageShield(hum, false)  -- 飞行中恢复 Freefall，不然角色状态机不自然
-	Spoof:Start()                -- 速度回零：服务端读到的速度恒为 0，撞东西 / 落地都不掉血
-	self:BuildMovers(root)
-	self.Active = true
-
-	-- 预热官方控制器，避免第一次 RenderStepped 里才发现要 WaitForChild
-	getControls()
-
-	table.insert(self.Connections, RunService.RenderStepped:Connect(function()
-		pcall(function() self:Update() end)
-	end))
-end
-
---=====================================================================
---  缓降落地
---  目标：放开控制的那一刻，角色是"已经站在地上、速度为零"的状态，
---  全程不产生 Freefall -> Landed 的状态转换，靠状态判定摔伤的服务器抓不到。
---=====================================================================
-function Fly:SoftLand(root, hum)
-	local bv = new("BodyVelocity", {
-		Name = "O_X_HUB_Land",
-		MaxForce = Vector3.new(9e9, 9e9, 9e9),
-		Velocity = Vector3.zero,
-		Parent = root,
-	})
-
-	local footOffset = getFootOffset(root)
-	local t0         = os.clock()
-	local settleAt   = nil
-	local finished   = false
-
-	-- 离得远就快、贴近了就慢，既快又不会砸下去
-	local function descendSpeed(gap)
-		return math.clamp(gap * CONFIG.SoftLandApproach, CONFIG.SoftLandMinSpeed, CONFIG.SoftLandMaxSpeed)
-	end
-
-	-- 立刻给初速度，别干等第一帧 Heartbeat 才动
-	local startGap = getGroundDistance(root) - footOffset
-	if startGap > CONFIG.SoftLandGap then
-		bv.Velocity = Vector3.new(0, -descendSpeed(startGap), 0)
-	end
-
-	-- 离得远才提示，贴地那种一两秒就完事，不用打扰
-	if startGap > 25 then
-		notify("缓降中  ·  落地后自动交回操作", C.Accent)
-	end
-
-	local conn
-	local function finish()
-		if finished then return end
-		finished = true
-		Fly.CancelSoftLand = nil
-
-		if conn then pcall(function() conn:Disconnect() end) end
-		pcall(function() bv:Destroy() end)
-
-		if hum and hum.Parent then
-			-- 只有确实贴地才屏蔽 Freefall，否则宁可让它正常掉
-			local grounded = false
-			if root and root.Parent then
-				grounded = getGroundDistance(root) - footOffset <= CONFIG.SoftLandGap + 2
+			for _, d in ipairs(char:GetDescendants()) do
+				if d:IsA("BasePart") then
+					local bottom = d.Position.Y - d.Size.Y * 0.5
+					if bottom < lowest then lowest = bottom end
+				end
 			end
-			if grounded then setDamageShield(hum, true) end
-			pcall(function() hum.PlatformStand = false end)
-			if grounded then
-				task.delay(SHIELD_TIME, function()
-					if hum and hum.Parent then
-						setDamageShield(hum, false)
-					end
+		end)
+
+		local off = root.Position.Y - lowest
+		-- 姿态异常（躺地上、挂在墙上）时给个保守值
+		if off < 0.5 or off > 12 then return 3 end
+		return off
+	end
+
+	-- 屏蔽会触发摔伤判定的状态。
+	-- StateChanged 不会再抛 Freefall -> Landed / FallingDown，靠状态判定摔伤的服务器就抓不到。
+	-- 注意：SetStateEnabled 在客户端调用不会同步到服务端，但"状态变化"本身会同步，
+	-- 所以客户端不进这些状态，服务端也就看不到。
+	local SHIELD_STATES = {
+		Enum.HumanoidStateType.Freefall,
+		Enum.HumanoidStateType.Landed,
+		Enum.HumanoidStateType.FallingDown,
+	}
+
+	local function setDamageShield(hum, on)
+		if not CONFIG.DamageShield then return end
+		for _, st in ipairs(SHIELD_STATES) do
+			pcall(function() hum:SetStateEnabled(st, not on) end)
+		end
+	end
+
+	-- 贴地放手后，状态屏蔽再撑这么久才撤掉
+	local SHIELD_TIME = 0.5
+
+	--=====================================================================
+	--  速度回零（防摔伤 / 防撞击伤害）
+	--
+	--  原理：服务端的伤害判定读的是"同步过去的角色速度"。
+	--  在 Heartbeat 末尾把 AssemblyLinearVelocity 清零、下一帧 RenderStepped 再还原，
+	--  中间这一段正好是网络同步窗口 —— 服务端读到的速度恒为 0。
+	--  角色的实际移动不受影响，因为物理步之前速度已经还原了。
+	--=====================================================================
+	local Spoof = {
+		Active = false,
+		Gen    = 0,      -- 代数，防止"延迟停止"误杀新开的回零
+		Conns  = {},
+	}
+
+	function Spoof:Stop()
+		self.Gen = self.Gen + 1
+		if not self.Active then return end
+		self.Active = false
+		for _, c in ipairs(self.Conns) do
+			pcall(function() c:Disconnect() end)
+		end
+		self.Conns = {}
+	end
+
+	function Spoof:Start()
+		if not CONFIG.DamageShield or not CONFIG.VelocitySpoof then return end
+		self.Gen = self.Gen + 1
+		if self.Active then return end
+
+		self.Active = true
+		local saved = nil
+
+		local hb
+		hb = RunService.Heartbeat:Connect(function()
+			if not self.Active then
+				pcall(function() hb:Disconnect() end)
+				return
+			end
+			local root = getRoot()
+			if not root then return end
+			pcall(function()
+				saved = root.AssemblyLinearVelocity
+				root.AssemblyLinearVelocity = Vector3.zero
+			end)
+		end)
+
+		local rs
+		rs = RunService.RenderStepped:Connect(function()
+			if not self.Active then
+				pcall(function() rs:Disconnect() end)
+				return
+			end
+			if not saved then return end
+			local root = getRoot()
+			if root then
+				pcall(function() root.AssemblyLinearVelocity = saved end)
+			end
+			saved = nil
+		end)
+
+		self.Conns = { hb, rs }
+	end
+
+	-- 一直回零到角色落地，再多撑一会儿才停
+	function Spoof:StopWhenGrounded()
+		if not self.Active then return end
+
+		local gen = self.Gen
+		local t0 = os.clock()
+
+		local conn
+		conn = RunService.Heartbeat:Connect(function()
+			if not self.Active then
+				pcall(function() conn:Disconnect() end)
+				return
+			end
+
+			local root = getRoot()
+			local hum  = getHumanoid()
+			local done = false
+
+			if not root or not root.Parent or not hum or not hum.Parent then
+				done = true
+			elseif getGroundDistance(root) - getFootOffset(root) <= CONFIG.SoftLandGap + 1 then
+				done = true
+			elseif os.clock() - t0 > 15 then
+				done = true
+			end
+
+			if done then
+				pcall(function() conn:Disconnect() end)
+				task.delay(CONFIG.VelocitySpoofHold, function()
+					-- 这中间要是又起飞了，就不能把新开的回零关掉
+					if Spoof.Gen == gen then Spoof:Stop() end
 				end)
 			end
-		end
-
-		-- 回零再撑到落地之后一会儿才停，把落地那一瞬间也盖住
-		Spoof:StopWhenGrounded()
-	end
-	self.CancelSoftLand = finish
-
-	conn = RunService.Heartbeat:Connect(function()
-		if finished then return end
-
-		-- 角色没了 / 复活了
-		if not root.Parent or not hum or not hum.Parent then
-			finished = true
-			Fly.CancelSoftLand = nil
-			pcall(function() conn:Disconnect() end)
-			pcall(function() bv:Destroy() end)
-			if hum then setDamageShield(hum, false) end
-			Spoof:Stop()
-			return
-		end
-
-		-- 兜底：万一一直探不到地面（掉出地图、站在不可见碰撞上等）
-		if os.clock() - t0 > CONFIG.SoftLandTimeout then
-			finish()
-			return
-		end
-
-		local gap = getGroundDistance(root) - footOffset
-
-		if gap <= CONFIG.SoftLandGap then
-			-- 已经贴地：速度彻底归零，等物理稳定下来再放手
-			bv.Velocity = Vector3.zero
-			if not settleAt then
-				settleAt = os.clock()
-			elseif os.clock() - settleAt >= CONFIG.SoftLandSettle then
-				finish()
-			end
-		else
-			settleAt = nil
-			bv.Velocity = Vector3.new(0, -descendSpeed(gap), 0)
-		end
-	end)
-end
-
-function Fly:Stop(useSoftLand)
-	local root, hum = getRoot(), getHumanoid()
-
-	-- 上一轮缓降还没结束就先掐掉
-	if self.CancelSoftLand then
-		local cancel = self.CancelSoftLand
-		self.CancelSoftLand = nil
-		pcall(cancel)
-	end
-
-	if self.Active then
-		for _, conn in ipairs(self.Connections) do
-			pcall(function() conn:Disconnect() end)
-		end
-		self.Connections = {}
-		self.Active = false
-	end
-
-	if self.BodyVelocity then
-		pcall(function() self.BodyVelocity:Destroy() end)
-		self.BodyVelocity = nil
-	end
-	if self.BodyGyro then
-		pcall(function() self.BodyGyro:Destroy() end)
-		self.BodyGyro = nil
-	end
-
-	if not hum then return end
-
-	local gap = math.huge
-	if root and root.Parent then
-		gap = getGroundDistance(root) - getFootOffset(root)
-	end
-
-	if useSoftLand and CONFIG.SoftLand and gap > CONFIG.SoftLandGap then
-		-- 高空：走缓降流程（回零继续跑着，落地由 SoftLand 收尾）
-		Fly:SoftLand(root, hum)
-		return
-	end
-
-	-- 本来就在地上：直接放手。只在确实贴地时才屏蔽 Freefall，
-	-- 免得玩家主动关掉保护从高空跳下去时角色反而卡在空中
-	local grounded = gap <= CONFIG.SoftLandGap + 2
-	if grounded then setDamageShield(hum, true) end
-	pcall(function() hum.PlatformStand = false end)
-	if grounded then
-		task.delay(SHIELD_TIME, function()
-			if hum and hum.Parent then setDamageShield(hum, false) end
 		end)
-		-- 贴地放手：回零再撑一小会儿，把落地那一瞬间也盖住
-		Spoof:StopWhenGrounded()
-	else
-		-- 主动从高空跳下去（关掉了落地保护）：没必要再回零，恢复正常物理
-		Spoof:Stop()
+
+		table.insert(self.Conns, conn)
 	end
-end
 
--- 状态同步到所有界面元素
-local function syncFlyUI()
-	local on = Fly.Enabled
-
-	flyDot.BackgroundColor3 = on and C.Green or C.Dim
-	flyCardState.Text = on and "已开启" or "已关闭"
-	flyCardState.TextColor3 = on and C.Green or C.Dim
-	flyCardStroke.Color = on and C.Green or C.Stroke
-
-	navItems.fly.dot.BackgroundColor3 = on and C.Green or C.Dim
-	flyReopenDot.BackgroundColor3 = on and C.Green or C.Dim
-
-	flyToggleLabel.Text = on and "关闭飞行" or "开启飞行"
-	flyToggle.BackgroundColor3 = on and C.Green or C.Accent
-	flyToggleStroke.Color = on and C.Green or C.Accent
-	flyWinState.Text = on and "飞行中" or "已停止"
-	flyWinState.TextColor3 = on and C.Green or C.Dim
-end
-
-function Fly:SetEnabled(state)
-	self.Enabled = state
-
-	if state then
-		self:Start()
-		if not self.Active then
-			self.Enabled = false
-			syncFlyUI()
-			notify("角色未加载，无法起飞", C.Red)
-			return
-		end
-		syncFlyUI()
-		notify("飞行已开启  ·  速度 " .. fmtSpeed(flySpeed), C.Green)
-	else
-		self:Stop(true)
-		syncFlyUI()
-		notify("飞行已关闭", C.Red)
-	end
-end
-
-function Fly:Toggle()
-	self:SetEnabled(not self.Enabled)
-end
-
--- 接上界面按钮的回调（FlyToggleRequest 在前面已 forward declare）
-FlyToggleRequest = function()
-	Fly:Toggle()
-end
-
--- 伤害保护总开关：在飞就立刻开始 / 停止回零
-ShieldRequest = function(on)
-	CONFIG.DamageShield = on
-	if on then
-		if Fly.Active then Spoof:Start() end
-		notify("伤害保护已开启  ·  飞行中撞东西 / 落地都不掉血", C.Green)
-	else
+	-- 完全撤掉伤害保护（复活 / 关脚本时用）
+	function Fly:StopShield()
 		Spoof:Stop()
 		local hum = getHumanoid()
 		if hum then setDamageShield(hum, false) end
-		notify("伤害保护已关闭", C.Red)
-	end
-end
-
-syncFlyUI()
-
--- 飞行窗口的 ✕：结束飞行（走落地保护，不会摔死）+ 收起窗口，不留胶囊
-FlyCloseRequest = function()
-	Fly:SetEnabled(false)
-	closeFlyWindow()
-end
-
---========================== 全局连接（关闭时要能全断掉） ==========================
-local function track(conn)
-	table.insert(GLOBAL_CONNS, conn)
-	return conn
-end
-
--- 快捷键
-track(UserInputService.InputBegan:Connect(function(input, processed)
-	if SHUTDOWN or processed then return end
-	if input.KeyCode == CONFIG.FlyKey then
-		Fly:Toggle()
-	end
-end))
-
--- 复活后自动恢复飞行 + 重新应用通用属性
-track(LocalPlayer.CharacterAdded:Connect(function()
-	if SHUTDOWN then return end
-	Fly:Stop(false)
-	Fly:StopShield()      -- 旧角色的回零 / 状态屏蔽全部撤掉，重新来过
-	task.wait(0.8)
-	if SHUTDOWN then return end
-	applySettings()
-	if Fly.Enabled then
-		Fly:Start()
-	end
-end))
-
--- 相机重建时重算缩放
-track(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
-	task.wait(0.2)
-	if SHUTDOWN then return end
-	updateScale()
-end))
-
---=====================================================================
---  主窗口 ✕ = 结束进程
---  停飞行 → 撤伤害保护 → 断开所有连接 → 还原改过的属性 → 销毁界面
---=====================================================================
-local function unloadAll(instant)
-	if SHUTDOWN then return end
-	SHUTDOWN = true
-
-	-- 1. 停飞行。走缓降流程，别让玩家直接摔死
-	pcall(function() Fly:SetEnabled(false) end)
-	pcall(function() Fly:StopShield() end)
-	local hum = getHumanoid()
-	if hum then
-		pcall(function() hum.PlatformStand = false end)
 	end
 
-	-- 2. 断开所有全局连接（含拖拽用的 InputChanged）
-	for _, c in ipairs(GLOBAL_CONNS) do
-		pcall(function() c:Disconnect() end)
-	end
-	GLOBAL_CONNS = {}
+	function Fly:BuildMovers(root)
+		if self.BodyVelocity then
+			pcall(function() self.BodyVelocity:Destroy() end)
+		end
+		if self.BodyGyro then
+			pcall(function() self.BodyGyro:Destroy() end)
+		end
 
-	-- 3. 还原被改过的全局属性（重力是 workspace 级的，必须还回去）
-	pcall(function() workspace.Gravity = gravDef end)
-	if hum then
-		pcall(function() hum.WalkSpeed = walkDef end)
-		pcall(function()
-			hum.UseJumpPower = true
-			hum.JumpPower = jumpDef
+		self.BodyVelocity = new("BodyVelocity", {
+			Name = "O_X_HUB_Fly",
+			MaxForce = Vector3.new(9e9, 9e9, 9e9),
+			Velocity = Vector3.zero,
+			Parent = root,
+		})
+
+		self.BodyGyro = new("BodyGyro", {
+			Name = "O_X_HUB_Gyro",
+			MaxTorque = Vector3.new(9e9, 9e9, 9e9),
+			P = 10000,
+			D = 500,
+			CFrame = root.CFrame,
+			Parent = root,
+		})
+	end
+
+	function Fly:Update()
+		local root = getRoot()
+		if not root then return end
+
+		-- 抗反作弊：移动器被游戏删掉就重建
+		if not self.BodyVelocity or not self.BodyVelocity.Parent
+			or not self.BodyGyro or not self.BodyGyro.Parent then
+			self:BuildMovers(root)
+		end
+
+		local cam = workspace.CurrentCamera
+		if not cam then return end
+		local camCF = cam.CFrame
+
+		local mv = readMoveInput()
+		local dir = Vector3.zero
+
+		if mv.Magnitude > 0.01 then
+			-- mv.X = 左右，mv.Z = 前后
+			-- 用相机的 LookVector 而不是水平投影：抬头前进即上升，符合"飞行状态"的直觉
+			dir = (camCF.LookVector * (mv.Z * CONFIG.MoveZSign))
+				+ (camCF.RightVector * (mv.X * CONFIG.MoveXSign))
+			if dir.Magnitude > 0 then
+				dir = dir.Unit
+			end
+		end
+
+		-- 键盘垂直微调
+		if anyKeyDown(CONFIG.UpKeys) then
+			dir = dir + Vector3.new(0, 1, 0)
+		end
+		if anyKeyDown(CONFIG.DownKeys) then
+			dir = dir - Vector3.new(0, 1, 0)
+		end
+
+		if dir.Magnitude > 0 then
+			dir = dir.Unit
+		end
+
+		-- dir 为零向量时速度归零 = 悬停，重力被抵消，不会下坠
+		self.BodyVelocity.Velocity = dir * flySpeed
+		self.BodyGyro.CFrame = CFrame.new(root.Position, root.Position + camCF.LookVector)
+	end
+
+	function Fly:Start()
+		if self.Active then return end
+		local root, hum = getRoot(), getHumanoid()
+		if not root or not hum then return end
+
+		-- 还在缓降就直接打断，重新起飞
+		if self.CancelSoftLand then
+			local cancel = self.CancelSoftLand
+			self.CancelSoftLand = nil
+			pcall(cancel)
+		end
+
+		hum.PlatformStand = true
+		setDamageShield(hum, false)  -- 飞行中恢复 Freefall，不然角色状态机不自然
+		Spoof:Start()                -- 速度回零：服务端读到的速度恒为 0，撞东西 / 落地都不掉血
+		self:BuildMovers(root)
+		self.Active = true
+
+		-- 预热官方控制器，避免第一次 RenderStepped 里才发现要 WaitForChild
+		getControls()
+
+		table.insert(self.Connections, RunService.RenderStepped:Connect(function()
+			pcall(function() self:Update() end)
+		end))
+	end
+
+	--=====================================================================
+	--  缓降落地
+	--  目标：放开控制的那一刻，角色是"已经站在地上、速度为零"的状态，
+	--  全程不产生 Freefall -> Landed 的状态转换，靠状态判定摔伤的服务器抓不到。
+	--=====================================================================
+	function Fly:SoftLand(root, hum)
+		local bv = new("BodyVelocity", {
+			Name = "O_X_HUB_Land",
+			MaxForce = Vector3.new(9e9, 9e9, 9e9),
+			Velocity = Vector3.zero,
+			Parent = root,
+		})
+
+		local footOffset = getFootOffset(root)
+		local t0         = os.clock()
+		local settleAt   = nil
+		local finished   = false
+
+		-- 离得远就快、贴近了就慢，既快又不会砸下去
+		local function descendSpeed(gap)
+			return math.clamp(gap * CONFIG.SoftLandApproach, CONFIG.SoftLandMinSpeed, CONFIG.SoftLandMaxSpeed)
+		end
+
+		-- 立刻给初速度，别干等第一帧 Heartbeat 才动
+		local startGap = getGroundDistance(root) - footOffset
+		if startGap > CONFIG.SoftLandGap then
+			bv.Velocity = Vector3.new(0, -descendSpeed(startGap), 0)
+		end
+
+		-- 离得远才提示，贴地那种一两秒就完事，不用打扰
+		if startGap > 25 then
+			notify(L("softLandMsg"), C.Accent)
+		end
+
+		local conn
+		local function finish()
+			if finished then return end
+			finished = true
+			Fly.CancelSoftLand = nil
+
+			if conn then pcall(function() conn:Disconnect() end) end
+			pcall(function() bv:Destroy() end)
+
+			if hum and hum.Parent then
+				-- 只有确实贴地才屏蔽 Freefall，否则宁可让它正常掉
+				local grounded = false
+				if root and root.Parent then
+					grounded = getGroundDistance(root) - footOffset <= CONFIG.SoftLandGap + 2
+				end
+				if grounded then setDamageShield(hum, true) end
+				pcall(function() hum.PlatformStand = false end)
+				if grounded then
+					task.delay(SHIELD_TIME, function()
+						if hum and hum.Parent then
+							setDamageShield(hum, false)
+						end
+					end)
+				end
+			end
+
+			-- 回零再撑到落地之后一会儿才停，把落地那一瞬间也盖住
+			Spoof:StopWhenGrounded()
+		end
+		self.CancelSoftLand = finish
+
+		conn = RunService.Heartbeat:Connect(function()
+			if finished then return end
+
+			-- 角色没了 / 复活了
+			if not root.Parent or not hum or not hum.Parent then
+				finished = true
+				Fly.CancelSoftLand = nil
+				pcall(function() conn:Disconnect() end)
+				pcall(function() bv:Destroy() end)
+				if hum then setDamageShield(hum, false) end
+				Spoof:Stop()
+				return
+			end
+
+			-- 兜底：万一一直探不到地面（掉出地图、站在不可见碰撞上等）
+			if os.clock() - t0 > CONFIG.SoftLandTimeout then
+				finish()
+				return
+			end
+
+			local gap = getGroundDistance(root) - footOffset
+
+			if gap <= CONFIG.SoftLandGap then
+				-- 已经贴地：速度彻底归零，等物理稳定下来再放手
+				bv.Velocity = Vector3.zero
+				if not settleAt then
+					settleAt = os.clock()
+				elseif os.clock() - settleAt >= CONFIG.SoftLandSettle then
+					finish()
+				end
+			else
+				settleAt = nil
+				bv.Velocity = Vector3.new(0, -descendSpeed(gap), 0)
+			end
 		end)
 	end
 
-	-- 4. 收起界面再销毁
-	local function kill()
-		pcall(function() guiMain:Destroy() end)
-		pcall(function() notifyGui:Destroy() end)
-		_G.O_X_HUB_LOADED = nil
+	function Fly:Stop(useSoftLand)
+		local root, hum = getRoot(), getHumanoid()
+
+		-- 上一轮缓降还没结束就先掐掉
+		if self.CancelSoftLand then
+			local cancel = self.CancelSoftLand
+			self.CancelSoftLand = nil
+			pcall(cancel)
+		end
+
+		if self.Active then
+			for _, conn in ipairs(self.Connections) do
+				pcall(function() conn:Disconnect() end)
+			end
+			self.Connections = {}
+			self.Active = false
+		end
+
+		if self.BodyVelocity then
+			pcall(function() self.BodyVelocity:Destroy() end)
+			self.BodyVelocity = nil
+		end
+		if self.BodyGyro then
+			pcall(function() self.BodyGyro:Destroy() end)
+			self.BodyGyro = nil
+		end
+
+		if not hum then return end
+
+		local gap = math.huge
+		if root and root.Parent then
+			gap = getGroundDistance(root) - getFootOffset(root)
+		end
+
+		if useSoftLand and CONFIG.SoftLand and gap > CONFIG.SoftLandGap then
+			-- 高空：走缓降流程（回零继续跑着，落地由 SoftLand 收尾）
+			Fly:SoftLand(root, hum)
+			return
+		end
+
+		-- 本来就在地上：直接放手。只在确实贴地时才屏蔽 Freefall，
+		-- 免得玩家主动关掉保护从高空跳下去时角色反而卡在空中
+		local grounded = gap <= CONFIG.SoftLandGap + 2
+		if grounded then setDamageShield(hum, true) end
+		pcall(function() hum.PlatformStand = false end)
+		if grounded then
+			task.delay(SHIELD_TIME, function()
+				if hum and hum.Parent then setDamageShield(hum, false) end
+			end)
+			-- 贴地放手：回零再撑一小会儿，把落地那一瞬间也盖住
+			Spoof:StopWhenGrounded()
+		else
+			-- 主动从高空跳下去（关掉了落地保护）：没必要再回零，恢复正常物理
+			Spoof:Stop()
+		end
 	end
 
-	if instant then
-		kill()
-		return
+	-- 状态同步到所有界面元素
+	local function syncFlyUI()
+		local on = Fly.Enabled
+
+		flyDot.BackgroundColor3 = on and C.Green or C.Dim
+		flyCardState.Text = on and L("stateOn") or L("stateOff")
+		flyCardState.TextColor3 = on and C.Green or C.Dim
+		flyCardStroke.Color = on and C.Green or C.Stroke
+
+		navItems.fly.dot.BackgroundColor3 = on and C.Green or C.Dim
+		flyReopenDot.BackgroundColor3 = on and C.Green or C.Dim
+
+		flyToggleLabel.Text = on and L("flyOff") or L("flyOn")
+		flyToggle.BackgroundColor3 = on and C.Green or C.Accent
+		flyToggleStroke.Color = on and C.Green or C.Accent
+		flyWinState.Text = on and L("flyFlying") or L("flyStopped")
+		flyWinState.TextColor3 = on and C.Green or C.Dim
 	end
 
-	pcall(function()
-		local t = TweenService:Create(
+	function Fly:SetEnabled(state)
+		self.Enabled = state
+
+		if state then
+			self:Start()
+			if not self.Active then
+				self.Enabled = false
+				syncFlyUI()
+				notify(L("noChar"), C.Red)
+				return
+			end
+			syncFlyUI()
+			notify(string.format(L("flyOnMsg"), fmtSpeed(flySpeed)), C.Green)
+		else
+			self:Stop(true)
+			syncFlyUI()
+			notify(L("flyOffMsg"), C.Red)
+		end
+	end
+
+	function Fly:Toggle()
+		self:SetEnabled(not self.Enabled)
+	end
+
+	-- 接上界面按钮的回调（FlyToggleRequest 在前面已 forward declare）
+	FlyToggleRequest = function()
+		Fly:Toggle()
+	end
+
+	-- 伤害保护总开关：在飞就立刻开始 / 停止回零
+	ShieldRequest = function(on)
+		CONFIG.DamageShield = on
+		if on then
+			if Fly.Active then Spoof:Start() end
+			notify(L("shieldOnMsg"), C.Green)
+		else
+			Spoof:Stop()
+			local hum = getHumanoid()
+			if hum then setDamageShield(hum, false) end
+			notify(L("shieldOffMsg"), C.Red)
+		end
+	end
+
+	syncFlyUI()
+
+	-- 飞行窗口的 ✕：结束飞行（走落地保护，不会摔死）+ 收起窗口，不留胶囊
+	FlyCloseRequest = function()
+		Fly:SetEnabled(false)
+		closeFlyWindow()
+	end
+
+	--========================== 全局连接（关闭时要能全断掉） ==========================
+	local function track(conn)
+		table.insert(GLOBAL_CONNS, conn)
+		return conn
+	end
+
+	-- 快捷键
+	track(UserInputService.InputBegan:Connect(function(input, processed)
+		if SHUTDOWN or processed then return end
+		if input.KeyCode == CONFIG.FlyKey then
+			Fly:Toggle()
+		end
+	end))
+
+	-- 复活后自动恢复飞行 + 重新应用通用属性
+	track(LocalPlayer.CharacterAdded:Connect(function()
+		if SHUTDOWN then return end
+		Fly:Stop(false)
+		Fly:StopShield()      -- 旧角色的回零 / 状态屏蔽全部撤掉，重新来过
+		task.wait(0.8)
+		if SHUTDOWN then return end
+		applySettings()
+		if Fly.Enabled then
+			Fly:Start()
+		end
+	end))
+
+	-- 相机重建时重算缩放
+	track(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+		task.wait(0.2)
+		if SHUTDOWN then return end
+		updateScale()
+	end))
+
+	--=====================================================================
+	--  主窗口 ✕ = 结束进程
+	--  停飞行 → 撤伤害保护 → 断开所有连接 → 还原改过的属性 → 销毁界面
+	--=====================================================================
+	unloadAll = function(instant)
+		if SHUTDOWN then return end
+		SHUTDOWN = true
+
+		-- 1. 停飞行。走缓降流程，别让玩家直接摔死
+		pcall(function() Fly:SetEnabled(false) end)
+		pcall(function() Fly:StopShield() end)
+		local hum = getHumanoid()
+		if hum then
+			pcall(function() hum.PlatformStand = false end)
+		end
+
+		-- 2. 断开所有全局连接（含拖拽用的 InputChanged）
+		for _, c in ipairs(GLOBAL_CONNS) do
+			pcall(function() c:Disconnect() end)
+		end
+		GLOBAL_CONNS = {}
+
+		-- 3. 还原被改过的全局属性（重力是 workspace 级的，必须还回去）
+		pcall(function() workspace.Gravity = gravDef end)
+		if hum then
+			pcall(function() hum.WalkSpeed = walkDef end)
+			pcall(function()
+				hum.UseJumpPower = true
+				hum.JumpPower = jumpDef
+			end)
+		end
+
+		-- 4. 收起界面再销毁
+		local function kill()
+			pcall(function() guiMain:Destroy() end)
+			pcall(function() notifyGui:Destroy() end)
+			_G.O_X_HUB_LOADED = nil
+		end
+
+		if instant then
+			kill()
+			return
+		end
+
+		pcall(function()
+			local t = TweenService:Create(
+				uiScale,
+				TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+				{ Scale = 0.86 }
+			)
+			t:Play()
+		end)
+		task.delay(0.16, kill)
+	end
+
+	ShutdownRequest = function()
+		unloadAll(false)
+	end
+
+	_G.O_X_HUB_LOADED = unloadAll   -- 下次重复执行时能先把这一份卸干净
+
+	--=====================================================================
+	--  四、启动动画 -> 显示主界面
+	--=====================================================================
+	createLoadingScreen(nil, function()
+		applySettings()
+		guiMain.Enabled = true
+		fadeIn(guiMain, 0.35)
+		uiScale.Scale = math.clamp(computeScale(WIN_W, WIN_H) * 0.88, 0.5, 1)
+		TweenService:Create(
 			uiScale,
-			TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-			{ Scale = 0.86 }
-		)
-		t:Play()
+			TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = computeScale(WIN_W, WIN_H) }
+		):Play()
+		task.wait(0.15)
+		notify(string.format(L("loaded"), CONFIG.Title, CONFIG.Version), C.Accent)
 	end)
-	task.delay(0.16, kill)
 end
 
-ShutdownRequest = function()
-	unloadAll(false)
+--=====================================================================
+--  五、启动流程
+--=====================================================================
+-- 重启：把旧的整份卸掉，再用新语言跑一遍 boot。
+-- 等价于重新注入，但不用联网，也不会闪一下语言选择页。
+restart = function(lang)
+	LANG = lang
+	task.spawn(function()
+		task.wait(0.45)                     -- 让"已切换语言"的提示先露个脸
+		if unloadAll then pcall(unloadAll, true) end
+		task.wait(0.12)
+		boot(lang)
+	end)
 end
 
-_G.O_X_HUB_LOADED = unloadAll   -- 下次重复执行时能先把这一份卸干净
-
---=====================================================================
---  四、启动流程
---=====================================================================
-createLoadingScreen(nil, function()
-	applySettings()
-	guiMain.Enabled = true
-	fadeIn(guiMain, 0.35)
-	uiScale.Scale = math.clamp(computeScale(WIN_W, WIN_H) * 0.88, 0.5, 1)
-	TweenService:Create(
-		uiScale,
-		TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Scale = computeScale(WIN_W, WIN_H) }
-	):Play()
-	task.wait(0.15)
-	notify(CONFIG.Title .. " 加载完成  ·  " .. CONFIG.Version, C.Accent)
+-- 注入后第一屏：选语言。选完才 boot（加载动画 + 主界面）
+createLanguageScreen(function(lang)
+	boot(lang)
 end)
