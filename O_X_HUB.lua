@@ -41,9 +41,19 @@ local CONFIG = {
 	MoveXSign = 1,        -- X 分量：1 表示"正值向右"
 
 	-- ---------- 落地保护 ----------
-	SoftLand       = true,  -- 关闭飞行时缓慢下降，避免摔伤
-	SoftLandSpeed  = 30,    -- 缓慢下降的速度
-	SoftLandHeight = 8,     -- 离地高度低于这个值就直接落地
+	-- 有掉落伤害的服务器基本都监听 Humanoid.StateChanged 的 Freefall -> Landed。
+	-- 所以保护分两层：
+	--   ① 缓降到底、贴地站住、速度归零之后才放开控制 —— 角色根本没进入过自由落体
+	--   ② 放开控制的瞬间短暂屏蔽 Freefall 状态，兜住引擎/脚本的边界判定
+	SoftLand         = true,  -- 关闭飞行时缓降，避免摔伤
+	SoftLandApproach = 2.5,   -- 接近速度系数：下降速度 = 离地余量 × 这个值
+	SoftLandMaxSpeed = 110,   -- 缓降最大速度（高处快速接近）
+	SoftLandMinSpeed = 6,     -- 缓降最低速度（贴地前慢慢蹭）
+	SoftLandGap      = 0.4,   -- 离地小于这个值就算"站稳"
+	SoftLandSettle   = 0.12,  -- 站稳后等这么久（让物理速度彻底归零）再放开控制
+	SoftLandTimeout  = 20,    -- 兜底：最多缓降这么久
+	FallShield       = true,  -- 放开控制时短暂屏蔽 Freefall 状态
+	FallShieldTime   = 0.5,   -- 屏蔽时长
 
 	-- ---------- 图标 ----------
 	-- 内联的图标会写到执行器工作目录，再用 getcustomasset 转成可用资源
@@ -1692,7 +1702,7 @@ new("TextLabel", {
 	Size = UDim2.new(1, 0, 0, 14),
 	Position = UDim2.new(0, 0, 0, 144),
 	BackgroundTransparency = 1,
-	Text = "关闭飞行时缓慢下降，避免高空摔死",
+	Text = "关飞行后缓降贴地才放手，不会被判定摔伤",
 	TextSize = 11,
 	Font = FONT_N,
 	TextColor3 = C.Dim,
@@ -1997,11 +2007,12 @@ showPage("home")
 --  三、飞行模块
 --=====================================================================
 local Fly = {
-	Enabled      = false,   -- 用户意图（复活后据此恢复）
-	Active       = false,   -- 运行态
-	BodyVelocity = nil,
-	BodyGyro     = nil,
-	Connections  = {},
+	Enabled        = false,   -- 用户意图（复活后据此恢复）
+	Active         = false,   -- 运行态
+	BodyVelocity   = nil,
+	BodyGyro       = nil,
+	Connections    = {},
+	CancelSoftLand = nil,     -- 缓降的取消函数（重新起飞 / 复活时用）
 }
 
 -- 读取官方移动输入。
@@ -2069,6 +2080,37 @@ local function getGroundDistance(root)
 		return dist
 	end
 	return math.huge
+end
+
+-- 角色"站稳时" root 中心离地多高 = 脚底到 root 的距离。
+-- 缓降到这个高度再放开控制，角色就是站着而不是掉下来。
+local function getFootOffset(root)
+	local char = root.Parent
+	if not char then return 3 end
+
+	local lowest = root.Position.Y
+	pcall(function()
+		for _, d in ipairs(char:GetDescendants()) do
+			if d:IsA("BasePart") then
+				local bottom = d.Position.Y - d.Size.Y * 0.5
+				if bottom < lowest then lowest = bottom end
+			end
+		end
+	end)
+
+	local off = root.Position.Y - lowest
+	-- 姿态异常（躺地上、挂在墙上）时给个保守值
+	if off < 0.5 or off > 12 then return 3 end
+	return off
+end
+
+-- 短暂屏蔽 Freefall 状态。
+-- 引擎的 StateChanged 不会再抛 Freefall -> Landed，靠状态判定摔伤的服务器就抓不到。
+local function setFallShield(hum, on)
+	if not CONFIG.FallShield then return end
+	pcall(function()
+		hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, not on)
+	end)
 end
 
 function Fly:BuildMovers(root)
@@ -2145,7 +2187,15 @@ function Fly:Start()
 	local root, hum = getRoot(), getHumanoid()
 	if not root or not hum then return end
 
+	-- 还在缓降就直接打断，重新起飞
+	if self.CancelSoftLand then
+		local cancel = self.CancelSoftLand
+		self.CancelSoftLand = nil
+		pcall(cancel)
+	end
+
 	hum.PlatformStand = true
+	setFallShield(hum, false)   -- 飞行中恢复 Freefall，不然角色状态机不自然
 	self:BuildMovers(root)
 	self.Active = true
 
@@ -2157,34 +2207,113 @@ function Fly:Start()
 	end))
 end
 
--- 缓慢下降，落地后自动解除（防止高空关飞行被摔伤逻辑打死）
+--=====================================================================
+--  缓降落地
+--  目标：放开控制的那一刻，角色是"已经站在地上、速度为零"的状态，
+--  全程不产生 Freefall -> Landed 的状态转换，靠状态判定摔伤的服务器抓不到。
+--=====================================================================
 function Fly:SoftLand(root, hum)
 	local bv = new("BodyVelocity", {
 		Name = "O_X_HUB_Land",
 		MaxForce = Vector3.new(9e9, 9e9, 9e9),
-		Velocity = Vector3.new(0, -CONFIG.SoftLandSpeed, 0),
+		Velocity = Vector3.zero,
 		Parent = root,
 	})
 
+	local footOffset = getFootOffset(root)
+	local t0         = os.clock()
+	local settleAt   = nil
+	local finished   = false
+
+	-- 离得远就快、贴近了就慢，既快又不会砸下去
+	local function descendSpeed(gap)
+		return math.clamp(gap * CONFIG.SoftLandApproach, CONFIG.SoftLandMinSpeed, CONFIG.SoftLandMaxSpeed)
+	end
+
+	-- 立刻给初速度，别干等第一帧 Heartbeat 才动
+	local startGap = getGroundDistance(root) - footOffset
+	if startGap > CONFIG.SoftLandGap then
+		bv.Velocity = Vector3.new(0, -descendSpeed(startGap), 0)
+	end
+
+	-- 离得远才提示，贴地那种一两秒就完事，不用打扰
+	if startGap > 25 then
+		notify("缓降中  ·  落地后自动交回操作", C.Accent)
+	end
+
 	local conn
+	local function finish()
+		if finished then return end
+		finished = true
+		Fly.CancelSoftLand = nil
+
+		if conn then pcall(function() conn:Disconnect() end) end
+		pcall(function() bv:Destroy() end)
+
+		if hum and hum.Parent then
+			-- 只有确实贴地才屏蔽 Freefall，否则宁可让它正常掉
+			local grounded = false
+			if root and root.Parent then
+				grounded = getGroundDistance(root) - footOffset <= CONFIG.SoftLandGap + 2
+			end
+			if grounded then setFallShield(hum, true) end
+			pcall(function() hum.PlatformStand = false end)
+			if grounded then
+				task.delay(CONFIG.FallShieldTime, function()
+					if hum and hum.Parent then
+						setFallShield(hum, false)
+					end
+				end)
+			end
+		end
+	end
+	self.CancelSoftLand = finish
+
 	conn = RunService.Heartbeat:Connect(function()
-		if not root.Parent then
-			conn:Disconnect()
-			bv:Destroy()
+		if finished then return end
+
+		-- 角色没了 / 复活了
+		if not root.Parent or not hum or not hum.Parent then
+			finished = true
+			Fly.CancelSoftLand = nil
+			pcall(function() conn:Disconnect() end)
+			pcall(function() bv:Destroy() end)
+			if hum then setFallShield(hum, false) end
 			return
 		end
-		if getGroundDistance(root) <= CONFIG.SoftLandHeight then
-			conn:Disconnect()
-			bv:Destroy()
-			if hum and hum.Parent then
-				pcall(function() hum.PlatformStand = false end)
+
+		-- 兜底：万一一直探不到地面（掉出地图、站在不可见碰撞上等）
+		if os.clock() - t0 > CONFIG.SoftLandTimeout then
+			finish()
+			return
+		end
+
+		local gap = getGroundDistance(root) - footOffset
+
+		if gap <= CONFIG.SoftLandGap then
+			-- 已经贴地：速度彻底归零，等物理稳定下来再放手
+			bv.Velocity = Vector3.zero
+			if not settleAt then
+				settleAt = os.clock()
+			elseif os.clock() - settleAt >= CONFIG.SoftLandSettle then
+				finish()
 			end
+		else
+			settleAt = nil
+			bv.Velocity = Vector3.new(0, -descendSpeed(gap), 0)
 		end
 	end)
 end
 
 function Fly:Stop(useSoftLand)
 	local root, hum = getRoot(), getHumanoid()
+
+	-- 上一轮缓降还没结束就先掐掉
+	if self.CancelSoftLand then
+		local cancel = self.CancelSoftLand
+		self.CancelSoftLand = nil
+		pcall(cancel)
+	end
 
 	if self.Active then
 		for _, conn in ipairs(self.Connections) do
@@ -2205,11 +2334,26 @@ function Fly:Stop(useSoftLand)
 
 	if not hum then return end
 
-	local high = root and getGroundDistance(root) > CONFIG.SoftLandHeight
-	if useSoftLand and CONFIG.SoftLand and high then
+	local gap = math.huge
+	if root and root.Parent then
+		gap = getGroundDistance(root) - getFootOffset(root)
+	end
+
+	if useSoftLand and CONFIG.SoftLand and gap > CONFIG.SoftLandGap then
+		-- 高空：走缓降流程
 		Fly:SoftLand(root, hum)
-	else
-		pcall(function() hum.PlatformStand = false end)
+		return
+	end
+
+	-- 本来就在地上：直接放手。只在确实贴地时才屏蔽 Freefall，
+	-- 免得玩家主动关掉保护从高空跳下去时角色反而卡在空中
+	local grounded = gap <= CONFIG.SoftLandGap + 2
+	if grounded then setFallShield(hum, true) end
+	pcall(function() hum.PlatformStand = false end)
+	if grounded then
+		task.delay(CONFIG.FallShieldTime, function()
+			if hum and hum.Parent then setFallShield(hum, false) end
+		end)
 	end
 end
 
