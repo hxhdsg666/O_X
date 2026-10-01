@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.5.1
+--  Version : 1.5.2
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -221,7 +221,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.5.1",
+	Version = "v1.5.2",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -634,6 +634,23 @@ VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==
 
 --========================== 工具函数 ==========================
 
+-- 元素"出厂时"的透明度。入场动画恢复时**永远用这个值** ——
+-- 绝不读"当前值"：动画叠加时当前值可能是另一套动画刚设上去的中间态，
+-- 把它当目标的话元素就会永久停在中间态（症状：整个界面文字全没了）。
+local BASE_ALPHA = setmetatable({}, { __mode = "k" })
+
+local function rememberAlpha(obj)
+	if not obj:IsA("GuiObject") then return end
+	local cls = obj.ClassName
+	local e = { d = obj, bg = obj.BackgroundTransparency }
+	if cls == "TextLabel" or cls == "TextButton" or cls == "TextBox" then
+		e.tx = obj.TextTransparency
+	elseif cls == "ImageLabel" or cls == "ImageButton" then
+		e.im = obj.ImageTransparency
+	end
+	BASE_ALPHA[obj] = e
+end
+
 -- 快速创建实例：props 里的 Parent 最后赋值，children 自动挂载
 local function new(class, props, children)
 	local obj = Instance.new(class)
@@ -648,6 +665,7 @@ local function new(class, props, children)
 	if props and props.Parent then
 		obj.Parent = props.Parent
 	end
+	rememberAlpha(obj)
 	return obj
 end
 
@@ -894,22 +912,20 @@ end
 -- 记住每个元素"本来该在哪"：反复入场（切页 / 重启）时不会越滑越偏
 local BASE_POS = setmetatable({}, { __mode = "k" })
 
--- 正在做入场动画的元素：它的"目标透明度"必须沿用第一次记下来的值。
--- 否则动画叠加时（比如先整体淡入、再逐项入场）会把"中途被藏起来的状态"
--- 当成目标，tween 完元素就永远不显示了。
-local IN_FLIGHT = setmetatable({}, { __mode = "k" })
-
+-- 取元素"出厂透明度"。恢复目标固定，所以同一元素反复入场天然幂等，
+-- 无论动画叠不叠加都不会把中间态当成目标。
 local function snapshotAlpha(d)
-	local live = IN_FLIGHT[d]
-	if live then return live end
-	local e = { d = d, bg = d.BackgroundTransparency }
-	if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+	local e = BASE_ALPHA[d]
+	if e then return e end
+	-- 兜底：理论上不会有（所有实例都走 new()）
+	e = { d = d, bg = d.BackgroundTransparency }
+	local cls = d.ClassName
+	if cls == "TextLabel" or cls == "TextButton" or cls == "TextBox" then
 		e.tx = d.TextTransparency
-	end
-	if d:IsA("ImageLabel") or d:IsA("ImageButton") then
+	elseif cls == "ImageLabel" or cls == "ImageButton" then
 		e.im = d.ImageTransparency
 	end
-	IN_FLIGHT[d] = e
+	BASE_ALPHA[d] = e
 	return e
 end
 
@@ -944,13 +960,6 @@ local function slideIn(obj, dy, waitSec, dur)
 			if e.im ~= nil then props.ImageTransparency = e.im end
 			if e.bg ~= nil then props.BackgroundTransparency = e.bg end
 			TweenService:Create(e.d, info, props):Play()
-		end
-	end)
-
-	-- 这一批 tween 跑完才解除标记（动画中途再入场就能续用同一份快照）
-	task.delay(total + 0.06, function()
-		for _, e in ipairs(snap) do
-			if IN_FLIGHT[e.d] == e then IN_FLIGHT[e.d] = nil end
 		end
 	end)
 end
@@ -2433,6 +2442,54 @@ boot = function(lang)
 		return page
 	end
 
+	-- 兜底自检：入场动画跑完之后，主界面里不该还有"本该完全不透明却全透明"的元素。
+	-- 正常情况下一处都不会修；修到了说明动画逻辑又出问题了（会打日志）。
+	-- 两个限定条件，免得把"故意淡出"的临时效果误判成故障：
+	--   ① 只查"出厂时完全不透明"的元素（涟漪、开场动画的光晕本来就是半透明）
+	--   ② 跳过被隐藏祖先挡住的（飞行开场动画跑完会把整层 Visible = false）
+	local function healVisibility(delaySec)
+		task.delay(delaySec or 1.2, function()
+			if SHUTDOWN then return end
+
+			local function hiddenByAncestor(d)
+				local cur = d
+				for _ = 1, 12 do
+					if not cur or cur == guiMain then return false end
+					if cur.Visible == false then return true end
+					cur = cur.Parent
+				end
+				return false
+			end
+
+			local fixed, names = 0, {}
+			for _, d in ipairs(guiMain:GetDescendants()) do
+				local want = BASE_ALPHA[d]
+				if want and not hiddenByAncestor(d) then
+					local hit = false
+					if want.tx == 0 and d.TextTransparency > 0.999 then
+						d.TextTransparency = 0; hit = true
+					end
+					if want.im == 0 and d.ImageTransparency > 0.999 then
+						d.ImageTransparency = 0; hit = true
+					end
+					if want.bg == 0 and d.BackgroundTransparency > 0.999 then
+						d.BackgroundTransparency = 0; hit = true
+					end
+					if hit then
+						fixed = fixed + 1
+						if #names < 6 then names[#names + 1] = d.Name end
+					end
+				end
+			end
+			if fixed > 0 then
+				pcall(function()
+					print("[O_X_HUB] 入场自检：修好了 " .. fixed .. " 个卡在全透明的元素 -> "
+						.. table.concat(names, ", "))
+				end)
+			end
+		end)
+	end
+
 	local function showPage(key)
 		for k, page in pairs(pages) do
 			page.Visible = (k == key)
@@ -2453,6 +2510,7 @@ boot = function(lang)
 		local target = pages[key]
 		if target then
 			staggerIn(target:GetChildren(), 9, 0.03, 0.3)
+			healVisibility(0.9)
 		end
 	end
 
@@ -4612,6 +4670,7 @@ boot = function(lang)
 			{ Scale = computeScale(WIN_W, WIN_H) }
 		):Play()
 		staggerIn({ header, sidebar, content }, 12, 0.07, 0.36)
+		healVisibility(1.2)
 
 		task.wait(0.3)
 		notify(string.format(L("welcome"), CONFIG.Title), C.Accent)
