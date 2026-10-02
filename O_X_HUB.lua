@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.9.2
+--  Version : 1.9.3
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -138,6 +138,12 @@ local LOCALES = {
 		pdCameras      = "破坏摄像头",
 		pdCamerasD     = "打掉 Workspace.Cameras 里的所有摄像头（要执行器有 getconnections）",
 		pdCamNoKey     = "拿不到 RemoteKey，破摄像头这条走不通",
+		pdDiagS        = "交互 %s · 战利品 %s · 手上 %s 个包",
+		pdDiagA        = "武器表 %s · 静默 %s · 视角锁 %s",
+		pdErrFmt       = "出错：%s",
+		pdNoLoot       = "扫到交互点但没认出战利品，先开箱或等它刷出来",
+		pdNoVan        = "找不到撤离点（BagSecuredArea），包丢不出去",
+		pdSilentFail   = "抓不到武器表，静默自瞄还没挂上（先进一局）",
 		pdCamOn        = "破坏摄像头已开启",
 		pdCamOff       = "破坏摄像头已关闭",
 		pdYell         = "吼平民",
@@ -182,7 +188,8 @@ local LOCALES = {
 		pdInfAmmoOn    = "无限弹药已开启",
 		pdInfAmmoOff   = "无限弹药已关闭",
 		pdKillAll      = "全灭警察",
-		pdKillAllD     = "对地图上所有守卫自动开火；有 RemoteKey 就不用贴脸",
+		pdKillAllD     = "贴到守卫身上用近战远程打死，全图挨个来（服务端只查距离）",
+		pdKillDone     = "已清掉 %s 个守卫",
 		pdKillOn       = "全灭警察已开启",
 		pdKillOff      = "全灭警察已关闭",
 		pdKillFail     = "既没有 RemoteKey 也没有 MeleeDamage，杀不动",
@@ -377,6 +384,12 @@ local LOCALES = {
 		pdCameras      = "Break cameras",
 		pdCamerasD     = "Shoots down every camera in Workspace.Cameras (needs getconnections)",
 		pdCamNoKey     = "No RemoteKey, cannot break cameras",
+		pdDiagS        = "prompts %s · loot %s · bags %s",
+		pdDiagA        = "gun tables %s · silent %s · camlock %s",
+		pdErrFmt       = "Error: %s",
+		pdNoLoot       = "Prompts found but no loot recognised yet, open crates first",
+		pdNoVan        = "No exfil point (BagSecuredArea), cannot stash bags",
+		pdSilentFail   = "No weapon table yet, silent aim not hooked (join a heist first)",
 		pdCamOn        = "Cameras disabled",
 		pdCamOff       = "Camera breaking off",
 		pdYell         = "Yell at civilians",
@@ -421,7 +434,8 @@ local LOCALES = {
 		pdInfAmmoOn    = "Infinite ammo on",
 		pdInfAmmoOff   = "Infinite ammo off",
 		pdKillAll      = "Wipe the police",
-		pdKillAllD     = "Fires at every guard on the map; with a RemoteKey you never get close",
+		pdKillAllD     = "Snaps onto each guard and melees them; server only checks distance",
+		pdKillDone     = "Cleared %s guards",
 		pdKillOn       = "Police wipe on",
 		pdKillOff      = "Police wipe off",
 		pdKillFail     = "No RemoteKey and no MeleeDamage, cannot kill",
@@ -534,7 +548,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.9.2",
+	Version = "v1.9.3",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -6321,14 +6335,22 @@ boot = function(lang)
 			-- 运行时
 			Items = {}, Esps = {}, Boxes = {}, Taken = setmetatable({}, { __mode = "k" }),
 			Bad = setmetatable({}, { __mode = "k" }),
-			prompts = {}, clicks = {}, scanAt = 0, names = {}, run = 0,
+			prompts = {}, spots = {}, clicks = {}, scanAt = 0, names = {}, run = 0,
 			carry = 0, key = nil, ammoOld = nil, ammoHooked = false,
 			lastKill = 0, lastYell = 0, lastReady = 0, lastBox = 0, lastAmmo = 0,
+			-- 第三轮：静默自瞄 / 贴脸交互 / 诊断（真脚本做法，见 _body2.lua 注释）
+			locked = nil, hit = nil, frozen = false, silentOrig = {},
+			silent = false, silentN = 0, gunN = 0, camOk = false, aimAt = 0,
+			promptN = 0, lootN = 0, diagAt = 0, err = nil,
 		}
 		local pdAutoDoneLoop            -- 先声明：潜入页的开关要用它
 		local pdEspSweep                -- 透视收尾（多处要用）
 		local pdLobbyFarm               -- 大厅自动开图刷（主游戏页那个开关）
 		local pdSetAmmo                 -- 无限弹药的元表钩子（开关直接调用，见潜入/强攻页）
+		local pdSilent                  -- 静默自瞄开关（包装武器子弹表，强攻页调用）
+		local pdAimBind                 -- 自瞄的渲染步绑定（窗口开关时挂/摘）
+		local pdAimUnbind
+		local pdUnsnap                  -- 解钉（潜入页关掉自动完成时要用，见 _body2）
 
 		-- ---------------- 窗口骨架（跟服务器窗口同款：拖动 / － 胶囊 / ✕ 关窗） ----------------
 		local pdWin = new("Frame", {
@@ -6765,6 +6787,7 @@ boot = function(lang)
 			else
 				pd.run = pd.run + 1
 				pdStatus.Text = ""
+				pcall(pdUnsnap)                       -- 关掉时一定解钉：钉住 = 手机摇杆和触屏全没反应
 				notify(L("pdDoneOff"), C.Red)
 			end
 		end)
@@ -6798,11 +6821,22 @@ boot = function(lang)
 
 		pdRow(pdAssault, 40, "Aim", L("pdAim"), L("pdAimD"), false, function(v)
 			pd.Aim = v
+			if v then
+				pcall(pdAimBind)                        -- 相机锁（排在游戏相机脚本之后写）
+				pcall(pdSilent, true)                   -- 子弹改道；武器表晚加载就靠心跳每 2 秒重试
+				if not pd.silent then notify(L("pdSilentFail"), C.Amber) end
+			elseif not pd.Fire then
+				pcall(pdAimUnbind)
+				pcall(pdSilent, false)
+			end
 			notify(v and string.format(L("pdAimOn"), L(PRI_KEY[pd.Priority])) or L("pdAimOff"),
 				v and C.Green or C.Red)
 			if v and #pd.Items == 0 then notify(L("pdNoNpc"), C.Amber) end
 		end)
-		pdRow(pdAssault, 74, "Fire", L("pdFire"), L("pdFireD"), false, function(v) pd.Fire = v end)
+		pdRow(pdAssault, 74, "Fire", L("pdFire"), L("pdFireD"), false, function(v)
+			pd.Fire = v
+			if v then pcall(pdAimBind) end
+		end)
 		pdRow(pdAssault, 108, "OnlyEnemy", L("pdOnlyEnemy"), L("pdOnlyEnemyD"), true,
 			function(v) pd.OnlyEnemy = v end)
 		pdRow(pdAssault, 142, "Head", L("pdHead"), L("pdHeadD"), true, function(v) pd.Head = v end)
@@ -6824,6 +6858,7 @@ boot = function(lang)
 		end)
 		pdRow(pdAssault, 312, "KillAll", L("pdKillAll"), L("pdKillAllD"), false, function(v)
 			pd.KillAll = v
+			if not v then pd.killList, pd.killTarget, pd.killWarned, pd.killN = nil, nil, nil, 0 end
 			notify(v and L("pdKillOn") or L("pdKillOff"), v and C.Green or C.Red)
 		end)
 
@@ -6884,6 +6919,25 @@ boot = function(lang)
 		pdSlider(pdAssault, 376, L("pdFov"), 10, 360, pd.Fov, function(v) pd.Fov = v end)
 		pdSlider(pdAssault, 414, L("pdAimRange"), 20, 1000, pd.Range, function(v) pd.Range = v end)
 		pdSlider(pdAssault, 452, L("pdFollow"), 20, 100, 100, function(v) pd.Follow = v / 100 end)
+
+		-- 诊断行：一眼看出"到底挂上没有"（心跳每 0.5 秒刷一次）
+		local function pdDiagLabel(page, name)
+			return new("TextLabel", {
+				Name = name,
+				Size = UDim2.new(1, 0, 0, 12),
+				Position = UDim2.new(0, 0, 0, 486),
+				BackgroundTransparency = 1,
+				Text = "",
+				TextSize = 10,
+				Font = FONT_N,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				Parent = page,
+			})
+		end
+		local pdDiagStealth = pdDiagLabel(pdStealth, "HeistDiag")
+		local pdDiagAssault = pdDiagLabel(pdAssault, "HeistDiag")
 
 		pdShow("stealth")
 
@@ -6947,7 +7001,13 @@ boot = function(lang)
 		-- Workspace.Police（敌人）/ Citizens（平民）/ BigLoot·Lootables（战利品）/
 		-- BagSecuredArea（撤离点）/ Cameras（摄像头）；远程在 RS_Package.Remotes。
 		-- 名字随版本可能变，所以全部 FindFirstChild + 兜底。
-		local LOOT_FOLDERS = { "BigLoot", "Lootables", "Loot", "Lootable", "LootBag" }
+		local LOOT_FOLDERS = { "BigLoot", "Lootables", "Loot", "Lootable", "LootBag",
+			"SafeSpots", "OpenedSafe", "OpenMilitaryCrate", "MilitaryCrate",
+			"ShadowBoxes", "Vault", "Bags", "Coke", "WeaponBagger" }
+		-- 物品名（实机里同一个战利品在不同地图挂在不同容器里，光靠文件夹名会漏）
+		local LOOT_NAMES = { "DepositGoldBar", "GoldBar", "MoneyStack", "Painting",
+			"Cola", "Barrel", "Bag", "Money", "Cash", "Jewel", "Gem", "Necklace",
+			"Watch", "Artifact" }
 		local CIV_FOLDERS  = { "Citizens", "Civilians", "Hostages" }
 		local ALLY_FOLDERS = { "Crew", "Crewmates", "Teammates", "Allies" }
 
@@ -6997,12 +7057,29 @@ boot = function(lang)
 			return (pos - root.Position).Magnitude
 		end
 
-		-- 交互点挂在哪个文件夹里（战利品 / 集装箱 / 门 / 别的一律算"杂项"）
+		local function pdNameHit(name, list)
+			if type(name) ~= "string" or name == "" then return false end
+			local low = string.lower(name)
+			for _, kw in ipairs(list) do
+				if string.find(low, string.lower(kw), 1, true) then return true end
+			end
+			return false
+		end
+
+		-- 交互点是不是战利品。三路一起判，因为实机里战利品 prompt 常挂在 Hitbox 子件上、
+		-- 父级可能是地图临时容器 —— 上一版只看 6 层内的文件夹名，所以老报"没有战利品"。
 		local function pdIsLoot(p)
+			local txt = ""
+			pcall(function()
+				txt = tostring(p.ActionText or "") .. " " .. tostring(p.ObjectText or "")
+			end)
+			if pdNameHit(txt, { "grab", "steal", "take", "pick up", "loot", "rob", "collect" }) then
+				return true
+			end
 			local node, depth = p, 0
-			while node and node ~= workspace and depth < 6 do
-				for _, f in ipairs(LOOT_FOLDERS) do
-					if node.Name == f then return true end
+			while node and node ~= workspace and depth < 12 do
+				if pdNameHit(node.Name, LOOT_FOLDERS) or pdNameHit(node.Name, LOOT_NAMES) then
+					return true
 				end
 				node, depth = node.Parent, depth + 1
 			end
@@ -7038,10 +7115,20 @@ boot = function(lang)
 		-- ---------------- 扫描：交互点 / 人物 ----------------
 		-- ponytail: 每 0.4 秒全树扫一次；地图大到卡帧就把间隔拉长或改 CollectionService 标签
 		local function pdScan()
-			local ps, cs, list = {}, {}, {}
+			local ps, cs, list, spots = {}, {}, {}, {}
 			for _, d in ipairs(workspace:GetDescendants()) do
 				if d:IsA("ProximityPrompt") then
-					if d.Enabled then ps[#ps + 1] = d end
+					if d.Enabled ~= false then
+						ps[#ps + 1] = d
+						-- 位置和"是不是战利品"一次算好（省得每轮重走祖先链）
+						local part, n = d.Parent, 0
+						while part and not part:IsA("BasePart") and n < 6 do
+							part, n = part.Parent, n + 1
+						end
+						spots[#spots + 1] = {
+							p = d, part = part, pos = pdPos(d), loot = pdIsLoot(d),
+						}
+					end
 				elseif d:IsA("ClickDetector") then
 					cs[#cs + 1] = d
 				elseif d:IsA("Humanoid") then
@@ -7051,7 +7138,12 @@ boot = function(lang)
 					end
 				end
 			end
+			local lootN = 0
+			for _, s in ipairs(spots) do
+				if s.loot then lootN = lootN + 1 end
+			end
 			pd.prompts, pd.clicks, pd.Items = ps, cs, list
+			pd.spots, pd.promptN, pd.lootN = spots, #spots, lootN
 		end
 
 		-- ---------------- 透视：所有人 + 战利品，方框 + 名字，按类型分色 ----------------
@@ -7144,12 +7236,11 @@ boot = function(lang)
 				end
 			end
 			if pd.LootEsp or pd.AutoDone then
-				for _, p in ipairs(pd.prompts) do
-					local part = pdEspPart(p.Parent)
-					if part then
-						local loot = pdIsLoot(p)
+				for _, s in ipairs(pd.spots) do     -- pd.spots 扫描时已经算好挂 prompt 的部件；不再重算 loot
+					local part = s.part or pdEspPart(s.p.Parent)
+					if s.loot and part then
 						list[#list + 1] = { part = part, kind = "loot",
-							name = p.Parent.Name, rng = pd.LootRange }
+							name = s.p.Name, rng = pd.LootRange }
 					end
 				end
 			end
@@ -7209,25 +7300,97 @@ boot = function(lang)
 			end
 		end
 
-		-- 交互配方（抄 RealNotorietyLib 的 Lib.Interact）：
-		-- 短按 → fireproximityprompt；长按 → StartInteraction → 等 HoldDuration → CompleteInteraction。
-		local function pdInteract(p)
+		-- 挂着 prompt 的那个部件（战利品 prompt 常挂在 Hitbox 子件上，要往上找）
+		local function pdPartOf(inst)
+			local n, i = inst, 0
+			while n and i < 6 do
+				if n:IsA("BasePart") then return n end
+				n, i = n.Parent, i + 1
+			end
+			return nil
+		end
+
+		-- 贴上去再按：直接把角色钉在交互点旁边并面向它。
+		-- 抄 madmoney firePromptOnPart（feather v3.0:299-349）：贴住 → 等 0.2 秒让服务器认位置 → 再触发。
+		-- 不贴的话，服务器那边玩家还在十米外，prompt 按了也白按 —— 这是"自动完成没反应"的头号原因。
+		local function pdSnapTo(part)
+			local root = getRoot()
+			if not (root and part) then return false end
+			local hum = getHumanoid()
+			pd.frozen = true
+			pd.snapAt = os.clock()
+			pcall(function() root.CFrame = CFrame.new(part.Position + Vector3.new(0, 2.5, 0), part.Position) end)
+			pcall(function()
+				pd.snapOld = root.Anchored            -- 还原成原来的值，别擅自解锁（原来就是 true 就别动）
+				root.Anchored = true
+			end)
+			if hum then
+				pcall(function()
+					pd.standOld = hum.PlatformStand   -- 记住原来的 PlatformStand，解钉时还原（不然会盖掉飞行/缓降的状态）
+					hum.PlatformStand = true
+				end)
+			end
+			return true
+		end
+
+		-- 一定要还原：钉住的时候角色的移动/触屏摇杆全废，漏一次就变成"UI 断触"（手机上手感极差）
+		local function pdUnsnap()
+			pd.frozen = false
+			pd.snapAt = nil
+			local root, hum = getRoot(), getHumanoid()
+			if root then pcall(function() root.Anchored = pd.snapOld == true end) end
+			pd.snapOld = nil
+			if hum and pd.standOld ~= nil then
+				pcall(function() hum.PlatformStand = pd.standOld end)
+			elseif hum then
+				pcall(function() hum.PlatformStand = false end)
+			end
+			pd.standOld = nil
+		end
+
+		-- 交互配方（三家合并，都是实机跑通的脚本里的原文做法）：
+		--  · autowin_shadowraid.lua:22-35  —— InputHoldBegin → 等 HoldDuration → InputHoldEnd
+		--  · madmoney firePromptOnPart:299-349 —— MaxActivationDistance=9999 / Enabled=true / 贴脸 / fireproximityprompt
+		--  · XXMZ beta:1004-1035（instant interact）—— HoldDuration 直接改 0，长按变瞬发
+		-- 成功信号 = ProximityPromptService.PromptTriggered（RealNotorietyLib.Lib.Interact 就是这么判的）
+		local function pdInteract(p, part)
 			if not p or not p.Parent then return false end
+			if part and not part.Parent then part = nil end
+			pcall(function() p.MaxActivationDistance = 9999 end)
+			pcall(function() p.Enabled = true end)
 			pcall(function() p.RequiresLineOfSight = false end)
-			local startR, compR = pdRemote("StartInteraction"), pdRemote("CompleteInteraction")
 			local hold = tonumber(p.HoldDuration) or 0
-			local fx = ex("fireproximityprompt")                 -- 短按的走这条
+			-- 有的 prompt 写死 20 秒（假的，实际服务器只看 CompleteInteraction）
+			if hold > 0 then pcall(function() p.HoldDuration = 0 end) end
+			if part then
+				pdSnapTo(part)
+				task.wait(0.25)                                  -- let server register position
+			end
+			pd.hit = nil
+			local fx = ex("fireproximityprompt")
 			if fx then pcall(fx, p) end
 			pcall(function() p:InputHoldBegin() end)
-			if hold > 0.1 and startR then
-				pcall(function() startR:FireServer(p) end)
-				task.wait(math.min(hold, 2))                    -- ponytail: 有些 prompt 的 HoldDuration 是假的 20 秒，掐到 2 秒
-				if compR then pcall(function() compR:FireServer(p) end) end
-			end
-			if fx then pcall(fx, p) end
+			task.wait(math.clamp(hold, 0.05, 2) + 0.35)
 			pcall(function() p:InputHoldEnd() end)
-			task.wait(0.15)
-			return (p.Parent == nil) or (p.Enabled == false)
+			-- 兜底一：执行器没有 fireproximityprompt 时再补一发
+			if not pd.hit and p.Parent and fx then
+				pcall(fx, p)
+				task.wait(0.15)
+			end
+			-- 兜底二：自己发两个远程（RealNotorietyLib 的 Lib.Interact，10 个脚本都用这条）
+			-- 传的是"物品"（挂 prompt 的那个部件），远程按 InteractList[名字].timer 计时
+			local item = part or p.Parent or p
+			local startR, compR = pdRemote("StartInteraction"), pdRemote("CompleteInteraction")
+			if startR then
+				pcall(function() startR:FireServer(item) end)
+				task.wait(0.12)
+				if compR then pcall(function() compR:FireServer(item) end) end
+				task.wait(0.2)
+			end
+			if part then pdUnsnap() end
+			task.wait(0.12)
+			-- 成功判据：收到 PromptTriggered，或者 prompt 没了/被关掉（服务器处理完就收走）
+			return (pd.hit ~= nil) or (p.Parent == nil) or (p.Enabled == false)
 		end
 
 		-- 手上/背包里的工具名（电锯、撬棍、卡这类都要靠名字丢出去）
@@ -7317,37 +7480,72 @@ boot = function(lang)
 			return true
 		end
 
-		-- 全灭警察：有 RemoteKey 走 Damage（不用靠近），没有就把自己贴过去用 MeleeDamage
-		local function pdKillAll()
-			local kill, low = 0, false
-			local key = pdKey()
-			local dmg, melee = pdRemote("Damage"), pdRemote("MeleeDamage")
-			for _, t in ipairs(pd.Items) do
-				if t.kind == "enemy" and t.hum and t.hum.Health > 0 then
-					local root = t.model:FindFirstChild("HumanoidRootPart")
-					-- Damage 第 2 参：能拿到 RemoteKey 就用它，否则用装备中的 Tool（bm:465-471 那条路，不吃执行器 API）
-					local char = pdChar()
-					local gun = char and char:FindFirstChildOfClass("Tool")
-					local second = key or (gun and gun.Name)
-					if dmg and second then
-						pcall(function()
-							dmg:FireServer("Damage", second, t.hum, 110, root, "M16",
-								Vector3.new(-4.93716431, -0.482243985, -0.680375397))
-						end)
-						kill = kill + 1
-					elseif melee then
-						local mine = getRoot()
-						if mine and root then
-							pcall(function() mine.CFrame = root.CFrame end)
-							pcall(function() melee:FireServer(t.model, 999, 100) end)
-							kill = kill + 1
-						end
-					else
-						low = true
-					end
-				end
+		-- 全灭警察：真脚本的做法（rblxploit API :135-138）是把自己贴到守卫身上再
+		-- repeat MeleeDamage:FireServer(guard, 999, 100) until dead —— MeleeDamage
+		-- 服务端只查距离，所以贴脸必中，不需要 RemoteKey。一次全打会卡帧（每发都要挪 CFrame），
+		-- 改成队列：心跳里每 0.12 秒处理当前目标、每步补两发，1.5 秒还没死就换下一个。
+		local function pdKillFire(t)
+			local hum, model = t.hum, t.model
+			if not (hum and hum.Parent and model and model.Parent and hum.Health > 0) then return end
+			local root = hum.RootPart or model:FindFirstChild("HumanoidRootPart")
+			local mine = getRoot()
+			if root and mine then
+				pcall(function() mine.CFrame = CFrame.new(root.Position, root.Position + root.CFrame.LookVector) end)
 			end
-			return kill, low
+			local melee = pdRemote("MeleeDamage")
+			if melee then
+				pcall(function()
+					melee:FireServer(model, 999, 100)
+					melee:FireServer(model, 999, 100)
+				end)
+			end
+			-- 有 RemoteKey 就再补一发 Damage（不用贴脸那条路）
+			local dmg, key = pdRemote("Damage"), pdKey()
+			if dmg and key then
+				pcall(function()
+					dmg:FireServer("Damage", key, hum, math.huge, root, "Knife",
+						root and root.CFrame.LookVector or Vector3.new(0, 0, 1))
+				end)
+			end
+		end
+
+		local function pdKillStep(now)
+			if not pdRemote("MeleeDamage") and not pdRemote("Damage") then
+				if not pd.killWarned then pd.killWarned = true; notify(L("pdKillFail"), C.Amber) end
+				return
+			end
+			local t = pd.killTarget
+			if t and not (t.hum and t.hum.Parent and t.hum.Health > 0) then
+				pd.killN = (pd.killN or 0) + 1
+				t, pd.killTarget = nil, nil
+			end
+			if not t then
+				if not pd.killList or #pd.killList == 0 then
+					if (pd.killN or 0) > 0 then
+						notify(string.format(L("pdKillDone"), pd.killN), C.Green)
+						pd.killN = 0
+					end
+					pdScan()
+					local q = {}
+					for _, it in ipairs(pd.Items) do
+						if it.kind == "enemy" and it.hum and it.hum.Health > 0 then q[#q + 1] = it end
+					end
+					pd.killList = q
+					if #q == 0 then
+						if not pd.killWarned then pd.killWarned = true; notify(L("pdNoNpc"), C.Amber) end
+						return
+					end
+					pd.killWarned = nil
+				end
+				t = table.remove(pd.killList, 1)
+				pd.killTarget, pd.killAt2 = t, now
+			end
+			if not t then return end
+			pdKillFire(t)
+			if now - (pd.killAt2 or now) > 1.5 then
+				if t.hum and t.hum.Health <= 0 then pd.killN = (pd.killN or 0) + 1 end
+				pd.killTarget = nil
+			end
 		end
 
 		-- 无限弹药：拦 Bullet 的 FireServer，把 UseAmmo 改成 false（DarkHub 那套）
@@ -7402,6 +7600,14 @@ boot = function(lang)
 		end
 
 		-- ---------------- 自瞄 ----------------
+		-- 手机端手指按住屏幕时不要抢相机：写 Camera.CFrame 会让玩家的触屏拖视角完全没反应，
+		-- 看起来就是"UI 断触"。命中交给静默自瞄（改子弹方向），视角让玩家自己转。
+		local function pdTouching()
+			if not UserInputService.TouchEnabled then return false end
+			local ok, list = pcall(function() return UserInputService:GetTouches() end)
+			return ok and type(list) == "table" and #list > 0
+		end
+
 		local function pdAimPos(model)
 			if pd.Head then
 				local head = model:FindFirstChild("Head")
@@ -7453,28 +7659,23 @@ boot = function(lang)
 			return best
 		end
 
-		-- 自瞄落点：真的把鼠标推过去。
-		-- 🔴 第一人称是 MouseBehavior.LockCenter，这时候**只有 mousemoverel 会同时转视角和转模型**；
-		--    直接写 Camera.CFrame 只转视角，枪口/子弹不跟（这是上一版"只转视角"的根因）。
+		-- 自瞄落点（视觉锁）。真脚本的原文做法就是每帧直接写 Camera.CFrame：
+		--   XXMZ beta:273-289 aimAtTarget：
+		--     Camera.CFrame = CFrame.new(cameraPos, targetPos)            -- 或者 Lerp(..., sensitivity/100)
+		-- 上一版推 mousemoverel 的做法在实机里没用，已删。
+		-- 🔴 关键是"什么时候写"：必须排在游戏自带相机脚本后面，所以挂在 Camera 优先级的下一步
+		--    （RunService:BindToRenderStep(name, Enum.RenderPriority.Camera.Value + 1, fn)），
+		--    写早了会被相机脚本这一帧盖掉 —— 这才是"只转视角/看不出效果"的根因。
 		local function pdApplyAim(cam, pos)
-			local sp = cam:WorldToViewportPoint(pos)          -- 不含顶部黑条，跟准星同一坐标系
-			local vp = cam.ViewportSize
-			local dx = (sp.X - vp.X * 0.5) * pd.Follow
-			local dy = (sp.Y - vp.Y * 0.5) * pd.Follow
-			local mode = ""
-			pcall(function() mode = tostring(UserInputService.MouseBehavior) end)
-			local relMove = ex("mousemoverel")
-			if relMove then
-				pcall(relMove, dx, dy)
-				return
-			end
-			local absMove = ex("mousemoveabs")
-			if absMove and mode ~= "LockCenter" then
-				local loc = UserInputService:GetMouseLocation()
-				pcall(absMove, loc.X + dx, loc.Y + dy)
-				return
-			end
-			pcall(function() cam.CFrame = CFrame.lookAt(cam.CFrame.Position, pos) end)
+			local camPos = cam.CFrame.Position
+			local ok = pcall(function()
+				if pd.Follow < 0.999 then
+					cam.CFrame = cam.CFrame:Lerp(CFrame.new(camPos, pos), math.clamp(pd.Follow, 0.05, 1))
+				else
+					cam.CFrame = CFrame.new(camPos, pos)
+				end
+			end)
+			if ok then pd.camOk = true end
 		end
 
 		local function pdFire()
@@ -7490,38 +7691,141 @@ boot = function(lang)
 			end
 		end
 
+		-- ---------------- 静默自瞄：让子弹本身拐弯 ----------------
+		-- 原文出处：ltseverydayyou 的 Notoriety.luau（199KB，61 处 silent aim）
+		--   :3561-3591 getLocalGunsEnvironment —— getsenv(PlayerScripts.SPS_Package.LocalGuns)
+		--   :2965-2987 getProjectileTableFromShoot —— getupvalue(shoot, 28)，不是 table 就
+		--               getupvalue(getupvalue(shoot, 2), 28)；判据 type(rawget(t,"new"))=="function"
+		--   :3030-3096 包装体的核心就是把 Data.TargetPosition / Data.Direction 改成目标
+		-- 这条路子不碰鼠标也不碰相机：武器系统自己算出来的子弹轨迹被我们改了，所以"必中"。
+		local function pdGunsEnv()
+			local ok, env = pcall(function()
+				local ps = LocalPlayer:FindFirstChild("PlayerScripts")
+				local sps = ps and ps:FindFirstChild("SPS_Package")
+				local guns = sps and sps:FindFirstChild("LocalGuns")
+				if not guns then return nil end
+				local gs = ex("getsenv")
+				if gs then return gs(guns) end
+				local renv = ex("getrenv")
+				if renv then
+					local r = renv()
+					if type(r) == "table" and r.getsenv then return r.getsenv(guns) end
+				end
+				return nil
+			end)
+			if ok and type(env) == "table" then return env end
+			return nil
+		end
+
+		-- 武器状态表 = 带 shoot 函数的 table。先在同一环境里递归找，找不到再用 jqmesc 那招翻 getgc。
+		local function pdGunStates()
+			local out, seen, nodes = {}, {}, 0
+			local env = pdGunsEnv()
+			local function scan(v, depth)
+				if type(v) ~= "table" or seen[v] or depth > 6 or nodes > 4000 then return end
+				seen[v], nodes = true, nodes + 1
+				if type(rawget(v, "shoot")) == "function" then
+					out[#out + 1] = v
+					return
+				end
+				for _, x in pairs(v) do scan(x, depth + 1) end
+			end
+			if env then pcall(scan, env, 0) end
+			if #out == 0 then
+				local gc = ex("getgc")
+				if gc then
+					local ok, list = pcall(gc, true)
+					for _, v in ipairs(ok and list or {}) do
+						if type(v) == "table" and type(rawget(v, "shoot")) == "function" then
+							out[#out + 1] = v
+						end
+					end
+				end
+			end
+			pd.gunN = #out
+			return out
+		end
+
+		local function pdProjectileTable(shoot)
+			local g = ex("getupvalue")
+			if not g or type(shoot) ~= "function" then return nil end
+			local function ok(t)
+				return type(t) == "table" and type(rawget(t, "new")) == "function"
+			end
+			local o, t = pcall(g, shoot, 28)
+			if o and ok(t) then return t end
+			local o2, inner = pcall(g, shoot, 2)
+			if o2 and type(inner) == "function" then
+				local o3, t2 = pcall(g, inner, 28)
+				if o3 and ok(t2) then return t2 end
+			end
+			return nil
+		end
+
+		pdSilent = function(on)
+			if not on then
+				for tbl, orig in pairs(pd.silentOrig) do
+					pcall(function() rawset(tbl, "new", orig) end)
+				end
+				pd.silentOrig = {}
+				pd.silent, pd.silentN = false, 0
+				return false
+			end
+			local patched = 0
+			for _, st in ipairs(pdGunStates()) do
+				local tbl = pdProjectileTable(rawget(st, "shoot"))
+				local orig = tbl and rawget(tbl, "new")
+				if tbl and type(orig) == "function" and not pd.silentOrig[tbl] then
+					pd.silentOrig[tbl] = orig
+					rawset(tbl, "new", function(Data, ...)
+						pcall(function()
+							local tgt = pd.locked
+							if tgt and type(Data) == "table" and Data.Player == LocalPlayer
+								and typeof(Data.StartPosition) == "Vector3" then
+								local d = tgt - Data.StartPosition
+								if d.Magnitude > 0.001 then
+									Data.TargetPosition = tgt
+									Data.Direction = d.Unit
+								end
+							end
+						end)
+						return orig(Data, ...)
+					end)
+					patched = patched + 1
+				end
+			end
+			pd.silentN = patched
+			pd.silent = patched > 0
+			return pd.silent
+		end
+
 		-- ---------------- 潜入：全图自动完成 ----------------
 		-- 顺序：扫全部交互点 →（战利品在集装箱里就先开箱）→ 过去 → 交互 → 拿包 → 满了去撤离点丢包 → 循环
 		-- 复杂地图里"开箱/放电锯/刷卡"本身就是别的 ProximityPrompt，所以统一按「旁边的交互点先按一遍」处理。
-		local function pdNearbyPrompt(pos, skipLoot)
+		-- pd.spots 由 pdScan 建好：{ p = prompt, part = 挂 prompt 的部件, pos = 位置, loot = 是不是战利品 }
+		-- 这里只做"挑哪个"，不再自己去解析部件（解析一次就够，省得每轮重走一遍祖先链）。
+		local function pdNearbySpot(pos, limit, wantLoot)
 			local best, bd
-			for _, p in ipairs(pd.prompts) do
-				if p ~= skipLoot and not pd.Taken[p] and not pd.Bad[p] then
-					local q = pdPos(p)
-					if q then
-						local d = (q - pos).Magnitude
-						if d <= 12 and (not bd or d < bd) then
-							-- 只挑"不是战利品"的（箱盖、门、电锯架）
-							if not pdIsLoot(p) then best, bd = p, d end
-						end
-					end
+			for _, s in ipairs(pd.spots) do
+				if s.pos and s.loot == wantLoot and not pd.Taken[s.p] and not pd.Bad[s.p] then
+					local d = (s.pos - pos).Magnitude
+					if d <= limit and (not bd or d < bd) then best, bd = s, d end
 				end
 			end
 			return best
 		end
 
-		local function pdRunOne(p, allowEquip)
-			if not p or not p.Parent then return false, "gone" end
-			local pos = pdPos(p)
+		local function pdRunSpot(s, allowEquip)
+			if not (s and s.p and s.p.Parent) then return false, "gone" end
+			local pos = s.pos
 			if not pos then
-				pd.Bad[p] = true
+				pd.Bad[s.p] = true
 				return false, "nopos"
 			end
 			pdMoveTo(pos)
-			task.wait(0.2)
-			local done = pdInteract(p)
+			local done = pdInteract(s.p, s.part or pdPartOf(s.p))
 			if done then
-				pd.Taken[p] = true
+				pd.Taken[s.p] = true
 				return true
 			end
 			-- 还按不动：八成卡在"要装备"上（撬棍/电锯），把手里的工具逐个丢上去试试
@@ -7529,37 +7833,65 @@ boot = function(lang)
 				local place = pdRemote("PlaceEquipment")
 				if place then
 					for _, name in ipairs(pdToolNames()) do
-						pcall(function() place:FireServer(name, CFrame.new(pos), p.Parent) end)
+						pcall(function() place:FireServer(name, CFrame.new(pos), s.part or s.p.Parent) end)
 						task.wait(1)
-						if pdInteract(p) then
-							pd.Taken[p] = true
+						if pdInteract(s.p, s.part or pdPartOf(s.p)) then
+							pd.Taken[s.p] = true
 							return true, "equip:" .. name
 						end
 					end
 				end
 			end
-			pd.Bad[p] = true
+			pd.Bad[s.p] = true
 			return false, "fail"
 		end
 
-		local function pdPickPrompt()
+		-- 挑下一个目标：战利品优先而且**不管多远都去**（用户报过"远处的战利品不动"），
+		-- 非战利品（箱盖/门/电锯架）只有开了"所有交互点"才当目标，权重压到最低。
+		local function pdPickSpot()
 			local root = getRoot()
 			if not root then return nil end
 			local origin = root.Position
-			local best, bd, bloot
-			for _, p in ipairs(pd.prompts) do
-				if not pd.Taken[p] and not pd.Bad[p] then
-					local loot = pdIsLoot(p)
-					if loot or pd.AllPrompts then
-						local pos = pdPos(p)
-						if pos then
-							local d = (pos - origin).Magnitude
-							if not bd or d < bd then best, bd, bloot = p, d, loot end
-						end
+			local best, bs
+			for _, s in ipairs(pd.spots) do
+				if s.pos and not pd.Taken[s.p] and not pd.Bad[s.p] then
+					if s.loot or pd.AllPrompts then
+						local score = (s.pos - origin).Magnitude + (s.loot and 0 or 5000)
+						if not bs or score < bs then best, bs = s, score end
 					end
 				end
 			end
-			return best, bloot
+			return best
+		end
+
+		-- 手上几个包。权威来源是 GUI：MissionEquipment["Loot Bag"].txtamt.Text
+		-- （空串 = 1，没有 Loot Bag 这个对象 = 0）—— rapi:225-236。GUI 读不到才用自己数的。
+		local function pdBagsUI()
+			local n
+			pcall(function()
+				local sg = LocalPlayer.PlayerGui:FindFirstChild("SG_Package")
+				local main = sg and sg:FindFirstChild("MainGui")
+				local ps = main and main:FindFirstChild("PlayerStats")
+				local lps = ps and ps:FindFirstChild("LocalPlayerStats")
+				local info = lps and lps:FindFirstChild("info_items")
+				local eq = info and info:FindFirstChild("MissionEquipment")
+				if not eq then return end
+				local bag = eq:FindFirstChild("Loot Bag")
+				if not bag then
+					n = 0
+					return
+				end
+				local amt = bag:FindFirstChild("txtamt")
+				local t = amt and amt.Text
+				n = (t == nil or t == "") and 1 or (tonumber(t) or 1)
+			end)
+			return n
+		end
+
+		local function pdBags()
+			local ui = pdBagsUI()
+			if type(ui) == "number" then pd.carry = ui end
+			return pd.carry or 0
 		end
 
 		local function pdVan()
@@ -7569,65 +7901,112 @@ boot = function(lang)
 				or area:FindFirstChildWhichIsA("BasePart", true)
 		end
 
+		-- 去撤离点把包丢出去。madmoney:369-374 也是先贴到 van 再 ThrowBag（参数是方向向量）；
+		-- autowin_shadowraid.lua 则直接用 BagSecuredArea.FloorPart。
+		local function pdDumpBags()
+			local van = pdVan()
+			local throw = pdRemote("ThrowBag")
+			local n = math.max(1, pdBags())
+			if not van then
+				pdStatus.Text = L("pdNoVan")
+				task.wait(1)
+				return false
+			end
+			if pd.dumpAt and os.clock() - pd.dumpAt < 2 then
+				task.wait(2)                                      -- 服务器还没把包收走，别刷屏
+				return false
+			end
+			pd.dumpAt = os.clock()
+			pdMoveTo(van.Position)
+			task.wait(0.35)
+			pdSnapTo(van)                                        -- 贴上去再丢，服务器才认
+			task.wait(0.25)
+			pdStatus.Text = string.format(L("pdThrow"), tostring(n))
+			if throw then
+				for _ = 1, n do
+					pcall(function() throw:FireServer(Vector3.new(0, 0, 0)) end)
+					task.wait(0.35)
+				end
+			end
+			pdUnsnap()
+			pd.carry = 0
+			task.wait(0.5)
+			return true
+		end
+
+		local done = 0
+
+		-- 一步：扫 → 满了就去丢 → 挑目标 →（箱子里的话先开箱）→ 贴上去按
+		local function pdAutoDoneStep()
+			pdScan()
+			if pd.Cameras then pdCameras() end
+			if pdBags() >= pd.CarryMax then
+				pdDumpBags()
+				return
+			end
+			local s = pdPickSpot()
+			if not s then
+				local van = pdVan()
+				if van then pdMoveTo(van.Position) end
+				if done == 0 then
+					pdStatus.Text = (pd.lootN == 0) and L("pdNoLoot") or L("pdNothing")
+					if not pd.warned then
+						pd.warned = true
+						notify(pdStatus.Text, C.Amber)
+					end
+				else
+					pdStatus.Text = string.format(L("pdAllDone"), tostring(done))
+				end
+				task.wait(1.5)
+				-- 每轮重新扫一遍：地图会刷新新目标（开箱后里面才有战利品）
+				for p in pairs(pd.Taken) do pd.Taken[p] = nil end
+				for p in pairs(pd.Bad) do pd.Bad[p] = nil end
+				task.wait(1)
+				return
+			end
+			if s.loot then
+				-- 战利品在箱子 / 保险柜 / 集装箱里：先把旁边那个交互点按一遍
+				-- （开箱、撬棍、放电锯、刷卡在游戏里都只是别的 ProximityPrompt，所以统一处理）
+				local box = pdNearbySpot(s.pos, 30, false)
+				if box then
+					pdStatus.Text = string.format(L("pdOpening"), tostring((box.part and box.part.Name) or "?"))
+					pdRunSpot(box, false)
+					pdScan()
+					s = pdPickSpot() or s
+				end
+			end
+			pdStatus.Text = string.format(L("pdGoing"), tostring((s.part and s.part.Name) or "?"))
+			local ok = pdRunSpot(s, s.loot)
+			if ok then
+				done = done + 1
+				pd.warned = false
+				local bags = pdBags()
+				if s.loot and pdBagsUI() == nil then
+					pd.carry = bags + 1                        -- 没有 GUI 的场合（测试/别的版本）自己数
+					bags = pd.carry
+				end
+				pdStatus.Text = string.format(L("pdStep"), tostring(done), tostring(bags))
+				if bags >= pd.CarryMax then
+					pdDumpBags()
+					pdStatus.Text = string.format(L("pdStep"), tostring(done), tostring(pdBags()))
+				end
+			end
+			task.wait(0.15)
+		end
+
 		pdAutoDoneLoop = function()
 			local me = pd.run + 1
 			pd.run = me
-			local done, carryShown = 0, 0
+			done = 0
 			while pd.AutoDone and not SHUTDOWN and pd.run == me do
-				pdScan()
-				if pd.Cameras then pdCameras() end
-				local target, loot = pdPickPrompt()
-				if not target then
-					local van = pdVan()
-					if van then pdMoveTo(pdPos(van)) end
-					if done == 0 then
-						pdStatus.Text = L("pdNothing")
-						notify(L("pdNothing"), C.Amber)
-					else
-						pdStatus.Text = string.format(L("pdAllDone"), tostring(done))
-					end
-					task.wait(1.5)
-					-- 每轮重新扫一遍：地图会刷新新目标（开箱后里面才有战利品）
-					for p in pairs(pd.Taken) do pd.Taken[p] = nil end
-					for p in pairs(pd.Bad) do pd.Bad[p] = nil end
+				local ok, err = pcall(pdAutoDoneStep)
+				if not ok then
+					-- 出错不能把循环打断（断了就是"点了没反应"），写进诊断行接着跑
+					pd.err = tostring(err)
+					pdStatus.Text = string.format(L("pdErrFmt"), tostring(err):sub(1, 60))
 					task.wait(1)
-				else
-					local tpos = pdPos(target)
-					if loot and tpos then
-						-- 战利品在箱子里：先把旁边的开箱点按了
-						local box = pdNearbyPrompt(tpos, target)
-						if box then
-							pdStatus.Text = string.format(L("pdOpening"), tostring(box.Parent and box.Parent.Name or "?"))
-							pdRunOne(box, false)
-						end
-					end
-					pdStatus.Text = string.format(L("pdGoing"), tostring(target.Parent and target.Parent.Name or "?"))
-					local ok = pdRunOne(target, loot)
-					if ok then
-						done = done + 1
-						if loot then
-							pd.carry = pd.carry + 1
-							carryShown = pd.carry
-							local van = pdVan()
-							if pd.carry >= pd.CarryMax and van then
-								local throw = pdRemote("ThrowBag")
-								pdStatus.Text = string.format(L("pdThrow"), tostring(pd.carry))
-								pdMoveTo(pdPos(van))
-								task.wait(0.3)
-								if throw then
-									for _ = 1, pd.carry do
-										pcall(function() throw:FireServer(Vector3.new(0, 0, 0)) end)
-										task.wait(0.25)
-									end
-								end
-								pd.carry = 0
-								task.wait(0.6)
-							end
-						end
-						pdStatus.Text = string.format(L("pdStep"), tostring(done), tostring(carryShown))
-					end
-					task.wait(0.15)
 				end
+				task.wait(0.1)
 			end
 			pdStatus.Text = ""
 		end
@@ -7698,63 +8077,171 @@ boot = function(lang)
 			end
 		end
 
-		-- ---------------- 常驻循环 ----------------
-		local pdTicker = 0
-		track(RunService.Heartbeat:Connect(function()
-			if SHUTDOWN then return end
-			if not pdWin.Visible then return end
-			local now = os.clock()
-			local need = pd.AutoDone or pd.Esp or pd.LootEsp or pd.Aim or pd.KillAll or pd.Cameras
-			if need and now - pd.scanAt >= 0.4 then
-				pd.scanAt = now
-				pdScan()
-				pdRefreshEsp()
-			end
-			if pd.InfStam then
-				local char = pdChar()
-				local st = char and char:FindFirstChild("Stamina")
-				local mx = char and char:FindFirstChild("MaxStamina")
-				if st and mx then pcall(function() st.Value = mx.Value end) end
-			end
-			if pd.InfAmmo and not pd.ammoHooked and now - pd.lastAmmo >= 1 then
-				pd.lastAmmo = now
-				pdAmmoRefill()
-			end
-			if pd.Cameras and now - pdTicker >= 3 then
-				local n = pdCameras()
-				if n == -1 then notify(L("pdCamNoKey"), C.Amber) end
-			end
-			if pd.KillAll and now - pdTicker >= 0.5 then
-				local kill, low = pdKillAll()
-				if low then notify(L("pdKillFail"), C.Amber) end
-			end
-			if pd.Yell and now - pd.lastYell >= 2 then
-				pd.lastYell = now
-				pdYellNow()
-			end
-			if pd.Ready and now - pd.lastReady >= 2 then
-				pd.lastReady = now
-				pdReadyNow()
-			end
-			if pd.LobbyBack then pdLobbyReturnTick() end
-			if now - pdTicker >= 3 then pdTicker = now end
-		end))
-
-		local pdLastFire = 0
-		track(RunService.RenderStepped:Connect(function()
-			if SHUTDOWN or not pdWin.Visible then return end
-			if not (pd.Aim or pd.Fire) then return end
+		-- ---------------- 自瞄绑定 ----------------
+		-- 关键在"什么时候写 Camera.CFrame"：游戏自带的相机脚本也在这条链上跑，
+		-- 我们得排在它后面（Camera 优先级的下一步），否则这一帧写完就被它盖回去。
+		-- 没有 BindToRenderStep 的执行器退化成 RenderStepped（XXMZ beta 就是纯 RenderStepped，也能用）。
+		local pdAimConn = nil
+		local pdAimFn = function()
+			if SHUTDOWN or not (pd.Aim or pd.Fire) then return end
 			local cam = workspace.CurrentCamera
 			if not cam then return end
 			local target = pdPick(cam)
-			if not target then return end
+			if not target then
+				pd.locked = nil
+				return
+			end
 			local pos = pdAimPos(target.model)
-			if not pos then return end
-			pdApplyAim(cam, pos)
-			if pd.Fire and os.clock() - pdLastFire >= 0.08 then
-				pdLastFire = os.clock()
+			if not pos then
+				pd.locked = nil
+				return
+			end
+			pd.locked = pos                                       -- 静默自瞄改子弹方向用的就是它
+			if not pdTouching() then pdApplyAim(cam, pos) end
+			if pd.Fire and os.clock() - (pd.lastFire or 0) >= 0.08 then
+				pd.lastFire = os.clock()
 				pdFire()
 			end
+		end
+
+		pdAimBind = function()
+			if pd.aimBound then return end
+			pd.aimBound = true
+			local okBind = pcall(function()
+				RunService:BindToRenderStep("OX_pdAim",
+					Enum.RenderPriority.Camera.Value + 1, pdAimFn)
+			end)
+			if okBind then
+				pd.aimBound = "bind"
+				return
+			end
+			pdAimConn = RunService.RenderStepped:Connect(pdAimFn)
+			track(pdAimConn)
+			pd.aimBound = "step"
+		end
+
+		pdAimUnbind = function()
+			if not pd.aimBound then return end
+			pcall(function() RunService:UnbindFromRenderStep("OX_pdAim") end)
+			if pdAimConn then
+				pcall(function() pdAimConn:Disconnect() end)
+				pdAimConn = nil
+			end
+			pd.aimBound = nil
+			pd.locked = nil
+		end
+
+		-- ---------------- 常驻循环 ----------------
+		-- 🔴 不再看 pdWin.Visible：窗口收起/关掉之后功能照样得跑（上一版就栽在这）。
+		--    每段逻辑都用 pcall 兜住，出错写进 pd.err 显示在诊断行上，绝不把循环打断
+		--    （一旦断连，用户看到的就是"点了没反应"）。
+		local pdTicker = 0
+		local function pdDiagText()
+			if pd.err then return string.format(L("pdErrFmt"), tostring(pd.err):sub(1, 60)) end
+			return string.format(L("pdDiagS"), tostring(pd.promptN), tostring(pd.lootN), tostring(pdBags()))
+				.. "   ·   "
+				.. string.format(L("pdDiagA"), tostring(pd.gunN),
+					pd.silent and "✓" or "✗", pd.camOk and "✓" or "✗")
+		end
+
+		local function pdDiagSweep()
+			if not pdDiagStealth then return end
+			local txt = pdDiagText()
+			pdDiagStealth.Text = txt
+			if pdDiagAssault then pdDiagAssault.Text = txt end
+			local col = pd.err and C.Red or ((pd.silent or pd.camOk) and C.Green or C.Dim)
+			pdDiagStealth.TextColor3 = col
+			if pdDiagAssault then pdDiagAssault.TextColor3 = col end
+		end
+
+		local function pdSafe(fn)
+			local ok, err = pcall(fn)
+			if not ok then pd.err = tostring(err) end
+		end
+
+		-- PromptTriggered = 交互真的成了的信号（RealNotorietyLib.Lib.Interact 就靠它）
+		pcall(function()
+			local pps = game:GetService("ProximityPromptService")
+			track(pps.PromptTriggered:Connect(function(p)
+				pd.hit = p
+				pd.err = nil
+			end))
+		end)
+
+		track(RunService.Heartbeat:Connect(function()
+			if SHUTDOWN then return end
+			local now = os.clock()
+			-- 自瞄：开关一开就挂上（武器表可能晚一步才加载，没挂上就每 2 秒重试）
+			pdSafe(function()
+				if pd.Aim or pd.Fire then
+					if not pd.aimBound then pdAimBind() end
+					if not pd.silent and now - pd.aimAt >= 2 then
+						pd.aimAt = now
+						pdSilent(true)
+					end
+				end
+			end)
+			pdSafe(function()
+				local need = pd.AutoDone or pd.Esp or pd.LootEsp or pd.Aim or pd.KillAll or pd.Cameras
+				if need and now - pd.scanAt >= 0.4 then
+					pd.scanAt = now
+					pdScan()
+					pdRefreshEsp()
+				end
+			end)
+			pdSafe(function()
+				if pd.InfStam then
+					local char = pdChar()
+					local st = char and char:FindFirstChild("Stamina")
+					local mx = char and char:FindFirstChild("MaxStamina")
+					if st and mx then st.Value = mx.Value end
+				end
+			end)
+			pdSafe(function()
+				if pd.InfAmmo and not pd.ammoHooked and now - pd.lastAmmo >= 1 then
+					pd.lastAmmo = now
+					pdAmmoRefill()
+				end
+			end)
+			pdSafe(function()
+				if pd.Cameras and now - pdTicker >= 3 then
+					local n = pdCameras()
+					if n == -1 then notify(L("pdCamNoKey"), C.Amber) end
+				end
+			end)
+			pdSafe(function()
+				-- 兜底解钉：贴脸时角色是 Anchored + PlatformStand，手机上等于摇杆/触屏全废。
+				-- 万一哪一步出错没解掉，6 秒后强制解开。
+				if pd.frozen and pd.snapAt and os.clock() - pd.snapAt > 6 then pdUnsnap() end
+			end)
+			pdSafe(function()
+				if pd.KillAll and now - (pd.killAt or 0) >= 0.12 then
+					pd.killAt = now
+					pdKillStep(now)
+				end
+			end)
+			pdSafe(function()
+				if pd.Yell and now - pd.lastYell >= 2 then
+					pd.lastYell = now
+					pdYellNow()
+				end
+			end)
+			pdSafe(function()
+				if pd.Ready and now - pd.lastReady >= 2 then
+					pd.lastReady = now
+					pdReadyNow()
+				end
+			end)
+			pdSafe(function()
+				if pd.LobbyBack then pdLobbyReturnTick() end
+			end)
+			pdSafe(function()
+				if now - pd.diagAt >= 0.5 then
+					pd.diagAt = now
+					pdDiagSweep()
+				end
+			end)
+			if now - pdTicker >= 3 then pdTicker = now end
 		end))
 
 		-- ---------------- 打开 / 收起 / 关闭 ----------------
@@ -7847,6 +8334,9 @@ boot = function(lang)
 
 		-- 结束整个脚本时：停掉所有开关，把挂在场景里的透视收干净
 		pdCleanup = function()
+			pcall(pdSilent, false)
+			pcall(pdAimUnbind)
+			pcall(pdUnsnap)
 			pd.AutoDone, pd.LootEsp, pd.Esp, pd.Aim, pd.Fire = false, false, false, false, false
 			pd.KillAll, pd.InfStam, pd.Cameras, pd.Yell, pd.Ready, pd.LobbyBack = false, false, false, false, false, false
 			pd.run = pd.run + 1
