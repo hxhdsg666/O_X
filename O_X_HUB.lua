@@ -1,7 +1,7 @@
 --=====================================================================
---  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.9.8
---  Date    : 2026-10-01
+--  O_X HUB  ·  通用设置 + 飞行 + 服务器脚本
+--  Version : 2.0.0
+--  Date    : 2026-10-02
 --
 --  用法（执行器里粘贴执行）：
 --    loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/O_X_HUB.lua"))()
@@ -12,6 +12,7 @@
 --    · 主窗口做成软件样式：右上角 － 最小化成图标 / ✕ 结束整个脚本
 --    · 左侧是功能列表：主页 / 服务器 / 通用（速度·跳跃·重力）/ 飞行 / 设置
 --    · 服务器：自然灾害模拟器（传送 / 农场）+ 劫案（主游戏无脚本，进地图才解锁潜入 / 强攻）
+--      + DOORS（透视 / 自动 / 移动 / 地图，楼层自动检测，顶部页签是新版式）
 --    · 设置页：联系作者（点一下复制邮箱）+ 语言切换（切换后脚本重启）
 --    · 主窗口、飞行窗口、悬浮图标都可以拖动移动
 --    · 飞行是独立窗口：－ 收成胶囊，✕ 只结束飞行
@@ -206,6 +207,89 @@ local LOCALES = {
 		pdTLoot        = "战利品",
 		pdTSpot        = "交互点",
 		pdVoidHint     = "服务端不吃近战：杀不动的警卫已丢到远处小黑屋钉住，不再贴脸来回窜",
+
+		-- DOORS 面板（place 6516141723 · 楼层靠 GameData.Floor 自动检测）
+		srvDoors       = "DOORS",
+		dsChipIdle     = "未在 DOORS",
+		dsChipLive     = "%s  ·  门 %s",
+		dsTabEsp       = "透视",
+		dsTabAuto      = "自动",
+		dsTabMove      = "移动",
+		dsTabMap       = "地图",
+
+		dsEspTitle     = "透视",
+		dsEspSub       = "隔墙可见 · 名字 + 方框",
+		dsEspEntity    = "实体透视",
+		dsEspEntityD   = "追人的东西全部标红，远远就能看到",
+		dsEspItem      = "道具透视",
+		dsEspItemD     = "钥匙 / 撬锁器 / 手电筒 / 十字架…",
+		dsEspDoor      = "门透视",
+		dsEspDoorD     = "当前房间的门和出口标成琥珀色",
+		dsEspHide      = "藏身点透视",
+		dsEspHideD     = "所有柜子都标出来，跑图不用瞎找",
+		dsEspDist      = "显示距离",
+		dsEspRange     = "透视范围",
+		dsEspHint      = "透视 0.3 秒扫一次，超出范围的先丢。关掉立刻清干净，不会留残影。",
+
+		dsAutoTitle    = "自动",
+		dsAutoSub      = "开了就一直跑，关掉就停",
+		dsAutoHide     = "自动躲藏",
+		dsAutoHideD    = "Rush / Ambush / Halt 一来就钻进最近的柜子，走了自动出来",
+		dsAutoInteract = "自动交互",
+		dsAutoInteractD= "把交互距离内的按钮 / 把手 / 电梯全按一遍",
+		dsAutoPickup   = "自动拾取",
+		dsAutoPickupD  = "走过路过的道具直接捡起来",
+		dsAutoNext     = "自动进门",
+		dsAutoNextD    = "把你推到当前房间的门前，游戏自己会把门打开",
+		dsAutoRevive   = "自动复活",
+		dsAutoReviveD  = "倒下之后自动点复活（还有复活次数才有用）",
+
+		dsMoveTitle    = "移动",
+		dsMoveSub      = "改了立刻生效，复活后自动重新应用",
+		dsBright       = "全亮",
+		dsBrightD      = "把 Lighting 拉亮，黑屋子和停电都看得见",
+		dsNoclip       = "穿墙",
+		dsNoclipD      = "角色不再和任何东西碰撞，关掉立刻还原",
+		dsSpeed        = "移动速度",
+		dsJump         = "跳跃高度",
+		dsReach        = "交互距离",
+		dsMoveHint     = "速度和跳跃只改你自己的角色。穿墙关掉时会把所有部件的碰撞还原成 true。",
+
+		dsMapTitle     = "地图",
+		dsMapSub       = "自动检测当前楼层 · 全部区域都在这里",
+		dsMapGo        = "传送",
+		dsMapJump      = "跳到门号",
+		dsMapJumpGo    = "传送到这扇门",
+		dsMapLobby     = "回大厅",
+		dsMapHint      = "跨楼层游戏本身不允许直接传送。点别的区域会先把你送回大厅，再坐对应的电梯。",
+		dsAreaDoors    = "%s 扇门",
+		dsAreaNoDoor   = "起点 / 没有门",
+
+		dsAreaLobby    = "大厅",
+		dsAreaHotel    = "酒店",
+		dsAreaBackdoor = "后门",
+		dsAreaMines    = "矿洞",
+		dsAreaRooms    = "密室",
+		dsAreaRetro    = "复古酒店",
+		dsAreaParty    = "派对",
+
+		dsTDoor        = "门",
+		dsTHide        = "藏身点",
+		dsOnFmt        = "%s已开启",
+		dsOffFmt       = "%s已关闭",
+		dsBrightOn     = "全亮已开启",
+		dsBrightOff    = "全亮已关闭",
+		dsNoclipOn     = "穿墙已开启",
+		dsNoclipOff    = "穿墙已关闭",
+		dsHideIn       = "发现 %s  ·  已自动躲进柜子",
+		dsHideOut      = "安全了  ·  已从柜子里出来",
+		dsHideNone     = "附近没有藏身点，只能硬吃了",
+		dsTpDone       = "已传送到「%s」",
+		dsTpDoor       = "已传送到门 %s",
+		dsTpNoRoom     = "这一层还没刷出这扇门",
+		dsLobbyBack    = "正在回大厅",
+		dsLobbyGo      = "正在回大厅  ·  到了坐「%s」的电梯",
+		dsLobbyFail    = "找不到大厅远程，这个版本可能改过名字",
 
 
 
@@ -455,6 +539,89 @@ local LOCALES = {
 		pdTSpot        = "spot",
 		pdVoidHint     = "Melee refused: unkillable guards get banished far away and pinned instead of jittering",
 
+		-- DOORS panel (place 6516141723 · floor auto-detected from GameData.Floor)
+		srvDoors       = "DOORS",
+		dsChipIdle     = "Not in DOORS",
+		dsChipLive     = "%s  ·  Door %s",
+		dsTabEsp       = "ESP",
+		dsTabAuto      = "Auto",
+		dsTabMove      = "Move",
+		dsTabMap       = "Floors",
+
+		dsEspTitle     = "ESP",
+		dsEspSub       = "Visible through walls · name + box",
+		dsEspEntity    = "Entity ESP",
+		dsEspEntityD   = "Anything that chases you is drawn in red",
+		dsEspItem      = "Item ESP",
+		dsEspItemD     = "Keys / lockpicks / flashlights / crucifixes...",
+		dsEspDoor      = "Door ESP",
+		dsEspDoorD     = "The current room's door and exit, in amber",
+		dsEspHide      = "Hiding spot ESP",
+		dsEspHideD     = "Every closet marked, no more blind searching",
+		dsEspDist      = "Show distance",
+		dsEspRange     = "ESP range",
+		dsEspHint      = "ESP sweeps every 0.3s and drops anything out of range. Turning it off clears everything at once.",
+
+		dsAutoTitle    = "Auto",
+		dsAutoSub      = "Runs while on, stops the moment you turn it off",
+		dsAutoHide     = "Auto hide",
+		dsAutoHideD    = "Dives into the nearest closet when Rush / Ambush / Halt shows up, leaves when it is gone",
+		dsAutoInteract = "Auto interact",
+		dsAutoInteractD= "Presses every prompt inside your reach",
+		dsAutoPickup   = "Auto pickup",
+		dsAutoPickupD  = "Picks up the items you walk past",
+		dsAutoNext     = "Auto advance",
+		dsAutoNextD    = "Pushes you to the current room's door, the game opens it for you",
+		dsAutoRevive   = "Auto revive",
+		dsAutoReviveD  = "Clicks revive the moment you go down (needs revives left)",
+
+		dsMoveTitle    = "Move",
+		dsMoveSub      = "Applies instantly, re-applied after a respawn",
+		dsBright       = "Fullbright",
+		dsBrightD      = "Brightens Lighting so dark rooms and blackouts stay readable",
+		dsNoclip       = "Noclip",
+		dsNoclipD      = "No collisions at all, restored the moment you turn it off",
+		dsSpeed        = "Walk speed",
+		dsJump         = "Jump power",
+		dsReach        = "Reach",
+		dsMoveHint     = "Speed and jump only affect your own character. Turning noclip off restores collisions on every part.",
+
+		dsMapTitle     = "Floors",
+		dsMapSub       = "Current floor auto-detected · every area listed",
+		dsMapGo        = "Go",
+		dsMapJump      = "Jump to door",
+		dsMapJumpGo    = "Teleport to this door",
+		dsMapLobby     = "Back to lobby",
+		dsMapHint      = "The game does not allow cross-floor teleporting. Picking another floor sends you back to the lobby so you can take its elevator.",
+		dsAreaDoors    = "%s doors",
+		dsAreaNoDoor   = "Start / no doors",
+
+		dsAreaLobby    = "Lobby",
+		dsAreaHotel    = "The Hotel",
+		dsAreaBackdoor = "The Backdoor",
+		dsAreaMines    = "The Mines",
+		dsAreaRooms    = "The Rooms",
+		dsAreaRetro    = "Retro Hotel",
+		dsAreaParty    = "Party",
+
+		dsTDoor        = "Door",
+		dsTHide        = "Hiding spot",
+		dsOnFmt        = "%s on",
+		dsOffFmt       = "%s off",
+		dsBrightOn     = "Fullbright on",
+		dsBrightOff    = "Fullbright off",
+		dsNoclipOn     = "Noclip on",
+		dsNoclipOff    = "Noclip off",
+		dsHideIn       = "%s incoming  ·  auto-hid in a closet",
+		dsHideOut      = "Safe again  ·  left the closet",
+		dsHideNone     = "No hiding spot nearby, you are taking this one",
+		dsTpDone       = "Teleported to %s",
+		dsTpDoor       = "Teleported to door %s",
+		dsTpNoRoom     = "That door is not loaded on this floor yet",
+		dsLobbyBack    = "Heading back to the lobby",
+		dsLobbyGo      = "Heading back to the lobby  ·  take the %s elevator there",
+		dsLobbyFail    = "Lobby remote not found, this build may have renamed it",
+
 
 
 
@@ -552,7 +719,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.9.8",
+	Version = "v2.0.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -1117,6 +1284,37 @@ eqWH30lTut4ZxxA3dtc3gyoAhGGz6zUPKd7s7TY3uVL/A8QWDZe3UlBSAAAAAElFTkSuQmCC
 	hAcPginD6UHTe8n3CzqUNmfAyZE/ZVMGf6Y4e/Waq2ME5AsOdCfzdFckuyNvt3vod0xO6YHsNHnL5lAA6Ws+q8Por7I3rTqH0O/k
 	3zXr7l+/W3jZ7Xz/AOfF1/1WB0mA/AuPq8Po5175XB1EP//S6+ne6kLntOS1384+65/xvePVft1vevW7s9fHNwB8M0Jn68vv2Cid
 	drzvEPc6p+f9OgDIsOp0/mrr3O10VudGqf8BsKkzlHqftFsAAAAASUVORK5CYII=
+]==],
+	srv_doors = [==[
+	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
 ]==],
 	sfx_close = [==[
 SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgzLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAASW5mbwAA
@@ -1703,7 +1901,8 @@ local ASSET_TRIED, ASSET_CACHE = {}, {}
 
 -- 各资源的文件扩展名（getcustomasset 靠它判断类型）
 local ASSET_EXT = { icon = "jpg", flag_us = "png", flag_cn = "png",
-	sfx_notify = "mp3", sfx_close = "mp3", sfx_deny = "mp3", srv_nds = "png", srv_heist = "png" }
+	sfx_notify = "mp3", sfx_close = "mp3", sfx_deny = "mp3", srv_nds = "png", srv_heist = "png",
+	srv_doors = "png" }
 
 local function getAsset(key)
 	if ASSET_TRIED[key] then return ASSET_CACHE[key] end
@@ -2096,6 +2295,19 @@ end
 local function pdIsMain()
 	local ok, pid = pcall(function() return game.PlaceId end)
 	return (not ok) or pid == PD.Place
+end
+
+--========================== 服务器：DOORS ==========================
+-- place 6516141723（DOORS 👁 by LSPLASH）。整款游戏只有这一个 place，
+-- 所以这里的"地图"指楼层：ReplicatedStorage.GameData.Floor
+-- （Hotel / Backdoor / Mines / Rooms / Retro / Party / Lobby）。
+local DS = { Place = 6516141723 }
+
+-- 在不在 DOORS 里
+local function dsInPlace()
+	local ok, pid = pcall(function() return game.PlaceId end)
+	if not ok or type(pid) ~= "number" then return false, nil end
+	return pid == DS.Place, pid
 end
 
 --========================== 角色工具 ==========================
@@ -3748,6 +3960,10 @@ boot = function(lang)
 	local openPdWindow = function() end
 	local PdCloseRequest = function() end
 	local pdCleanup = function() end
+	-- DOORS 面板：窗口开关 + 关脚本时的清理（真正实现都在下面那个 dsBuild 里）
+	local openDoorsWindow = function() end
+	local DsCloseRequest = function() end
+	local dsCleanup = function() end
 	local FlyToggleRequest = function() end
 	-- 伤害保护总开关（速度回零模块在下面才定义，这里先占位，免得闭包绑到全局）
 	local ShieldRequest = function() end
@@ -4150,10 +4366,11 @@ boot = function(lang)
 
 	addServerCard(1, L("srvNds"), 189707, "srv_nds")
 	addServerCard(2, L("srvHeist"), PD.Place, "srv_heist", pdInGame, function() openPdWindow() end)
+	addServerCard(3, L("srvDoors"), DS.Place, "srv_doors", dsInPlace, function() openDoorsWindow() end)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0, 0, 0, 156),
+		Position = UDim2.new(0, 0, 0, 234),
 		BackgroundTransparency = 1,
 		Text = L("srvMore"),
 		TextSize = 11,
@@ -8616,6 +8833,1553 @@ boot = function(lang)
 		end)
 	end
 
+	--========================== 服务器脚本：DOORS ==========================
+	-- place 6516141723（DOORS 👁 by LSPLASH）。
+	-- 区域（楼层）靠 ReplicatedStorage.GameData.Floor（StringValue）+ LatestRoom（NumberValue）自动检测；
+	-- 门号按社区脚本的通用换算：Backdoor = room-51、Mines = room+100，其余楼层 room 就是门号。
+	-- ⚠️ 跟劫案一样整块塞进独立函数 —— boot 的 200 个 local 名额很紧（改完必跑 _check + _lint + _run）。
+	local function dsBuild()
+		local DS_W, DS_H = 520, 500
+
+		local ds = {
+			-- 透视
+			Esp = false, EspItem = false, EspDoor = false, EspHide = false, EspDist = true,
+			EspRange = 400,
+			-- 自动
+			AutoHide = false, AutoInteract = false, AutoPickup = false, AutoNext = false,
+			AutoRevive = false,
+			-- 移动
+			Bright = false, Noclip = false, Speed = 16, Jump = 50, Reach = 12, JumpTo = 1,
+			-- 运行时
+			Area = nil, DoorN = nil, RoomN = nil, Rooms = 0,
+			esps = {}, run = 0, noclipped = {}, lastEsp = 0,
+			brightSaved = nil,
+			hideSpot = nil, hideOn = false, hideWarned = false,
+		}
+
+		-- ⚠️ 前向声明：界面（早）要调功能模块（晚）里的东西。不先占位的话，
+		-- 闭包会绑到全局名字上 → nil → 运行时炸（luaparse 语法检查不报，_lint.js 才抓得到）。
+		local DS_TABS = {}
+		local dsApplyBright = function() end
+		local dsApplySpeed = function() end
+		local dsRestoreCollide = function() end
+		local dsRenderStatus = function() end
+		local DsGoArea = function() end
+		local DsJumpRequest = function() end
+		local DsJumpToNumber = function() end
+		local DsLobbyRequest = function() end
+
+		-- 会追着你跑、必须躲起来的实体（值 = 触发躲藏的距离阈值，社区脚本通用值）
+		local HIDE_ENTS = {
+			RushMoving = 85, AmbushMoving = 150, BashMoving = 150, Scribbles = 100,
+			DronesStampede = 100, A60 = 125, A120 = 85, GlitchRush = 90,
+			GlitchAmbush = 175, BackdoorRush = 85, Halt = 200, Seek = 200,
+		}
+
+		-- 透视要画出来的所有实体（含"看着它就行"的那几个）
+		local ALL_ENTS = {
+			RushMoving = true, AmbushMoving = true, BashMoving = true, Scribbles = true,
+			DronesStampede = true, A60 = true, A120 = true, GlitchRush = true,
+			GlitchAmbush = true, BackdoorRush = true, Halt = true, Seek = true,
+			SeekHands = true, SeekArms = true, Eyes = true, Lookman = true,
+			BackdoorLookman = true, Figure = true, FigureRig = true, FigureRagdoll = true,
+			Screech = true, ScreechHitbox = true, Dupe = true, Void = true, Jack = true,
+			Timothy = true, Shadow = true, Snare = true, SnareCeiling = true,
+			GiggleCeiling = true, Groundskeeper = true, TellerRig = true, Creak = true,
+			NoiseModel = true, StemsEntity = true, Glitch = true, Window = true,
+		}
+
+		-- 地上的道具（走过去就会自动捡）
+		local ITEMS = {
+			Key = true, Lockpick = true, Crucifix = true, Flashlight = true, Vitamins = true,
+			Bandage = true, SkeletonKey = true, ["Skeleton Key"] = true, Lighter = true,
+			Bottle = true, Shears = true, Candle = true, Battery = true, Shakelight = true,
+			Gold = true, Rift = true, Potion = true, Bread = true, Cracker = true, Cheese = true,
+		}
+
+		-- 全部区域（"记住全地图"）。doors = 该区域的门数上限，0 表示没有门。
+		local DS_AREAS = {
+			{ key = "Lobby", doors = 0 },
+			{ key = "Hotel", doors = 100 },
+			{ key = "Backdoor", doors = 50 },
+			{ key = "Mines", doors = 250 },
+			{ key = "Rooms", doors = 1000 },
+			{ key = "Retro", doors = 100 },
+			{ key = "Party", doors = 100 },
+		}
+
+		-- 区域名：认识的走语言包，不认识的（比如活动楼层）直接显示原始 key
+		local AREA_SET = {}
+		for _, a in ipairs(DS_AREAS) do AREA_SET[a.key] = true end
+		local function dsAreaName(key)
+			if key and AREA_SET[key] then return L("dsArea" .. key) end
+			return tostring(key or "?")
+		end
+
+		-- ---------------- 小工具 ----------------
+		local function dsRS()
+			local ok, v = pcall(function() return game:GetService("ReplicatedStorage") end)
+			return ok and v or nil
+		end
+
+		local function dsGameData()
+			local rs = dsRS()
+			if not rs then return nil end
+			local ok, v = pcall(function() return rs:FindFirstChild("GameData") end)
+			return ok and v or nil
+		end
+
+		local function dsFloorKey()
+			local gd = dsGameData()
+			if not gd then return nil end
+			local ok, v = pcall(function()
+				local f = gd:FindFirstChild("Floor")
+				return f and f.Value
+			end)
+			if ok and type(v) == "string" and v ~= "" then return v end
+			return nil
+		end
+
+		local function dsRoomNum()
+			local gd = dsGameData()
+			if not gd then return nil end
+			local ok, v = pcall(function()
+				local r = gd:FindFirstChild("LatestRoom")
+				return r and r.Value
+			end)
+			if ok and type(v) == "number" then return v end
+			return nil
+		end
+
+		local function dsRooms()
+			local ok, v = pcall(function()
+				return game:GetService("Workspace"):FindFirstChild("CurrentRooms")
+			end)
+			return ok and v or nil
+		end
+
+		-- 门号换算：玩家在游戏里看到的门号
+		local function dsDoorNum(floor, room)
+			if type(room) ~= "number" then return nil end
+			if floor == "Backdoor" then
+				local n = room - 51
+				return n > 0 and n or room
+			elseif floor == "Mines" then
+				return room + 100
+			end
+			return room
+		end
+
+		-- 反查：门号 -> CurrentRooms 里的房间名（传送用）
+		local function dsRoomKey(floor, door)
+			if floor == "Backdoor" then return tostring(door + 51) end
+			if floor == "Mines" then return tostring(door - 100) end
+			return tostring(door)
+		end
+
+		-- 从任意实例里挑一个能读 Position 的部件
+		local function dsPartOf(inst)
+			if not inst then return nil end
+			local ok, isPart = pcall(function() return inst:IsA("BasePart") end)
+			if ok and isPart then return inst end
+			local out
+			pcall(function()
+				out = inst:FindFirstChild("Door") or inst.PrimaryPart
+					or inst:FindFirstChildOfClass("Part") or inst:FindFirstChild("Handle")
+			end)
+			return out
+		end
+
+		local function dsDist(part)
+			local root = getRoot()
+			if not part or not root then return math.huge end
+			local ok, d = pcall(function() return (part.Position - root.Position).Magnitude end)
+			return ok and d or math.huge
+		end
+
+		-- 触发一个 ProximityPrompt：优先执行器的 fireproximityprompt，退到官方 InputHold 那对方法
+		local function dsFire(prompt)
+			if not prompt then return false end
+			local fn = execFn("fireproximityprompt")
+			if fn then
+				local ok, r = pcall(fn, prompt)
+				if ok and r ~= false then return true end
+			end
+			local ok = pcall(function()
+				if prompt.InputHoldBegin then prompt:InputHoldBegin() end
+				if prompt.InputHoldEnd then prompt:InputHoldEnd() end
+			end)
+			return ok
+		end
+
+		-- 假装碰一下（捡道具）：有 firetouchinterest 就用，没有就把角色挪过去
+		local function dsTouch(part)
+			if not part then return false end
+			local root = getRoot()
+			if not root then return false end
+			local fn = execFn("firetouchinterest")
+			if fn then
+				local ok = pcall(function() fn(root, part, 0); fn(part, root, 1) end)
+				if ok then return true end
+			end
+			return pcall(function() root.CFrame = CFrame.new(part.Position + Vector3.new(0, 3, 0)) end)
+		end
+
+		local function dsTeleportTo(part, dy)
+			if not part then return false end
+			local root = getRoot()
+			local pos = part.Position + Vector3.new(0, dy or 4, 0)
+			if root and pcall(function() root.CFrame = CFrame.new(pos) end) then return true end
+			local char = LocalPlayer.Character
+			if not char then return false end
+			return pcall(function() char:MoveTo(pos) end)
+		end
+
+		-- ---------------- 窗口骨架（拖动 / － 胶囊 / ✕ 关窗，跟另外两个服务器窗口一致） ----------------
+		local dsWin = new("Frame", {
+			Name = "DoorsWindow",
+			Size = UDim2.new(0, DS_W, 0, DS_H),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Visible = false,
+			Parent = guiMain,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = dsWin })
+		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = dsWin })
+		local dsScale = new("UIScale", { Scale = 1, Parent = dsWin })
+
+		local dsHeader = new("Frame", {
+			Name = "Header",
+			Size = UDim2.new(1, 0, 0, SRV_HEAD_H),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Parent = dsWin,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = dsHeader })
+		new("Frame", {
+			Size = UDim2.new(1, 0, 0, 12),
+			Position = UDim2.new(0, 0, 1, -12),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Parent = dsHeader,
+		})
+		new("Frame", {
+			Size = UDim2.new(1, -24, 0, 1),
+			Position = UDim2.new(0, 12, 1, -1),
+			BackgroundColor3 = C.Stroke,
+			BorderSizePixel = 0,
+			Parent = dsHeader,
+		})
+
+		do
+			local box = new("Frame", {
+				Size = UDim2.new(0, 22, 0, 22),
+				Position = UDim2.new(0, 14, 0.5, 0),
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundColor3 = C.Card2,
+				BorderSizePixel = 0,
+				ClipsDescendants = true,
+				Parent = dsHeader,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, 7), Parent = box })
+			local a = getAsset("srv_doors")
+			if a then
+				new("ImageLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Image = a,
+					ScaleType = Enum.ScaleType.Crop,
+					Parent = box,
+				})
+			end
+			new("UIStroke", { Color = C.Stroke2, Thickness = 1, Transparency = 0.5, Parent = box })
+		end
+
+		new("TextLabel", {
+			Size = UDim2.new(0, 76, 1, 0),
+			Position = UDim2.new(0, 44, 0, 0),
+			BackgroundTransparency = 1,
+			Text = L("srvDoors"),
+			TextSize = 14,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsHeader,
+		})
+
+		-- 实时状态胶囊：● 区域 · 门号 —— 这就是"自动检测地图"的窗口
+		local dsChip = new("Frame", {
+			Name = "LiveChip",
+			Size = UDim2.new(0, 186, 0, 22),
+			Position = UDim2.new(0, 116, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			Parent = dsHeader,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dsChip })
+		local dsChipStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = dsChip })
+		local dsChipDot = new("Frame", {
+			Name = "Dot",
+			Size = UDim2.new(0, 6, 0, 6),
+			Position = UDim2.new(0, 10, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Dim,
+			BorderSizePixel = 0,
+			Parent = dsChip,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dsChipDot })
+		local dsChipText = new("TextLabel", {
+			Name = "ChipText",
+			Size = UDim2.new(1, -24, 1, 0),
+			Position = UDim2.new(0, 22, 0, 0),
+			BackgroundTransparency = 1,
+			Text = L("dsChipIdle"),
+			TextSize = 11,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsChip,
+		})
+
+		local dsMinBtn = new("TextButton", {
+			Name = "Minimize",
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -70, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "－",
+			TextSize = 14,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			Parent = dsHeader,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = dsMinBtn })
+		local dsMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = dsMinBtn })
+		bindHover(dsMinBtn, {
+			Bg = { C.Card, C.Card2 }, Stroke = dsMinStroke, StrokeOn = C.Stroke2,
+			Label = dsMinBtn, LabelOn = C.Text,
+		})
+
+		local dsCloseBtn = new("TextButton", {
+			Name = "Close",
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -38, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "✕",
+			TextSize = 13,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			Parent = dsHeader,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = dsCloseBtn })
+		local dsCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = dsCloseBtn })
+		bindHover(dsCloseBtn, {
+			Bg = { C.Card, C.Red }, Stroke = dsCloseStroke, StrokeOn = C.Red,
+			Label = dsCloseBtn, LabelOn = C.White,
+		})
+
+		makeDraggable(dsWin, dsHeader, function() return dsScale.Scale end)
+
+		-- ---------------- 顶部页签（跟另外两个窗口的左侧栏不一样，这是这次的新版式） ----------------
+		local dsTabBar = new("Frame", {
+			Name = "TabBar",
+			Size = UDim2.new(1, -20, 0, 34),
+			Position = UDim2.new(0, 10, 0, SRV_HEAD_H + 2),
+			BackgroundColor3 = C.Side,
+			BorderSizePixel = 0,
+			Parent = dsWin,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = dsTabBar })
+
+		local dsIndicator = new("Frame", {
+			Name = "TabIndicator",
+			Size = UDim2.new(0, 0, 0, 2),
+			Position = UDim2.new(0, 0, 1, -2),
+			BackgroundColor3 = C.Accent,
+			BorderSizePixel = 0,
+			ZIndex = 2,
+			Parent = dsTabBar,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dsIndicator })
+
+		local dsContent = new("Frame", {
+			Name = "Content",
+			Size = UDim2.new(1, -20, 1, -(SRV_HEAD_H + 2) - 34 - 16),
+			Position = UDim2.new(0, 10, 0, SRV_HEAD_H + 2 + 34 + 6),
+			BackgroundTransparency = 1,
+			Parent = dsWin,
+		})
+
+		local dsPages, dsTabs = {}, {}
+
+		local function dsAddPage(key)
+			local page = new("Frame", {
+				Name = "DoorsPage_" .. key,
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Visible = false,
+				Parent = dsContent,
+			})
+			dsPages[key] = page
+			return page
+		end
+
+		local function dsShow(key)
+			for k, page in pairs(dsPages) do page.Visible = (k == key) end
+			for k, t in pairs(dsTabs) do
+				local on = (k == key)
+				tween(t.label, EASE.soft, { TextColor3 = on and C.Text or C.Sub })
+				tween(t.btn, EASE.soft, { BackgroundColor3 = on and C.Card or C.Side })
+			end
+			local item = dsTabs[key]
+			if item then
+				tween(dsIndicator, EASE.pop, {
+					Size = UDim2.new(0, item.w, 0, 2),
+					Position = UDim2.new(0, item.x, 1, -2),
+				})
+			end
+			local target = dsPages[key]
+			if target then staggerIn(target:GetChildren(), 8, 0.03, 0.3) end
+		end
+
+		local function dsAddTab(key, text, order)
+			local n = math.max(#DS_TABS, 1)
+			local w = math.floor((DS_W - 32) / n)
+			local x = 6 + (order - 1) * w
+			local btn = new("TextButton", {
+				Name = "Doors_" .. key,
+				Size = UDim2.new(0, w - 4, 1, 0),
+				Position = UDim2.new(0, x, 0, 0),
+				BackgroundColor3 = C.Side,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = "",
+				Parent = dsTabBar,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = btn })
+			local label = new("TextLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Text = text,
+				TextSize = 12,
+				Font = FONT_B,
+				TextColor3 = C.Sub,
+				Parent = btn,
+			})
+			btn.MouseButton1Click:Connect(function() dsShow(key) end)
+			btn.MouseEnter:Connect(function()
+				if not dsPages[key] or not dsPages[key].Visible then
+					tween(label, EASE.soft, { TextColor3 = C.Text })
+				end
+			end)
+			btn.MouseLeave:Connect(function()
+				if not dsPages[key] or not dsPages[key].Visible then
+					tween(label, EASE.soft, { TextColor3 = C.Sub })
+				end
+			end)
+			dsTabs[key] = { btn = btn, label = label, x = x, w = w - 4 }
+			return btn
+		end
+
+		-- ---------------- 组件：开关卡片 / 滑块行 ----------------
+		local function dsCard(parent, x, y, w, h, name, title, desc, color, default, onChange)
+			local card = new("Frame", {
+				Name = name .. "Card",
+				Size = UDim2.new(0, w, 0, h),
+				Position = UDim2.new(0, x, 0, y),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				Parent = parent,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = card })
+			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = card })
+
+			local dot = new("Frame", {
+				Name = "Dot",
+				Size = UDim2.new(0, 6, 0, 6),
+				Position = UDim2.new(0, 14, 0, 15),
+				BackgroundColor3 = color,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Parent = card,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+
+			new("TextLabel", {
+				Size = UDim2.new(1, -74, 0, 18),
+				Position = UDim2.new(0, 26, 0, 8),
+				BackgroundTransparency = 1,
+				Text = title,
+				TextSize = 13,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = card,
+			})
+			if desc and desc ~= "" then
+				new("TextLabel", {
+					Size = UDim2.new(1, -30, 0, h - 28),
+					Position = UDim2.new(0, 26, 0, 26),
+					BackgroundTransparency = 1,
+					Text = desc,
+					TextSize = 10,
+					Font = FONT_N,
+					TextColor3 = C.Dim,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextYAlignment = Enum.TextYAlignment.Top,
+					TextWrapped = true,
+					Parent = card,
+				})
+			end
+
+			local sw = createSwitch(card, {
+				Name = name,
+				Position = UDim2.new(1, -52, 0, 11),
+				Default = default,
+				OnChange = function(v)
+					tween(dot, EASE.soft, { BackgroundTransparency = v and 0 or 1 })
+					if onChange then onChange(v) end
+				end,
+			})
+			return card, sw
+		end
+
+		local function dsSliderRow(parent, y, title, min, max, default, log, fmt, onChange)
+			new("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 16),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1,
+				Text = title,
+				TextSize = 12,
+				Font = FONT_N,
+				TextColor3 = C.Sub,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = parent,
+			})
+			local val = new("TextLabel", {
+				Size = UDim2.new(0, 66, 0, 16),
+				Position = UDim2.new(1, -66, 0, y),
+				BackgroundTransparency = 1,
+				Text = fmt(default),
+				TextSize = 12,
+				Font = FONT_M,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Right,
+				Parent = parent,
+			})
+			local set = createSlider(parent, {
+				Position = UDim2.new(0, 0, 0, y + 18),
+				Min = min, Max = max, Default = default, Log = log,
+				OnChange = function(v)
+					val.Text = fmt(v)
+					if onChange then onChange(v) end
+				end,
+			})
+			return set
+		end
+
+		-- 一条细分割线（有理由的线：分隔功能组，不是装饰）
+		local function dsRule(parent, y)
+			new("Frame", {
+				Size = UDim2.new(1, 0, 0, 1),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundColor3 = C.Stroke,
+				BorderSizePixel = 0,
+				Parent = parent,
+			})
+		end
+
+		-- ---------------- 页面 1：透视 ----------------
+		local dsEspPage = dsAddPage("esp")
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = L("dsEspTitle"),
+			TextSize = 15,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsEspPage,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = L("dsEspSub"),
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsEspPage,
+		})
+
+		local ESP_COLOR = { ent = C.Red, item = C.Green, door = C.Amber, hide = C.Accent2 }
+		local ESP_SIZE = {
+			ent = Vector3.new(4, 6, 3),
+			item = Vector3.new(1.6, 1.6, 1.6),
+			door = Vector3.new(6, 8, 1),
+			hide = Vector3.new(5, 6, 5),
+		}
+
+		dsCard(dsEspPage, 0, 44, 236, 62, "EspEnt",
+			L("dsEspEntity"), L("dsEspEntityD"), ESP_COLOR.ent, false,
+			function(v) ds.Esp = v end)
+		dsCard(dsEspPage, 244, 44, 236, 62, "EspItem",
+			L("dsEspItem"), L("dsEspItemD"), ESP_COLOR.item, false,
+			function(v) ds.EspItem = v end)
+		dsCard(dsEspPage, 0, 114, 236, 62, "EspDoor",
+			L("dsEspDoor"), L("dsEspDoorD"), ESP_COLOR.door, false,
+			function(v) ds.EspDoor = v end)
+		dsCard(dsEspPage, 244, 114, 236, 62, "EspHide",
+			L("dsEspHide"), L("dsEspHideD"), ESP_COLOR.hide, false,
+			function(v) ds.EspHide = v end)
+
+		dsRule(dsEspPage, 190)
+
+		local dsDistRow = new("Frame", {
+			Name = "DistRow",
+			Size = UDim2.new(1, 0, 0, 40),
+			Position = UDim2.new(0, 0, 0, 202),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			Parent = dsEspPage,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = dsDistRow })
+		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = dsDistRow })
+		new("TextLabel", {
+			Size = UDim2.new(1, -70, 0, 18),
+			Position = UDim2.new(0, 14, 0, 11),
+			BackgroundTransparency = 1,
+			Text = L("dsEspDist"),
+			TextSize = 13,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsDistRow,
+		})
+		createSwitch(dsDistRow, {
+			Name = "EspDist",
+			Position = UDim2.new(1, -52, 0, 9),
+			Default = true,
+			OnChange = function(v) ds.EspDist = v end,
+		})
+
+		dsSliderRow(dsEspPage, 254, L("dsEspRange"), 50, 1200, 400, true, function(v)
+			return tostring(math.floor(v)) .. "m"
+		end, function(v) ds.EspRange = v end)
+
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Position = UDim2.new(0, 0, 0, 306),
+			BackgroundTransparency = 1,
+			Text = L("dsEspHint"),
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			TextWrapped = true,
+			Parent = dsEspPage,
+		})
+
+		-- ---------------- 页面 2：自动 ----------------
+		local dsAutoPage = dsAddPage("auto")
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = L("dsAutoTitle"),
+			TextSize = 15,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsAutoPage,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = L("dsAutoSub"),
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsAutoPage,
+		})
+
+		dsCard(dsAutoPage, 0, 44, 480, 60, "AutoHide",
+			L("dsAutoHide"), L("dsAutoHideD"), C.Red, false,
+			function(v)
+				ds.AutoHide = v
+				if not v then ds.hideOn = false; ds.hideSpot = nil end
+				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoHide")),
+					v and C.Green or C.Sub)
+			end)
+		dsCard(dsAutoPage, 0, 110, 480, 60, "AutoInteract",
+			L("dsAutoInteract"), L("dsAutoInteractD"), C.Accent2, false,
+			function(v)
+				ds.AutoInteract = v
+				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoInteract")),
+					v and C.Green or C.Sub)
+			end)
+		dsCard(dsAutoPage, 0, 176, 480, 60, "AutoPickup",
+			L("dsAutoPickup"), L("dsAutoPickupD"), C.Green, false,
+			function(v)
+				ds.AutoPickup = v
+				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoPickup")),
+					v and C.Green or C.Sub)
+			end)
+		dsCard(dsAutoPage, 0, 242, 480, 60, "AutoNext",
+			L("dsAutoNext"), L("dsAutoNextD"), C.Amber, false,
+			function(v)
+				ds.AutoNext = v
+				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoNext")),
+					v and C.Green or C.Sub)
+			end)
+		dsCard(dsAutoPage, 0, 308, 480, 60, "AutoRevive",
+			L("dsAutoRevive"), L("dsAutoReviveD"), C.Sub, false,
+			function(v)
+				ds.AutoRevive = v
+				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoRevive")),
+					v and C.Green or C.Sub)
+			end)
+
+		-- ---------------- 页面 3：移动 ----------------
+		local dsMovePage = dsAddPage("move")
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = L("dsMoveTitle"),
+			TextSize = 15,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsMovePage,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = L("dsMoveSub"),
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsMovePage,
+		})
+
+		dsCard(dsMovePage, 0, 44, 236, 60, "Bright",
+			L("dsBright"), L("dsBrightD"), C.Amber, false,
+			function(v)
+				ds.Bright = v
+				dsApplyBright()
+				notify(v and L("dsBrightOn") or L("dsBrightOff"), v and C.Green or C.Sub)
+			end)
+		dsCard(dsMovePage, 244, 44, 236, 60, "Noclip",
+			L("dsNoclip"), L("dsNoclipD"), C.Accent2, false,
+			function(v)
+				ds.Noclip = v
+				if not v then dsRestoreCollide() end
+				notify(v and L("dsNoclipOn") or L("dsNoclipOff"), v and C.Green or C.Sub)
+			end)
+
+		dsRule(dsMovePage, 116)
+
+		dsSliderRow(dsMovePage, 128, L("dsSpeed"), 16, 300, 16, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) ds.Speed = v; dsApplySpeed() end)
+
+		dsSliderRow(dsMovePage, 178, L("dsJump"), 50, 300, 50, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) ds.Jump = v; dsApplySpeed() end)
+
+		dsSliderRow(dsMovePage, 228, L("dsReach"), 8, 60, 12, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) ds.Reach = v end)
+
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Position = UDim2.new(0, 0, 0, 282),
+			BackgroundTransparency = 1,
+			Text = L("dsMoveHint"),
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			TextWrapped = true,
+			Parent = dsMovePage,
+		})
+
+		-- ---------------- 页面 4：地图（自动检测 + 全区域） ----------------
+		local dsMapPage = dsAddPage("map")
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = L("dsMapTitle"),
+			TextSize = 15,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsMapPage,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = L("dsMapSub"),
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsMapPage,
+		})
+
+		-- 区域卡片（2 列 × 4 行）：名字 + 门数 + 传送
+		local dsAreaRows = {}
+		for i, area in ipairs(DS_AREAS) do
+			local col = (i - 1) % 2
+			local row = math.floor((i - 1) / 2)
+			local card = new("Frame", {
+				Name = "Area_" .. area.key,
+				Size = UDim2.new(0, 236, 0, 52),
+				Position = UDim2.new(0, col * 244, 0, 40 + row * 58),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				Parent = dsMapPage,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = card })
+			local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = card })
+
+			local dot = new("Frame", {
+				Name = "Dot",
+				Size = UDim2.new(0, 6, 0, 6),
+				Position = UDim2.new(0, 14, 0, 14),
+				BackgroundColor3 = C.Accent,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Parent = card,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+
+			new("TextLabel", {
+				Size = UDim2.new(1, -100, 0, 17),
+				Position = UDim2.new(0, 26, 0, 7),
+				BackgroundTransparency = 1,
+				Text = L("dsArea" .. area.key),
+				TextSize = 13,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = card,
+			})
+			local sub = new("TextLabel", {
+				Name = "Sub",
+				Size = UDim2.new(1, -30, 0, 14),
+				Position = UDim2.new(0, 26, 0, 26),
+				BackgroundTransparency = 1,
+				Text = area.doors > 0
+					and string.format(L("dsAreaDoors"), tostring(area.doors))
+					or L("dsAreaNoDoor"),
+				TextSize = 10,
+				Font = FONT_M,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = card,
+			})
+
+			local go = new("TextButton", {
+				Name = "Go",
+				Size = UDim2.new(0, 54, 0, 26),
+				Position = UDim2.new(1, -64, 0.5, 0),
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundColor3 = C.Card2,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = L("dsMapGo"),
+				TextSize = 11,
+				Font = FONT_B,
+				TextColor3 = C.Sub,
+				Parent = card,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = go })
+			local goStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = go })
+			bindHover(go, {
+				Bg = { C.Card2, C.Accent }, Stroke = goStroke, StrokeOn = C.Accent,
+				Label = go, LabelOn = C.White,
+			})
+			bindPress(go, C.Accent)
+			go.MouseButton1Click:Connect(function() DsGoArea(area.key) end)
+
+			dsAreaRows[area.key] = { stroke = stroke, dot = dot, sub = sub }
+		end
+
+		dsRule(dsMapPage, 278)
+
+		createButton(dsMapPage, {
+			Name = "JumpGo",
+			Size = UDim2.new(0, 148, 0, 30),
+			Position = UDim2.new(0, 0, 0, 288),
+			Text = L("dsMapJumpGo"),
+			TextSize = 12,
+			Style = "solid",
+			OnClick = function() DsJumpRequest() end,
+		})
+		createButton(dsMapPage, {
+			Name = "GoLobby",
+			Size = UDim2.new(0, 148, 0, 30),
+			Position = UDim2.new(0, 156, 0, 288),
+			Text = L("dsMapLobby"),
+			TextSize = 12,
+			Style = "ghost",
+			OnClick = function() DsLobbyRequest() end,
+		})
+
+		dsSliderRow(dsMapPage, 330, L("dsMapJump"), 1, 1000, 1, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) ds.JumpTo = math.floor(v) end)
+
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Position = UDim2.new(0, 0, 0, 374),
+			BackgroundTransparency = 1,
+			Text = L("dsMapHint"),
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			TextWrapped = true,
+			Parent = dsMapPage,
+		})
+
+		-- 页签：顺序固定，跟上面 4 个页面一一对应
+		DS_TABS = {
+			{ key = "esp", text = L("dsTabEsp") },
+			{ key = "auto", text = L("dsTabAuto") },
+			{ key = "move", text = L("dsTabMove") },
+			{ key = "map", text = L("dsTabMap") },
+		}
+		for i, t in ipairs(DS_TABS) do dsAddTab(t.key, t.text, i) end
+		dsShow("esp")
+
+		-- ---------------- 状态显示（自动检测的可视化） ----------------
+		dsRenderStatus = function()
+			local area = ds.Area
+			if not area then
+				dsChipDot.BackgroundColor3 = C.Dim
+				dsChipText.Text = L("dsChipIdle")
+				dsChipText.TextColor3 = C.Dim
+				dsChipStroke.Color = C.Stroke
+			else
+				dsChipDot.BackgroundColor3 = C.Green
+				dsChipText.Text = string.format(L("dsChipLive"),
+					dsAreaName(area), tostring(ds.DoorN or "?"))
+				dsChipText.TextColor3 = C.Text
+				dsChipStroke.Color = C.Green
+			end
+			for key, r in pairs(dsAreaRows) do
+				local here = (key == area)
+				tween(r.dot, EASE.soft, { BackgroundTransparency = here and 0 or 1 })
+				tween(r.stroke, EASE.soft, { Color = here and C.Accent or C.Stroke })
+				tween(r.sub, EASE.soft, { TextColor3 = here and C.Text or C.Dim })
+			end
+		end
+
+		-- ---------------- 功能实现 ----------------
+		dsApplySpeed = function()
+			local hum = getHumanoid()
+			if not hum then return end
+			pcall(function() hum.WalkSpeed = ds.Speed end)
+			pcall(function()
+				hum.UseJumpPower = true
+				hum.JumpPower = ds.Jump
+			end)
+		end
+
+		dsRestoreCollide = function()
+			for part in pairs(ds.noclipped) do
+				pcall(function() part.CanCollide = true end)
+				ds.noclipped[part] = nil
+			end
+		end
+
+		local function dsApplyNoclip()
+			local char = LocalPlayer.Character
+			if not char then return end
+			local ok, list = pcall(function() return char:GetDescendants() end)
+			if not ok then return end
+			for _, d in ipairs(list) do
+				local isPart = false
+				pcall(function() isPart = d:IsA("BasePart") end)
+				if isPart and d.CanCollide then
+					pcall(function() d.CanCollide = false end)
+					ds.noclipped[d] = true
+				end
+			end
+		end
+
+		local function dsLighting()
+			local ok, v = pcall(function() return game:GetService("Lighting") end)
+			return ok and v or nil
+		end
+
+		dsApplyBright = function()
+			local lt = dsLighting()
+			if not lt then return end
+			if ds.Bright then
+				if not ds.brightSaved then
+					ds.brightSaved = {}
+					pcall(function()
+						ds.brightSaved.Brightness = lt.Brightness
+						ds.brightSaved.Ambient = lt.Ambient
+						ds.brightSaved.OutdoorAmbient = lt.OutdoorAmbient
+						ds.brightSaved.FogEnd = lt.FogEnd
+						ds.brightSaved.ClockTime = lt.ClockTime
+						ds.brightSaved.GlobalShadows = lt.GlobalShadows
+					end)
+				end
+				pcall(function()
+					lt.Brightness = 2
+					lt.Ambient = Color3.fromRGB(178, 178, 178)
+					lt.OutdoorAmbient = Color3.fromRGB(178, 178, 178)
+					lt.FogEnd = 100000
+					lt.ClockTime = 14
+					lt.GlobalShadows = false
+				end)
+			elseif ds.brightSaved then
+				local s = ds.brightSaved
+				pcall(function()
+					lt.Brightness = s.Brightness
+					lt.Ambient = s.Ambient
+					lt.OutdoorAmbient = s.OutdoorAmbient
+					lt.FogEnd = s.FogEnd
+					lt.ClockTime = s.ClockTime
+					lt.GlobalShadows = s.GlobalShadows
+				end)
+				ds.brightSaved = nil
+			end
+		end
+
+		-- 找最近的藏身点（柜子）：有 HidePrompt / HidingPrompt 的都算
+		local function dsFindHideSpot()
+			local rooms = dsRooms()
+			if not rooms or not getRoot() then return nil end
+			local best, bestD = nil, math.huge
+			pcall(function()
+				for _, room in ipairs(rooms:GetChildren()) do
+					for _, obj in ipairs(room:GetChildren()) do
+						local n = obj.Name
+						local prompt = obj:FindFirstChild("HidePrompt")
+							or obj:FindFirstChild("HidingPrompt")
+						if not prompt and (n:find("Closet") or n:find("Wardrobe")
+							or n:find("Locker") or n:find("HidingSpot") or n:find("Hiding")) then
+							prompt = obj:FindFirstChild("HidePrompt", true)
+								or obj:FindFirstChild("HidingPrompt", true)
+						end
+						if prompt then
+							local part = dsPartOf(obj)
+							local d = dsDist(part)
+							if d < bestD and d <= 60 then
+								best, bestD = { obj = obj, prompt = prompt, part = part }, d
+							end
+						end
+					end
+				end
+			end)
+			return best
+		end
+
+		-- 自动躲藏：附近有追人的实体就钻柜子，安全了再出来
+		local function dsAutoHideStep()
+			local char = LocalPlayer.Character
+			if not char or not getRoot() then return end
+			local hiding = false
+			pcall(function() hiding = (char:GetAttribute("Hiding") == true) end)
+
+			local danger = nil
+			local ws = game:GetService("Workspace")
+			pcall(function()
+				for name, limit in pairs(HIDE_ENTS) do
+					local ent = ws:FindFirstChild(name)
+					local part = ent and dsPartOf(ent)
+					if part then
+						local d = dsDist(part)
+						if d <= limit and (not danger or d < danger.d) then
+							danger = { name = name, d = d }
+						end
+					end
+				end
+			end)
+
+			if danger and not hiding then
+				local spot = dsFindHideSpot()
+				if spot then
+					if spot.part then dsTeleportTo(spot.part, 2) end
+					dsFire(spot.prompt)
+					ds.hideSpot = spot
+					if not ds.hideOn then
+						ds.hideOn = true
+						notify(string.format(L("dsHideIn"), danger.name), C.Red)
+					end
+				elseif not ds.hideWarned then
+					ds.hideWarned = true
+					notify(L("dsHideNone"), C.Amber)
+				end
+			elseif not danger and hiding and ds.hideSpot then
+				dsFire(ds.hideSpot.prompt)
+				ds.hideSpot = nil
+				if ds.hideOn then
+					ds.hideOn = false
+					notify(L("dsHideOut"), C.Green)
+				end
+			end
+		end
+
+		-- 自动交互 / 自动拾取：扫当前房间的 prompt 和道具
+		local function dsAutoDoStep()
+			local rooms = dsRooms()
+			if not rooms or not getRoot() or not ds.RoomN then return end
+			local room
+			pcall(function() room = rooms:FindFirstChild(tostring(ds.RoomN)) end)
+			if not room then return end
+			local reach = ds.Reach
+			pcall(function()
+				for _, d in ipairs(room:GetDescendants()) do
+					if ds.AutoInteract then
+						local ok, isPrompt = pcall(function() return d:IsA("ProximityPrompt") end)
+						if ok and isPrompt and d.Enabled ~= false then
+							if dsDist(dsPartOf(d.Parent)) <= reach then dsFire(d) end
+						end
+					end
+					if ds.AutoPickup then
+						local ok, isTool = pcall(function() return d:IsA("Tool") or d:IsA("Model") end)
+						if ok and isTool and ITEMS[d.Name] then
+							dsTouch(dsPartOf(d) or d)
+						end
+					end
+				end
+			end)
+		end
+
+		-- 自动进门：把角色推到当前房间的门那儿（游戏自己会开）
+		local function dsAutoNextStep()
+			local rooms = dsRooms()
+			if not rooms or not ds.RoomN then return end
+			local room
+			pcall(function() room = rooms:FindFirstChild(tostring(ds.RoomN)) end)
+			local door = room and dsPartOf(room)
+			if door then dsTeleportTo(door, 3) end
+		end
+
+		local function dsAutoReviveStep()
+			local rs = dsRS()
+			if not rs then return end
+			local char = LocalPlayer.Character
+			local alive = false
+			if char then
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				alive = (hum ~= nil) and (hum.Health > 0)
+			end
+			if alive then return end
+			pcall(function()
+				local rf = rs:FindFirstChild("RemotesFolder")
+				local rev = rf and rf:FindFirstChild("Revive")
+				if rev then rev:FireServer() end
+			end)
+		end
+
+		-- ---------------- 对外动作（界面按钮调） ----------------
+		DsJumpToNumber = function(n)
+			local rooms = dsRooms()
+			if not rooms then return false end
+			local room
+			pcall(function() room = rooms:FindFirstChild(dsRoomKey(ds.Area, n)) end)
+			if not room then pcall(function() room = rooms:FindFirstChild(tostring(n)) end) end
+			if not room then return false end
+			local part = dsPartOf(room)
+			if not part then return false end
+			return dsTeleportTo(part, 4)
+		end
+
+		DsJumpRequest = function()
+			local n = ds.JumpTo or 1
+			if DsJumpToNumber(n) then
+				notify(string.format(L("dsTpDoor"), tostring(n)), C.Green)
+			else
+				notify(L("dsTpNoRoom"), C.Amber)
+			end
+		end
+
+		DsLobbyRequest = function(areaKey)
+			local rs = dsRS()
+			local ok = false
+			if rs then
+				pcall(function()
+					local rf = rs:FindFirstChild("RemotesFolder")
+					local lobby = rf and rf:FindFirstChild("Lobby")
+					if lobby then
+						lobby:FireServer()
+						ok = true
+					end
+				end)
+			end
+			if not ok then
+				notify(L("dsLobbyFail"), C.Red)
+			elseif areaKey then
+				notify(string.format(L("dsLobbyGo"), dsAreaName(areaKey)), C.Green)
+			else
+				notify(L("dsLobbyBack"), C.Green)
+			end
+		end
+
+		DsGoArea = function(key)
+			if key == "Lobby" then
+				DsLobbyRequest()
+				return
+			end
+			if key ~= ds.Area then
+				-- 游戏本身不提供跨楼层传送：回大厅，自己去坐对应的电梯
+				DsLobbyRequest(key)
+				return
+			end
+			if DsJumpToNumber(1) then
+				notify(string.format(L("dsTpDone"), dsAreaName(key)), C.Green)
+			else
+				notify(L("dsTpNoRoom"), C.Amber)
+			end
+		end
+
+		-- ---------------- 透视 ----------------
+		local function dsEspOff(part)
+			local e = ds.esps[part]
+			if not e then return end
+			ds.esps[part] = nil
+			if e.gui then pcall(function() e.gui:Destroy() end) end
+			if e.box then pcall(function() e.box:Destroy() end) end
+		end
+
+		local function dsEspSweep()
+			for part in pairs(ds.esps) do dsEspOff(part) end
+		end
+
+		local function dsEspSet(part, kind, text)
+			local col = ESP_COLOR[kind] or C.White
+			local e = ds.esps[part]
+			if not e then
+				local gui = new("BillboardGui", {
+					Name = "O_X_DS_ESP",
+					Size = UDim2.new(0, 160, 0, 16),
+					StudsOffset = Vector3.new(0, 2.6, 0),
+					AlwaysOnTop = true,
+					Adornee = part,
+					Parent = part,
+				})
+				local label = new("TextLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Text = text,
+					TextSize = 12,
+					Font = FONT_B,
+					TextColor3 = col,
+					TextStrokeTransparency = 0.3,
+					Parent = gui,
+				})
+				local box = new("BoxHandleAdornment", {
+					Name = "O_X_DS_BOX",
+					Adornee = part,
+					AlwaysOnTop = true,
+					ZIndex = 5,
+					Transparency = 0.55,
+					Color3 = col,
+					Size = ESP_SIZE[kind] or Vector3.new(3, 4, 3),
+					Parent = part,
+				})
+				ds.esps[part] = { gui = gui, label = label, box = box, kind = kind }
+				return
+			end
+			if e.kind ~= kind then
+				e.kind = kind
+				e.label.TextColor3 = col
+				e.box.Color3 = col
+				e.box.Size = ESP_SIZE[kind] or Vector3.new(3, 4, 3)
+			end
+			if e.label.Text ~= text then e.label.Text = text end
+		end
+
+		local function dsEspLabel(name, part)
+			if not ds.EspDist then return name end
+			local d = dsDist(part)
+			if d == math.huge then return name end
+			return string.format("%s  [%dm]", name, math.floor(d))
+		end
+
+		local function dsRefreshEsp()
+			local ws = game:GetService("Workspace")
+			local seen = {}
+			local function add(part, kind, name)
+				if not part or seen[part] then return end
+				if dsDist(part) > ds.EspRange then return end
+				seen[part] = true
+				dsEspSet(part, kind, dsEspLabel(name, part))
+			end
+
+			if ds.Esp then
+				pcall(function()
+					for _, obj in ipairs(ws:GetChildren()) do
+						if ALL_ENTS[obj.Name] then add(dsPartOf(obj), "ent", obj.Name) end
+					end
+				end)
+			end
+			if ds.EspDoor or ds.EspItem or ds.EspHide then
+				local rooms = dsRooms()
+				pcall(function()
+					if not rooms then return end
+					for _, room in ipairs(rooms:GetChildren()) do
+						for _, obj in ipairs(room:GetChildren()) do
+							local n = obj.Name
+							if ds.EspDoor and (n == "Door" or n == "RoomExit") then
+								add(dsPartOf(obj), "door", L("dsTDoor"))
+							elseif ds.EspItem and ITEMS[n] then
+								add(dsPartOf(obj), "item", n)
+							elseif ds.EspHide then
+								local isHide = (obj:FindFirstChild("HidePrompt") ~= nil)
+									or (obj:FindFirstChild("HidingPrompt") ~= nil)
+								if isHide then add(dsPartOf(obj), "hide", L("dsTHide")) end
+							end
+						end
+					end
+				end)
+			end
+
+			for part in pairs(ds.esps) do
+				if not seen[part] then dsEspOff(part) end
+			end
+		end
+
+		-- ---------------- 主循环 ----------------
+		local function dsStep()
+			if SHUTDOWN then return end
+			ds.run = ds.run + 1
+
+			-- 1) 区域 / 门号自动检测
+			local floor, room = dsFloorKey(), dsRoomNum()
+			if floor ~= ds.Area or room ~= ds.RoomN then
+				ds.Area, ds.RoomN = floor, room
+				ds.DoorN = dsDoorNum(floor, room)
+				dsRenderStatus()
+			end
+
+			-- 2) 移动类
+			if ds.Noclip then pcall(dsApplyNoclip) end
+			if ds.Bright then pcall(dsApplyBright) end
+
+			-- 3) 自动类
+			if ds.AutoHide then pcall(dsAutoHideStep) end
+			if ds.AutoInteract or ds.AutoPickup then pcall(dsAutoDoStep) end
+			if ds.AutoNext then pcall(dsAutoNextStep) end
+			if ds.AutoRevive then pcall(dsAutoReviveStep) end
+
+			-- 4) 透视（0.3s 一次，跟劫案一个思路：别每帧扫全树）
+			--    用 os.clock 而不是累加 dt —— 假时钟下才好测
+			local now = os.clock()
+			if now - ds.lastEsp >= 0.3 then
+				ds.lastEsp = now
+				if ds.Esp or ds.EspItem or ds.EspDoor or ds.EspHide then
+					pcall(dsRefreshEsp)
+				elseif next(ds.esps) then
+					pcall(dsEspSweep)
+				end
+			end
+		end
+
+		track(RunService.Heartbeat:Connect(dsStep))
+
+		-- 区域 / 门号一变就刷新（比轮询更及时，也让"自动检测"更明显）
+		track((function()
+			local gd = dsGameData()
+			local conns = {}
+			if gd then
+				for _, name in ipairs({ "Floor", "LatestRoom" }) do
+					pcall(function()
+						local v = gd:FindFirstChild(name)
+						if v and v.GetPropertyChangedSignal then
+							table.insert(conns, v:GetPropertyChangedSignal("Value"):Connect(function()
+								if SHUTDOWN then return end
+								ds.Area, ds.RoomN = dsFloorKey(), dsRoomNum()
+								ds.DoorN = dsDoorNum(ds.Area, ds.RoomN)
+								dsRenderStatus()
+							end))
+						end
+					end)
+				end
+			end
+			return {
+				Disconnect = function()
+					for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
+				end,
+			}
+		end)())
+
+		-- 复活之后把速度 / 跳跃重新按上去
+		track(LocalPlayer.CharacterAdded:Connect(function()
+			task.wait(1)
+			if SHUTDOWN then return end
+			ds.noclipped = {}
+			pcall(dsApplySpeed)
+		end))
+
+		-- ---------------- 打开 / 收起 / 关闭 ----------------
+		local dsPlaySplash = makeWindowSplash(dsWin, "DoorsSplash", L("srvDoors"), "srv_doors", R.win)
+
+		local dsReopen = new("TextButton", {
+			Name = "DoorsReopen",
+			Size = UDim2.new(0, 116, 0, 32),
+			Position = UDim2.new(0, 20, 0, 272),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			Visible = false,
+			Parent = guiMain,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dsReopen })
+		local dsReopenStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = dsReopen })
+		local dsReopenScale = new("UIScale", { Scale = 1, Parent = dsReopen })
+		bindHover(dsReopen, {
+			Stroke = dsReopenStroke, StrokeOn = C.Stroke2,
+			Scale = dsReopenScale, ScaleOn = 1.06,
+		})
+
+		do
+			local box = new("Frame", {
+				Size = UDim2.new(0, 20, 0, 20),
+				Position = UDim2.new(0, 7, 0.5, 0),
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundColor3 = C.Card2,
+				BorderSizePixel = 0,
+				ClipsDescendants = true,
+				Parent = dsReopen,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = box })
+			local a = getAsset("srv_doors")
+			if a then
+				new("ImageLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Image = a,
+					ScaleType = Enum.ScaleType.Crop,
+					Parent = box,
+				})
+			end
+		end
+		new("TextLabel", {
+			Size = UDim2.new(1, -34, 1, 0),
+			Position = UDim2.new(0, 32, 0, 0),
+			BackgroundTransparency = 1,
+			Text = L("srvDoors"),
+			TextSize = 12,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsReopen,
+		})
+
+		local dsReopenDragged = makeDraggable(dsReopen, dsReopen, nil, { threshold = 6, clamp = true })
+
+		local function dsHideWin()
+			dsWin.Visible = false
+			dsReopen.Visible = true
+			dsReopenScale.Scale = 0.4
+			tween(dsReopenScale, EASE.pop, { Scale = computeScale(DS_W, DS_H) })
+		end
+
+		openDoorsWindow = function()
+			if dsWin.Visible then return end
+			dsReopen.Visible = false
+			dsWin.Visible = true
+			dsScale.Scale = math.clamp(computeScale(DS_W, DS_H) * 0.9, 0.5, 1)
+			tween(dsScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+				{ Scale = computeScale(DS_W, DS_H) })
+			ds.Area, ds.RoomN = dsFloorKey(), dsRoomNum()
+			ds.DoorN = dsDoorNum(ds.Area, ds.RoomN)
+			dsRenderStatus()
+			dsPlaySplash()
+			task.spawn(function()
+				task.wait(0.05)
+				pcall(dsRefreshEsp)
+			end)
+		end
+
+		-- ✕ 只关窗口：功能状态留着（跟另外两个服务器窗口一个语义）
+		DsCloseRequest = function()
+			dsWin.Visible = false
+			dsReopen.Visible = false
+		end
+
+		-- 结束整个脚本时：停掉所有开关，还原被改过的属性
+		dsCleanup = function()
+			ds.run = ds.run + 1
+			ds.Esp, ds.EspItem, ds.EspDoor, ds.EspHide = false, false, false, false
+			ds.AutoHide, ds.AutoInteract, ds.AutoPickup = false, false, false
+			ds.AutoNext, ds.AutoRevive = false, false
+			ds.Noclip, ds.Bright = false, false
+			ds.hideSpot, ds.hideOn = nil, false
+			pcall(dsEspSweep)
+			pcall(dsRestoreCollide)
+			pcall(dsApplyBright)
+			local hum = getHumanoid()
+			if hum then
+				pcall(function() hum.WalkSpeed = 16 end)
+				pcall(function()
+					hum.UseJumpPower = true
+					hum.JumpPower = 50
+				end)
+			end
+			dsWin.Visible = false
+			dsReopen.Visible = false
+		end
+
+		dsScale.Scale = computeScale(DS_W, DS_H)
+		dsReopenScale.Scale = dsScale.Scale
+
+		dsMinBtn.MouseButton1Click:Connect(function() dsHideWin() end)
+		dsCloseBtn.MouseButton1Click:Connect(function() DsCloseRequest() end)
+		dsReopen.MouseButton1Click:Connect(function()
+			if dsReopenDragged() then return end
+			openDoorsWindow()
+		end)
+
+		track(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+			task.wait(0.2)
+			if SHUTDOWN or not dsWin.Visible then return end
+			dsScale.Scale = computeScale(DS_W, DS_H)
+		end))
+	end
+
+	local dsOk, dsErr = pcall(dsBuild)
+	if not dsOk then
+		warn("[O_X HUB] DOORS 初始化失败:", tostring(dsErr))
+		pcall(function()
+			local errLabel = Instance.new("TextLabel")
+			errLabel.Name = "DoorsError"
+			errLabel.Size = UDim2.new(0, 400, 0, 100)
+			errLabel.Position = UDim2.new(0.5, -200, 0.5, -50)
+			errLabel.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+			errLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			errLabel.Text = "DOORS 脚本加载失败:\n" .. tostring(dsErr):sub(1, 200)
+			errLabel.TextSize = 14
+			errLabel.Parent = game:GetService("CoreGui")
+		end)
+	end
+
 	-- 快捷键
 	track(UserInputService.InputBegan:Connect(function(input, processed)
 		if SHUTDOWN or processed then return end
@@ -8783,6 +10547,7 @@ boot = function(lang)
 		-- 自动获胜还在跑的话先断掉，不然关掉之后它还会一直把你往出生点拉
 		pcall(function() SrvAutoWinRequest(false) end)
 		pcall(pdCleanup)
+		pcall(dsCleanup)
 		pcall(closeDenyModal)
 
 		-- 1. 停飞行。走缓降流程，别让玩家直接摔死
