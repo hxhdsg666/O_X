@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行 + 服务器脚本
---  Version : 2.0.0
+--  Version : 2.0.1
 --  Date    : 2026-10-02
 --
 --  用法（执行器里粘贴执行）：
@@ -13,6 +13,9 @@
 --    · 左侧是功能列表：主页 / 服务器 / 通用（速度·跳跃·重力）/ 飞行 / 设置
 --    · 服务器：自然灾害模拟器（传送 / 农场）+ 劫案（主游戏无脚本，进地图才解锁潜入 / 强攻）
 --      + DOORS（透视 / 自动 / 移动 / 地图，楼层自动检测，顶部页签是新版式）
+--      ⚠️ DOORS 是"大厅 6516141723 + 游戏内 6839171747"两个 place，两个都认
+--    · v2.0.1 修复：DOORS 认 place（大厅不再显示成酒店 / 进游戏不再被拦）、
+--      地图页改成跟服务器卡片同一条传送链；劫案的自瞄与自动完成（扫描节流 + 交互判据）
 --    · 设置页：联系作者（点一下复制邮箱）+ 语言切换（切换后脚本重启）
 --    · 主窗口、飞行窗口、悬浮图标都可以拖动移动
 --    · 飞行是独立窗口：－ 收成胶囊，✕ 只结束飞行
@@ -256,12 +259,12 @@ local LOCALES = {
 		dsMoveHint     = "速度和跳跃只改你自己的角色。穿墙关掉时会把所有部件的碰撞还原成 true。",
 
 		dsMapTitle     = "地图",
-		dsMapSub       = "自动检测当前楼层 · 全部区域都在这里",
+		dsMapSub       = "自动检测地点与楼层 · 跨服务器传送走的是服务器那套",
 		dsMapGo        = "传送",
 		dsMapJump      = "跳到门号",
 		dsMapJumpGo    = "传送到这扇门",
 		dsMapLobby     = "回大厅",
-		dsMapHint      = "跨楼层游戏本身不允许直接传送。点别的区域会先把你送回大厅，再坐对应的电梯。",
+		dsMapHint      = "大厅和游戏内是两个服务器，点「传送」就是一次真正的服务器传送（落地自动重跑脚本）。换楼层只能坐电梯。",
 		dsAreaDoors    = "%s 扇门",
 		dsAreaNoDoor   = "起点 / 没有门",
 
@@ -290,6 +293,15 @@ local LOCALES = {
 		dsLobbyBack    = "正在回大厅",
 		dsLobbyGo      = "正在回大厅  ·  到了坐「%s」的电梯",
 		dsLobbyFail    = "找不到大厅远程，这个版本可能改过名字",
+		dsPlaceId      = "place %s",
+		dsPlaceLobby   = "大厅",
+		dsPlaceLobbyD  = "从 Roblox 点进来的那个服务器，坐电梯开局",
+		dsPlaceGame    = "游戏内",
+		dsPlaceGameD   = "酒店 / 后门 / 矿洞 / 密室都在这一个服务器里",
+		dsCurFloor     = "当前楼层",
+		dsCurFloorFmt  = "%s  ·  门 %s",
+		dsAlreadyThere = "已经在「%s」了",
+		dsFloorSwitch  = "「%s」要坐电梯过去  ·  先送你回大厅",
 
 
 
@@ -587,12 +599,12 @@ local LOCALES = {
 		dsMoveHint     = "Speed and jump only affect your own character. Turning noclip off restores collisions on every part.",
 
 		dsMapTitle     = "Floors",
-		dsMapSub       = "Current floor auto-detected · every area listed",
+		dsMapSub       = "Place and floor auto-detected · cross-server travel uses the same chain as the server cards",
 		dsMapGo        = "Go",
 		dsMapJump      = "Jump to door",
 		dsMapJumpGo    = "Teleport to this door",
 		dsMapLobby     = "Back to lobby",
-		dsMapHint      = "The game does not allow cross-floor teleporting. Picking another floor sends you back to the lobby so you can take its elevator.",
+		dsMapHint      = "Lobby and In game are two separate servers; \"Go\" performs a real server teleport (the script re-runs on arrival). Floors can only be changed by elevator.",
 		dsAreaDoors    = "%s doors",
 		dsAreaNoDoor   = "Start / no doors",
 
@@ -621,6 +633,15 @@ local LOCALES = {
 		dsLobbyBack    = "Heading back to the lobby",
 		dsLobbyGo      = "Heading back to the lobby  ·  take the %s elevator there",
 		dsLobbyFail    = "Lobby remote not found, this build may have renamed it",
+		dsPlaceId      = "place %s",
+		dsPlaceLobby   = "Lobby",
+		dsPlaceLobbyD  = "The server you join from Roblox; take the elevator to start",
+		dsPlaceGame    = "In game",
+		dsPlaceGameD   = "Hotel / Backdoor / Mines / Rooms all live in this one server",
+		dsCurFloor     = "Floor",
+		dsCurFloorFmt  = "%s  ·  Door %s",
+		dsAlreadyThere = "Already in %s",
+		dsFloorSwitch  = "%s needs the elevator  ·  sending you back to the lobby",
 
 
 
@@ -719,7 +740,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v2.0.0",
+	Version = "v2.0.1",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -2298,16 +2319,43 @@ local function pdIsMain()
 end
 
 --========================== 服务器：DOORS ==========================
--- place 6516141723（DOORS 👁 by LSPLASH）。整款游戏只有这一个 place，
--- 所以这里的"地图"指楼层：ReplicatedStorage.GameData.Floor
--- （Hotel / Backdoor / Mines / Rooms / Retro / Party / Lobby）。
-local DS = { Place = 6516141723 }
+-- DOORS 👁（LSPLASH）是**两个 place**：
+--   6516141723 = 大厅（从 Roblox 点进来的那个，只有电梯 / 商店）
+--   6839171747 = 游戏内（所有楼层都在这一个 place 里）
+-- 楼层靠 ReplicatedStorage.GameData.Floor（Hotel / Backdoor / Mines / Rooms / Retro / Party）
+-- 区分，LatestRoom 是门号。⚠️ 只认大厅那个 ID 的话，一进游戏就会被拦在门外（实机踩过）。
+local DS = {
+	Lobby = 6516141723,
+	Game  = 6839171747,
+	-- 官方附属 place（语音房等），能进就说明在 DOORS 里
+	Extra = { 12308344607 },
+	-- GameData.Floor 可能出现的值（认新 place 时的白名单）
+	Floors = { Hotel = true, Backdoor = true, Mines = true, Rooms = true,
+		Retro = true, Party = true, Lobby = true, Fools = true },
+}
 
--- 在不在 DOORS 里
+-- 在不在 DOORS 里（两个 place + 附属 place 都算）
 local function dsInPlace()
 	local ok, pid = pcall(function() return game.PlaceId end)
 	if not ok or type(pid) ~= "number" then return false, nil end
-	return pid == DS.Place, pid
+	if pid == DS.Lobby or pid == DS.Game then return true, pid end
+	for _, id in ipairs(DS.Extra) do
+		if pid == id then return true, pid end
+	end
+	-- 兜底：官方以后加新 place（活动大厅之类）时也能认出来。
+	-- 判据卡得很死：GameData 下同时有 Floor(StringValue，值是已知楼层名) 和 LatestRoom(NumberValue)。
+	local ok2, has = pcall(function()
+		local rs = game:GetService("ReplicatedStorage")
+		local gd = rs:FindFirstChild("GameData")
+		if not gd then return false end
+		local fl = gd:FindFirstChild("Floor")
+		local lr = gd:FindFirstChild("LatestRoom")
+		if not (fl and lr) then return false end
+		if not fl:IsA("StringValue") or not lr:IsA("NumberValue") then return false end
+		return DS.Floors[tostring(fl.Value)] == true
+	end)
+	if ok2 and has then return true, pid end
+	return false, pid
 end
 
 --========================== 角色工具 ==========================
@@ -4366,7 +4414,8 @@ boot = function(lang)
 
 	addServerCard(1, L("srvNds"), 189707, "srv_nds")
 	addServerCard(2, L("srvHeist"), PD.Place, "srv_heist", pdInGame, function() openPdWindow() end)
-	addServerCard(3, L("srvDoors"), DS.Place, "srv_doors", dsInPlace, function() openDoorsWindow() end)
+	-- 卡片上写大厅那个 ID（从 Roblox 点进来的就是它）；真正的判定走 dsInPlace（两个 place 都认）
+	addServerCard(3, L("srvDoors"), DS.Lobby, "srv_doors", dsInPlace, function() openDoorsWindow() end)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, 0, 0, 16),
@@ -6560,7 +6609,7 @@ boot = function(lang)
 			carry = 0, key = nil, ammoOld = nil, ammoHooked = false,
 			lastKill = 0, lastYell = 0, lastReady = 0, lastBox = 0, lastAmmo = 0,
 			-- 第三轮：静默自瞄 / 贴脸交互 / 诊断（真脚本做法，见 _body2.lua 注释）
-			locked = nil, hit = nil, frozen = false, silentOrig = {},
+			locked = nil, hit = nil, frozen = false, silentOrig = {}, projCache = {},
 			silent = false, silentN = 0, gunN = 0, camOk = false, aimAt = 0,
 			promptN = 0, lootN = 0, enemyN = 0, diagAt = 0, err = nil, errAt = 0,
 			dcache = nil, dcAt = 0, killMiss = {}, voidSet = {}, voidPos = nil, voidN = 0, voidAt = 0, pinAt = 0, voidWarn = false, _ncHooked = false, aimFnCalls = 0, aimNoTarget = 0, aimNoPos = 0,
@@ -7380,10 +7429,13 @@ boot = function(lang)
 		local function pdScan()
 			local ps, cs, list, spots = {}, {}, {}, {}
 			local now = os.clock()
-			if not pd.dcache or now - pd.dcAt > 2.5 then
+			local stale = (not pd.dcache) or (now - pd.dcAt > 2.5)
+			if pd.dirty and (now - pd.dcAt > 0.8) then stale = true end
+			if stale then
 				local ok, d = pcall(function() return workspace:GetDescendants() end)
 				pd.dcache = ok and d or {}
 				pd.dcAt = now
+				pd.dirty = false
 			end
 			for _, d in ipairs(pd.dcache) do
 				if d:IsA("ProximityPrompt") then
@@ -7420,11 +7472,16 @@ boot = function(lang)
 			pd.spots, pd.promptN, pd.lootN, pd.enemyN = spots, #spots, lootN, enemyN
 		end
 
-		-- 树一变（新刷出的战利品 / 增援警卫 / 被消费的 prompt）立刻丢缓存：
-		-- 光靠 2.5 秒 TTL，新东西最慢要 2.5 秒才看得见，实机上就是"点了没反应"。
+		-- 树一变就打个"脏"标记 —— 但**不立刻丢缓存**。
+		-- 🔴 v2.0.1 修的关键 bug：之前是 DescendantAdded/Removing 直接 pd.dcache = nil，
+		--    可实机里子弹 / 弹壳 / 枪口火光每秒让这两个事件触发几十次，缓存等于永远失效，
+		--    于是每 0.4 秒就来一次 workspace:GetDescendants()（几万个实例）——
+		--    手机端直接卡成"点了没反应"，自瞄和自动完成都是被这个拖死的。
+		--    现在：脏了提前重扫，但最快 0.8 秒一次（新刷出的战利品照样 0.8 秒内看得见）。
 		pcall(function()
-			track(workspace.DescendantAdded:Connect(function() pd.dcache = nil end))
-			track(workspace.DescendantRemoving:Connect(function() pd.dcache = nil end))
+			local function pdDirty() pd.dirty = true end
+			track(workspace.DescendantAdded:Connect(pdDirty))
+			track(workspace.DescendantRemoving:Connect(pdDirty))
 		end)
 
 		-- ---------------- 透视：所有人 + 战利品，方框 + 名字，按类型分色 ----------------
@@ -7679,14 +7736,17 @@ boot = function(lang)
 			-- 兜底二：自己发两个远程（RealNotorietyLib 的 Lib.Interact，10 个脚本都用这条）
 			-- 传的是 prompt 本身（不是 item），服务器按 InteractList[prompt.Name].timer 计时
 			pdStatus.Text = "发远程... " .. tostring(p.Name)
+			local fired = false
 			local startR, compR = pdRemote("StartInteraction"), pdRemote("CompleteInteraction")
 			if startR then
-				pcall(function() startR:FireServer(p) end)
+				fired = pcall(function() startR:FireServer(p) end)
 				task.wait(0.12)
 				if compR then pcall(function() compR:FireServer(p) end) end
 				task.wait(0.2)
 			end
-			if part then pdUnsnap() end
+			-- 🔴 v2.0.1：解钉不再看 part 在不在 —— 钉住时角色是 Anchored + PlatformStand，
+			--    漏一次解钉，手机上就是"摇杆/触屏全废"（用户报的断触）。
+			pdUnsnap()
 			task.wait(0.12)
 			-- 还原 prompt 属性（关掉自动完成后手动互动还得用）
 			pcall(function()
@@ -7695,8 +7755,14 @@ boot = function(lang)
 				if origLOS ~= nil then p.RequiresLineOfSight = origLOS end
 				if origEnabled ~= nil then p.Enabled = origEnabled end
 			end)
-			-- 成功判据：收到 PromptTriggered，或者 prompt 没了/被关掉（服务器处理完就收走）
-			return (pd.hit ~= nil) or (p.Parent == nil) or (p.Enabled == false)
+			-- 返回值：confirmed（真成了） / soft（远程发出去了但没等到确认）
+			--   ① 收到 PromptTriggered（本地按下去那条路径）
+			--   ② prompt 没了 / 被关掉（服务器处理完就收走）
+			--   ③ soft：劫案里战利品被拿走后 prompt 通常还留在原地，
+			--      老代码只看 ①② 就会判成"交互失败"，把目标永久拉黑 ——
+			--      实机症状就是"跑过去 → 交互失败 → 再跑过去 → 又失败"，一件都拿不到。
+			local confirmed = (pd.hit ~= nil) or (p.Parent == nil) or (p.Enabled == false)
+			return confirmed, fired
 		end
 
 		-- 手上/背包里的工具名（电锯、撬棍、卡这类都要靠名字丢出去）
@@ -7993,7 +8059,7 @@ boot = function(lang)
 		local function pdPick(cam)
 			local origin = cam.CFrame.Position
 			local look = cam.CFrame.LookVector
-			local best, bscore
+			local best, bscore, bang
 			for _, t in ipairs(pd.Items) do
 				local use = (t.kind == "enemy")
 					or (not pd.OnlyEnemy and t.kind ~= "me" and t.kind ~= "ally")
@@ -8010,13 +8076,18 @@ boot = function(lang)
 							if pd.Priority == "near" then score = d
 							elseif pd.Priority == "low" then score = t.hum.Health end
 							if ang > math.max(pd.Fov * 0.5, 8) then score = score + 100000 end
-							if not pdVisible(cam, t.model) then score = score + 5000 end
-							if not bscore or score < bscore then best, bscore = t, score end
+							-- 🔴 v2.0.1：可见性射线只对"有机会成为最佳目标"的那个做。
+							--    之前对每个 NPC 每帧都 raycast（20 个目标 = 每秒 1200 次），
+							--    实机直接掉帧，手感就是"自瞄卡卡的"。
+							if not bscore or score < bscore then
+								if not pdVisible(cam, t.model) then score = score + 5000 end
+								if not bscore or score < bscore then best, bscore, bang = t, score, ang end
+							end
 						end
 					end
 				end
 			end
-			return best
+			return best, bang
 		end
 
 		-- 自瞄落点（视觉锁）。真脚本的原文做法就是每帧直接写 Camera.CFrame：
@@ -8091,7 +8162,9 @@ boot = function(lang)
 				for _, x in pairs(v) do scan(x, depth + 1) end
 			end
 			if env then pcall(scan, env, 0) end
-			if #out == 0 then
+			-- getgc 很贵（大游戏能卡 100ms+），没找到东西时也最多 8 秒试一次
+			if #out == 0 and (not pd.gcAt or os.clock() - pd.gcAt > 8) then
+				pd.gcAt = os.clock()
 				local gc = ex("getgc")
 				if gc then
 					local ok, list = pcall(gc, true)
@@ -8158,7 +8231,13 @@ boot = function(lang)
 			end
 			local patched = 0
 			for _, st in ipairs(pdGunStates()) do
-				local tbl = pdProjectileTable(rawget(st, "shoot"))
+				local shoot = rawget(st, "shoot")
+				-- 每个 shoot 函数只反查一次子弹表（暴力遍历 upvalue 很贵，别每 2 秒重来一遍）
+				local tbl = pd.projCache[shoot]
+				if tbl == nil then
+					tbl = pdProjectileTable(shoot) or false
+					pd.projCache[shoot] = tbl
+				end
 				local orig = tbl and rawget(tbl, "new")
 				if tbl and type(orig) == "function" and not pd.silentOrig[tbl] then
 					pd.silentOrig[tbl] = orig
@@ -8241,7 +8320,7 @@ boot = function(lang)
 			pdStatus.Text = "移动中... " .. tostring((s.part and s.part.Name) or "?")
 			pdMoveTo(pos)
 			pdStatus.Text = "交互中... " .. tostring((s.part and s.part.Name) or "?")
-			local done = pdInteract(s.p, s.part or pdPartOf(s.p))
+			local done, soft = pdInteract(s.p, s.part or pdPartOf(s.p))
 			if done then
 				pd.Taken[s.p] = true
 				return true
@@ -8253,12 +8332,19 @@ boot = function(lang)
 					for _, name in ipairs(pdToolNames()) do
 						pcall(function() place:FireServer(name, CFrame.new(pos), s.part or s.p.Parent) end)
 						task.wait(1)
-						if pdInteract(s.p, s.part or pdPartOf(s.p)) then
+						local d2, s2 = pdInteract(s.p, s.part or pdPartOf(s.p))
+						if d2 then
 							pd.Taken[s.p] = true
 							return true, "equip:" .. name
 						end
+						soft = soft or s2
 					end
 				end
+			end
+			-- 远程确实发出去了、只是没等到确认：当"试过了"处理，别永久拉黑、也别刷"交互失败"
+			if soft then
+				pd.Taken[s.p] = true
+				return true, "soft"
 			end
 			pd.Bad[s.p] = true
 			notify("交互失败: " .. tostring((s.part and s.part.Name) or "?"), C.Amber)
@@ -8519,9 +8605,10 @@ boot = function(lang)
 			pd.aimFnCalls = (pd.aimFnCalls or 0) + 1
 			local cam = workspace.CurrentCamera
 			if not cam then return end
-			local target = pdPick(cam)
+			local target, ang = pdPick(cam)
 			if not target then
 				pd.locked = nil
+				pd.ang = nil
 				pd.aimNoTarget = (pd.aimNoTarget or 0) + 1
 				return
 			end
@@ -8532,9 +8619,12 @@ boot = function(lang)
 				return
 			end
 			pd.locked = pos                                       -- 静默自瞄改子弹方向用的就是它
+			pd.ang = ang or 0
 			-- v1.9.7：手机端不再检查 pdTouching —— 用户主动开了自瞄就是要锁。
 			pdApplyAim(cam, pos)
-			if pd.Fire and os.clock() - (pd.lastFire or 0) >= 0.08 then
+			-- 🔴 v2.0.1：自动开火要等视角真的压到目标上再扣扳机。
+			--    之前"锁上就开火"，跟随速度没拉满时相机还在半路，子弹全打偏 —— 手感就是"开了自动开火打不中"。
+			if pd.Fire and (pd.ang or 0) <= 6 and os.clock() - (pd.lastFire or 0) >= 0.08 then
 				pd.lastFire = os.clock()
 				pdFire()
 			end
@@ -8625,7 +8715,11 @@ boot = function(lang)
 			pdSafe(function()
 				if pd.Aim or pd.Fire then
 					if not pd.aimBound then pdAimBind() end
-					if not pd.silent and now - pd.aimAt >= 2 then
+					-- 🔴 v2.0.1：不再只在"没挂上"时重试。换局 / 重载武器模块会生成新的子弹表，
+					--    老代码挂上一次就再也不管了 → 静默自瞄在下一局悄悄失效。
+					--    pdSilent 对已经挂过的表是幂等的，定期重挂没成本（挂不上时慢一点重试）。
+					local gap = pd.silent and 2 or 3
+					if now - pd.aimAt >= gap then
 						pd.aimAt = now
 						pdSilent(true)
 					end
@@ -8864,7 +8958,8 @@ boot = function(lang)
 		local dsApplySpeed = function() end
 		local dsRestoreCollide = function() end
 		local dsRenderStatus = function() end
-		local DsGoArea = function() end
+		local DsGoPlace = function() end
+		local DsGoFloor = function() end
 		local DsJumpRequest = function() end
 		local DsJumpToNumber = function() end
 		local DsLobbyRequest = function() end
@@ -8896,6 +8991,14 @@ boot = function(lang)
 			Bottle = true, Shears = true, Candle = true, Battery = true, Shakelight = true,
 			Gold = true, Rift = true, Potion = true, Bread = true, Cracker = true, Cheese = true,
 		}
+
+		-- 两个 place（点「传送」= 真正的服务器式传送）
+		local DS_PLACES = {
+			{ key = "Lobby", place = DS.Lobby, name = "dsPlaceLobby", desc = "dsPlaceLobbyD" },
+			{ key = "Game",  place = DS.Game,  name = "dsPlaceGame",  desc = "dsPlaceGameD" },
+		}
+		-- 游戏内的楼层顺序（地图页那两排 pill）
+		local DS_FLOOR_ORDER = { "Hotel", "Backdoor", "Mines", "Rooms", "Retro", "Party" }
 
 		-- 全部区域（"记住全地图"）。doors = 该区域的门数上限，0 表示没有门。
 		local DS_AREAS = {
@@ -8948,6 +9051,24 @@ boot = function(lang)
 				return r and r.Value
 			end)
 			if ok and type(v) == "number" then return v end
+			return nil
+		end
+
+		-- 当前区域：在大厅 place 里就是"大厅"；在游戏里才看 Floor。
+		-- LatestRoom <= 0 = 还没开局（电梯里），也当大厅。
+		local function dsPid()
+			local ok, pid = pcall(function() return game.PlaceId end)
+			return (ok and type(pid) == "number") and pid or nil
+		end
+
+		local function dsAreaNow()
+			local pid = dsPid()
+			if pid == DS.Lobby then return "Lobby" end
+			local room = dsRoomNum()
+			if type(room) == "number" and room <= 0 then return "Lobby" end
+			local f = dsFloorKey()
+			if f then return f end
+			if pid == DS.Game then return "Hotel" end
 			return nil
 		end
 
@@ -9618,7 +9739,9 @@ boot = function(lang)
 			Parent = dsMovePage,
 		})
 
-		-- ---------------- 页面 4：地图（自动检测 + 全区域） ----------------
+		-- ---------------- 页面 4：地图（两个地点 + 楼层） ----------------
+		-- 这里跟"服务器卡片"是一条链：跨 place 就 queue-on-teleport + Teleport，
+		-- 同一个 place 里才谈得上"传到这层入口"。
 		local dsMapPage = dsAddPage("map")
 		new("TextLabel", {
 			Size = UDim2.new(1, 0, 0, 20),
@@ -9642,15 +9765,13 @@ boot = function(lang)
 			Parent = dsMapPage,
 		})
 
-		-- 区域卡片（2 列 × 4 行）：名字 + 门数 + 传送
-		local dsAreaRows = {}
-		for i, area in ipairs(DS_AREAS) do
-			local col = (i - 1) % 2
-			local row = math.floor((i - 1) / 2)
+		-- ① 两个地点：点「传送」= 真正的 place 传送（跟服务器卡片一模一样）
+		local dsPlaceRows = {}
+		for i, pl in ipairs(DS_PLACES) do
 			local card = new("Frame", {
-				Name = "Area_" .. area.key,
-				Size = UDim2.new(0, 236, 0, 52),
-				Position = UDim2.new(0, col * 244, 0, 40 + row * 58),
+				Name = "Place_" .. pl.key,
+				Size = UDim2.new(0, 236, 0, 64),
+				Position = UDim2.new(0, (i - 1) * 244, 0, 40),
 				BackgroundColor3 = C.Card,
 				BorderSizePixel = 0,
 				Parent = dsMapPage,
@@ -9661,8 +9782,8 @@ boot = function(lang)
 			local dot = new("Frame", {
 				Name = "Dot",
 				Size = UDim2.new(0, 6, 0, 6),
-				Position = UDim2.new(0, 14, 0, 14),
-				BackgroundColor3 = C.Accent,
+				Position = UDim2.new(0, 14, 0, 16),
+				BackgroundColor3 = C.Green,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Parent = card,
@@ -9670,11 +9791,11 @@ boot = function(lang)
 			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
 
 			new("TextLabel", {
-				Size = UDim2.new(1, -100, 0, 17),
-				Position = UDim2.new(0, 26, 0, 7),
+				Size = UDim2.new(1, -90, 0, 18),
+				Position = UDim2.new(0, 26, 0, 8),
 				BackgroundTransparency = 1,
-				Text = L("dsArea" .. area.key),
-				TextSize = 13,
+				Text = L(pl.name),
+				TextSize = 14,
 				Font = FONT_B,
 				TextColor3 = C.Text,
 				TextXAlignment = Enum.TextXAlignment.Left,
@@ -9683,13 +9804,22 @@ boot = function(lang)
 			local sub = new("TextLabel", {
 				Name = "Sub",
 				Size = UDim2.new(1, -30, 0, 14),
-				Position = UDim2.new(0, 26, 0, 26),
+				Position = UDim2.new(0, 26, 0, 28),
 				BackgroundTransparency = 1,
-				Text = area.doors > 0
-					and string.format(L("dsAreaDoors"), tostring(area.doors))
-					or L("dsAreaNoDoor"),
+				Text = string.format(L("dsPlaceId"), tostring(pl.place)),
 				TextSize = 10,
 				Font = FONT_M,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = card,
+			})
+			new("TextLabel", {
+				Size = UDim2.new(1, -30, 0, 14),
+				Position = UDim2.new(0, 26, 0, 44),
+				BackgroundTransparency = 1,
+				Text = L(pl.desc),
+				TextSize = 9,
+				Font = FONT_N,
 				TextColor3 = C.Dim,
 				TextXAlignment = Enum.TextXAlignment.Left,
 				Parent = card,
@@ -9698,8 +9828,7 @@ boot = function(lang)
 			local go = new("TextButton", {
 				Name = "Go",
 				Size = UDim2.new(0, 54, 0, 26),
-				Position = UDim2.new(1, -64, 0.5, 0),
-				AnchorPoint = Vector2.new(0, 0.5),
+				Position = UDim2.new(1, -64, 0, 8),
 				BackgroundColor3 = C.Card2,
 				BorderSizePixel = 0,
 				AutoButtonColor = false,
@@ -9716,17 +9845,88 @@ boot = function(lang)
 				Label = go, LabelOn = C.White,
 			})
 			bindPress(go, C.Accent)
-			go.MouseButton1Click:Connect(function() DsGoArea(area.key) end)
+			go.MouseButton1Click:Connect(function() DsGoPlace(pl.key) end)
 
-			dsAreaRows[area.key] = { stroke = stroke, dot = dot, sub = sub }
+			dsPlaceRows[pl.key] = { stroke = stroke, dot = dot, go = go }
 		end
 
-		dsRule(dsMapPage, 278)
+		dsRule(dsMapPage, 116)
+
+		-- ② 当前楼层
+		new("TextLabel", {
+			Size = UDim2.new(0, 70, 0, 16),
+			Position = UDim2.new(0, 0, 0, 126),
+			BackgroundTransparency = 1,
+			Text = L("dsCurFloor"),
+			TextSize = 12,
+			Font = FONT_N,
+			TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsMapPage,
+		})
+		local dsCurText = new("TextLabel", {
+			Name = "CurText",
+			Size = UDim2.new(1, -80, 0, 16),
+			Position = UDim2.new(0, 74, 0, 126),
+			BackgroundTransparency = 1,
+			Text = L("dsDetecting"),
+			TextSize = 12,
+			Font = FONT_M,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsMapPage,
+		})
+
+		-- ③ 楼层 pill（3 列 × 2 行）：在这一局里才点得动
+		local dsFloorRows = {}
+		for i, key in ipairs(DS_FLOOR_ORDER) do
+			local col = (i - 1) % 3
+			local row = math.floor((i - 1) / 3)
+			local btn = new("TextButton", {
+				Name = "Floor_" .. key,
+				Size = UDim2.new(0, 161, 0, 30),
+				Position = UDim2.new(0, col * 169, 0, 150 + row * 38),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = "",
+				Parent = dsMapPage,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = btn })
+			local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = btn })
+			local label = new("TextLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Text = L("dsArea" .. key),
+				TextSize = 12,
+				Font = FONT_N,
+				TextColor3 = C.Sub,
+				Parent = btn,
+			})
+			btn.MouseButton1Click:Connect(function() DsGoFloor(key) end)
+			btn.MouseEnter:Connect(function()
+				tween(btn, EASE.soft, { BackgroundColor3 = C.Card2 })
+				tween(label, EASE.soft, { TextColor3 = C.Text })
+			end)
+			btn.MouseLeave:Connect(function()
+				local on = (key == ds.Area)
+				tween(btn, EASE.soft, { BackgroundColor3 = on and C.Card2 or C.Card })
+				tween(label, EASE.soft, { TextColor3 = on and C.Text or C.Sub })
+			end)
+			dsFloorRows[key] = { btn = btn, stroke = stroke, label = label }
+		end
+
+		dsRule(dsMapPage, 232)
+
+		-- ④ 跳到门号（只在本层有意义）
+		dsSliderRow(dsMapPage, 242, L("dsMapJump"), 1, 1000, 1, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) ds.JumpTo = math.floor(v) end)
 
 		createButton(dsMapPage, {
 			Name = "JumpGo",
 			Size = UDim2.new(0, 148, 0, 30),
-			Position = UDim2.new(0, 0, 0, 288),
+			Position = UDim2.new(0, 0, 0, 296),
 			Text = L("dsMapJumpGo"),
 			TextSize = 12,
 			Style = "solid",
@@ -9735,20 +9935,16 @@ boot = function(lang)
 		createButton(dsMapPage, {
 			Name = "GoLobby",
 			Size = UDim2.new(0, 148, 0, 30),
-			Position = UDim2.new(0, 156, 0, 288),
+			Position = UDim2.new(0, 156, 0, 296),
 			Text = L("dsMapLobby"),
 			TextSize = 12,
 			Style = "ghost",
 			OnClick = function() DsLobbyRequest() end,
 		})
 
-		dsSliderRow(dsMapPage, 330, L("dsMapJump"), 1, 1000, 1, false, function(v)
-			return tostring(math.floor(v))
-		end, function(v) ds.JumpTo = math.floor(v) end)
-
 		new("TextLabel", {
 			Size = UDim2.new(1, 0, 0, 30),
-			Position = UDim2.new(0, 0, 0, 374),
+			Position = UDim2.new(0, 0, 0, 336),
 			BackgroundTransparency = 1,
 			Text = L("dsMapHint"),
 			TextSize = 10,
@@ -9773,6 +9969,8 @@ boot = function(lang)
 		-- ---------------- 状态显示（自动检测的可视化） ----------------
 		dsRenderStatus = function()
 			local area = ds.Area
+			local pid = dsPid()
+			local inLobby = (area == nil) or (area == "Lobby")
 			if not area then
 				dsChipDot.BackgroundColor3 = C.Dim
 				dsChipText.Text = L("dsChipIdle")
@@ -9780,16 +9978,35 @@ boot = function(lang)
 				dsChipStroke.Color = C.Stroke
 			else
 				dsChipDot.BackgroundColor3 = C.Green
-				dsChipText.Text = string.format(L("dsChipLive"),
-					dsAreaName(area), tostring(ds.DoorN or "?"))
+				dsChipText.Text = string.format(L("dsChipLive"), dsAreaName(area),
+					inLobby and "—" or tostring(ds.DoorN or "?"))
 				dsChipText.TextColor3 = C.Text
 				dsChipStroke.Color = C.Green
 			end
-			for key, r in pairs(dsAreaRows) do
-				local here = (key == area)
+
+			-- 当前地点：在大厅 place 就是大厅，否则就是游戏内
+			local herePlace = (pid == DS.Lobby) and "Lobby" or ((pid == DS.Game) and "Game" or nil)
+			for key, r in pairs(dsPlaceRows) do
+				local here = (key == herePlace)
 				tween(r.dot, EASE.soft, { BackgroundTransparency = here and 0 or 1 })
 				tween(r.stroke, EASE.soft, { Color = here and C.Accent or C.Stroke })
-				tween(r.sub, EASE.soft, { TextColor3 = here and C.Text or C.Dim })
+				tween(r.go, EASE.soft, { TextColor3 = here and C.Dim or C.Sub })
+			end
+
+			-- 当前楼层
+			for key, r in pairs(dsFloorRows) do
+				local here = (key == area)
+				tween(r.stroke, EASE.soft, { Color = here and C.Accent or C.Stroke })
+				tween(r.btn, EASE.soft, { BackgroundColor3 = here and C.Card2 or C.Card })
+				tween(r.label, EASE.soft, { TextColor3 = here and C.Text or C.Sub })
+			end
+			if dsCurText then
+				if inLobby then
+					dsCurText.Text = dsAreaName(area or "Lobby")
+				else
+					dsCurText.Text = string.format(L("dsCurFloorFmt"), dsAreaName(area),
+						tostring(ds.DoorN or "?"))
+				end
 			end
 		end
 
@@ -10050,14 +10267,29 @@ boot = function(lang)
 			end
 		end
 
-		DsGoArea = function(key)
-			if key == "Lobby" then
-				DsLobbyRequest()
+		-- 传送到某个 place —— 跟服务器卡片完全同一条链（排队重执行 + Teleport + 三层降级）
+		DsGoPlace = function(key)
+			local target = (key == "Lobby") and DS.Lobby or DS.Game
+			local pid = dsPid()
+			local name = L(key == "Lobby" and "dsPlaceLobby" or "dsPlaceGame")
+			if pid == target then
+				notify(string.format(L("dsAlreadyThere"), name), C.Amber)
+				return
+			end
+			joinPlace(target, L("srvDoors"))
+		end
+
+		-- 点楼层：不在游戏里就先传进游戏；已经在游戏里就传送到这层入口
+		DsGoFloor = function(key)
+			local pid = dsPid()
+			if pid ~= DS.Game then
+				DsGoPlace("Game")
 				return
 			end
 			if key ~= ds.Area then
-				-- 游戏本身不提供跨楼层传送：回大厅，自己去坐对应的电梯
-				DsLobbyRequest(key)
+				-- 游戏里换层只能坐电梯：把你送回大厅，在那儿选电梯
+				notify(string.format(L("dsFloorSwitch"), dsAreaName(key)), C.Amber)
+				DsLobbyRequest()
 				return
 			end
 			if DsJumpToNumber(1) then
@@ -10180,7 +10412,7 @@ boot = function(lang)
 			ds.run = ds.run + 1
 
 			-- 1) 区域 / 门号自动检测
-			local floor, room = dsFloorKey(), dsRoomNum()
+			local floor, room = dsAreaNow(), dsRoomNum()
 			if floor ~= ds.Area or room ~= ds.RoomN then
 				ds.Area, ds.RoomN = floor, room
 				ds.DoorN = dsDoorNum(floor, room)
@@ -10223,7 +10455,7 @@ boot = function(lang)
 						if v and v.GetPropertyChangedSignal then
 							table.insert(conns, v:GetPropertyChangedSignal("Value"):Connect(function()
 								if SHUTDOWN then return end
-								ds.Area, ds.RoomN = dsFloorKey(), dsRoomNum()
+								ds.Area, ds.RoomN = dsAreaNow(), dsRoomNum()
 								ds.DoorN = dsDoorNum(ds.Area, ds.RoomN)
 								dsRenderStatus()
 							end))
@@ -10318,7 +10550,7 @@ boot = function(lang)
 			dsScale.Scale = math.clamp(computeScale(DS_W, DS_H) * 0.9, 0.5, 1)
 			tween(dsScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 				{ Scale = computeScale(DS_W, DS_H) })
-			ds.Area, ds.RoomN = dsFloorKey(), dsRoomNum()
+			ds.Area, ds.RoomN = dsAreaNow(), dsRoomNum()
 			ds.DoorN = dsDoorNum(ds.Area, ds.RoomN)
 			dsRenderStatus()
 			dsPlaySplash()
