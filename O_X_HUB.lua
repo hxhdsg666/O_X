@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.9.3
+--  Version : 1.9.4
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -139,7 +139,7 @@ local LOCALES = {
 		pdCamerasD     = "打掉 Workspace.Cameras 里的所有摄像头（要执行器有 getconnections）",
 		pdCamNoKey     = "拿不到 RemoteKey，破摄像头这条走不通",
 		pdDiagS        = "交互 %s · 战利品 %s · 手上 %s 个包",
-		pdDiagA        = "武器表 %s · 静默 %s · 视角锁 %s",
+		pdDiagA        = "守卫 %s · 武器表 %s · 静默 %s · 视角锁 %s",
 		pdErrFmt       = "出错：%s",
 		pdNoLoot       = "扫到交互点但没认出战利品，先开箱或等它刷出来",
 		pdNoVan        = "找不到撤离点（BagSecuredArea），包丢不出去",
@@ -188,7 +188,7 @@ local LOCALES = {
 		pdInfAmmoOn    = "无限弹药已开启",
 		pdInfAmmoOff   = "无限弹药已关闭",
 		pdKillAll      = "全灭警察",
-		pdKillAllD     = "贴到守卫身上用近战远程打死，全图挨个来（服务端只查距离）",
+		pdKillAllD     = "贴到守卫身上用近战远程打死，全图挨个来；近战杀不掉的丢进远处小黑屋钉住（不再来回窜）",
 		pdKillDone     = "已清掉 %s 个守卫",
 		pdKillOn       = "全灭警察已开启",
 		pdKillOff      = "全灭警察已关闭",
@@ -204,6 +204,8 @@ local LOCALES = {
 		pdTAlly        = "队友",
 		pdTOther       = "NPC",
 		pdTLoot        = "战利品",
+		pdTSpot        = "交互点",
+		pdVoidHint     = "服务端不吃近战：杀不动的警卫已丢到远处小黑屋钉住，不再贴脸来回窜",
 
 
 
@@ -385,7 +387,7 @@ local LOCALES = {
 		pdCamerasD     = "Shoots down every camera in Workspace.Cameras (needs getconnections)",
 		pdCamNoKey     = "No RemoteKey, cannot break cameras",
 		pdDiagS        = "prompts %s · loot %s · bags %s",
-		pdDiagA        = "gun tables %s · silent %s · camlock %s",
+		pdDiagA        = "guards %s · gun tables %s · silent %s · camlock %s",
 		pdErrFmt       = "Error: %s",
 		pdNoLoot       = "Prompts found but no loot recognised yet, open crates first",
 		pdNoVan        = "No exfil point (BagSecuredArea), cannot stash bags",
@@ -434,7 +436,7 @@ local LOCALES = {
 		pdInfAmmoOn    = "Infinite ammo on",
 		pdInfAmmoOff   = "Infinite ammo off",
 		pdKillAll      = "Wipe the police",
-		pdKillAllD     = "Snaps onto each guard and melees them; server only checks distance",
+		pdKillAllD     = "Melee-snaps each guard across the map; guards shrugging melee get banished far away and pinned",
 		pdKillDone     = "Cleared %s guards",
 		pdKillOn       = "Police wipe on",
 		pdKillOff      = "Police wipe off",
@@ -450,6 +452,8 @@ local LOCALES = {
 		pdTAlly        = "teammate",
 		pdTOther       = "npc",
 		pdTLoot        = "loot",
+		pdTSpot        = "spot",
+		pdVoidHint     = "Melee refused: unkillable guards get banished far away and pinned instead of jittering",
 
 
 
@@ -548,7 +552,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.9.3",
+	Version = "v1.9.4",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -6341,13 +6345,15 @@ boot = function(lang)
 			-- 第三轮：静默自瞄 / 贴脸交互 / 诊断（真脚本做法，见 _body2.lua 注释）
 			locked = nil, hit = nil, frozen = false, silentOrig = {},
 			silent = false, silentN = 0, gunN = 0, camOk = false, aimAt = 0,
-			promptN = 0, lootN = 0, diagAt = 0, err = nil,
+			promptN = 0, lootN = 0, enemyN = 0, diagAt = 0, err = nil, errAt = 0,
+			dcache = nil, dcAt = 0, killMiss = {}, voidSet = {}, voidPos = nil, voidN = 0, voidAt = 0, pinAt = 0, voidWarn = false,
 		}
 		local pdAutoDoneLoop            -- 先声明：潜入页的开关要用它
 		local pdEspSweep                -- 透视收尾（多处要用）
 		local pdLobbyFarm               -- 大厅自动开图刷（主游戏页那个开关）
 		local pdSetAmmo                 -- 无限弹药的元表钩子（开关直接调用，见潜入/强攻页）
 		local pdSilent                  -- 静默自瞄开关（包装武器子弹表，强攻页调用）
+		local pdVan                     -- 撤离车/包点（先声明：body1 的 pdIsDeposit 要用）
 		local pdAimBind                 -- 自瞄的渲染步绑定（窗口开关时挂/摘）
 		local pdAimUnbind
 		local pdUnsnap                  -- 解钉（潜入页关掉自动完成时要用，见 _body2）
@@ -6858,7 +6864,10 @@ boot = function(lang)
 		end)
 		pdRow(pdAssault, 312, "KillAll", L("pdKillAll"), L("pdKillAllD"), false, function(v)
 			pd.KillAll = v
-			if not v then pd.killList, pd.killTarget, pd.killWarned, pd.killN = nil, nil, nil, 0 end
+			if not v then
+				pd.killList, pd.killTarget, pd.killWarned, pd.killN = nil, nil, nil, 0
+				pd.killMiss, pd.voidWarn = {}, false
+			end
 			notify(v and L("pdKillOn") or L("pdKillOff"), v and C.Green or C.Red)
 		end)
 
@@ -7073,7 +7082,8 @@ boot = function(lang)
 			pcall(function()
 				txt = tostring(p.ActionText or "") .. " " .. tostring(p.ObjectText or "")
 			end)
-			if pdNameHit(txt, { "grab", "steal", "take", "pick up", "loot", "rob", "collect" }) then
+			if pdNameHit(txt, { "grab", "steal", "take", "pick", "loot", "rob",
+				"collect", "carry", "lift", "pocket" }) then
 				return true
 			end
 			local node, depth = p, 0
@@ -7086,24 +7096,29 @@ boot = function(lang)
 			return false
 		end
 
-		-- 敌我识别：按文件夹认最稳（Police = 敌人，Citizens = 平民）
-		-- ponytail: 玩家一律当队友（Notoriety 是合作劫案）；真有 PvP 再按 Team 判。
+		-- 敌我识别：玩家一律队友 / 本人（Notoriety 是合作劫案）；剩下的按文件夹 + 名字认。
+		-- 实机反馈"是不是没识别警卫"：警卫可能不在 Police 文件夹（增援直接生在地上、
+		-- 不同地图文件夹改名），所以名字关键词也认：Guard / Cop / Police / SWAT / Officer…
+		local PD_KW = {
+			enemy = { "police", "guard", "cop", "security", "swat", "officer",
+				"sheriff", "tactical", "riot", "marine", "enemy", "hostile", "fbi", "agent" },
+			civ = { "citizen", "civilian", "hostage", "shopper", "pedestrian", "clerk" },
+			depV = { "secured", "unload", "drop off", "drop bags",
+				"put bags", "load bag", "get in", "enter van", "escape", "extract" },
+			depN = { "secured", "bagsecured", "van", "truck", "escape", "extract", "exit" },
+		}
 		local function pdKind(model)
+			local plr = Players:GetPlayerFromCharacter(model)
+			if plr then return (plr == LocalPlayer) and "me" or "ally" end
 			local node, depth = model, 0
 			while node and node ~= workspace and depth < 8 do
-				local n = node.Name
-				if n == "Police" or n == "Enemies" or n == "Security" then return "enemy" end
-				for _, f in ipairs(CIV_FOLDERS) do
-					if n == f then return "civ" end
-				end
+				local n = tostring(node.Name)
+				if pdNameHit(n, PD_KW.enemy) then return "enemy" end
+				if pdNameHit(n, PD_KW.civ) then return "civ" end
 				for _, f in ipairs(ALLY_FOLDERS) do
 					if n == f then return "ally" end
 				end
 				node, depth = node.Parent, depth + 1
-			end
-			local plr = Players:GetPlayerFromCharacter(model)
-			if plr then
-				return (plr == LocalPlayer) and "me" or "ally"
 			end
 			local nm = string.lower(tostring(model.Name))
 			for _, kw in ipairs(PD.AllyKw) do
@@ -7112,13 +7127,44 @@ boot = function(lang)
 			return "other"
 		end
 
+		-- 撤离 / 装车类交互点：绝不能当目标（上一版实机"一直传送到车上"就是
+		-- 装包 prompt 的文字 / 容器名带 bag·secured 被当成战利品，无限跑车）。
+		-- 丢包只走 ThrowBag 远程，不看 prompt。
+		local function pdIsDeposit(p)
+			local txt = ""
+			pcall(function()
+				txt = tostring(p.ActionText or "") .. " " .. tostring(p.ObjectText or "")
+			end)
+			if pdNameHit(txt, PD_KW.depV) then return true end
+			local node, depth = p, 0
+			while node and node ~= workspace and depth < 12 do
+				if pdNameHit(node.Name, PD_KW.depN) then return true end
+				node, depth = node.Parent, depth + 1
+			end
+			local pos = pdPos(p)
+			local van = pdVan and pdVan()
+			if pos and van then
+				local ok, d = pcall(function() return (pos - van.Position).Magnitude end)
+				if ok and d and d < 18 then return true end
+			end
+			return false
+		end
+
 		-- ---------------- 扫描：交互点 / 人物 ----------------
-		-- ponytail: 每 0.4 秒全树扫一次；地图大到卡帧就把间隔拉长或改 CollectionService 标签
+		-- 手机端实测：每 0.4 秒全树 GetDescendants() 明显掉帧（触屏发黏 = 用户说的"断触"），
+		-- 所以实例表缓存 2.5 秒才重取一次，0.4 秒只是重走这份缓存。
 		local function pdScan()
 			local ps, cs, list, spots = {}, {}, {}, {}
-			for _, d in ipairs(workspace:GetDescendants()) do
+			local now = os.clock()
+			if not pd.dcache or now - pd.dcAt > 2.5 then
+				local ok, d = pcall(function() return workspace:GetDescendants() end)
+				pd.dcache = ok and d or {}
+				pd.dcAt = now
+			end
+			for _, d in ipairs(pd.dcache) do
 				if d:IsA("ProximityPrompt") then
-					if d.Enabled ~= false then
+					-- dcache 是快照：prompt 被消费后 Parent=nil 但还在数组里，不剔掉就会反复当目标
+					if d.Parent and d.Enabled ~= false then
 						ps[#ps + 1] = d
 						-- 位置和"是不是战利品"一次算好（省得每轮重走祖先链）
 						local part, n = d.Parent, 0
@@ -7127,10 +7173,11 @@ boot = function(lang)
 						end
 						spots[#spots + 1] = {
 							p = d, part = part, pos = pdPos(d), loot = pdIsLoot(d),
+							dep = pdIsDeposit(d),
 						}
 					end
 				elseif d:IsA("ClickDetector") then
-					cs[#cs + 1] = d
+					if d.Parent then cs[#cs + 1] = d end
 				elseif d:IsA("Humanoid") then
 					local model = d.Parent
 					if model and d.Health > 0 then
@@ -7138,24 +7185,35 @@ boot = function(lang)
 					end
 				end
 			end
-			local lootN = 0
+			local lootN, enemyN = 0, 0
 			for _, s in ipairs(spots) do
-				if s.loot then lootN = lootN + 1 end
+				if s.loot and not s.dep then lootN = lootN + 1 end
+			end
+			for _, it in ipairs(list) do
+				if it.kind == "enemy" then enemyN = enemyN + 1 end
 			end
 			pd.prompts, pd.clicks, pd.Items = ps, cs, list
-			pd.spots, pd.promptN, pd.lootN = spots, #spots, lootN
+			pd.spots, pd.promptN, pd.lootN, pd.enemyN = spots, #spots, lootN, enemyN
 		end
+
+		-- 树一变（新刷出的战利品 / 增援警卫 / 被消费的 prompt）立刻丢缓存：
+		-- 光靠 2.5 秒 TTL，新东西最慢要 2.5 秒才看得见，实机上就是"点了没反应"。
+		pcall(function()
+			track(workspace.DescendantAdded:Connect(function() pd.dcache = nil end))
+			track(workspace.DescendantRemoving:Connect(function() pd.dcache = nil end))
+		end)
 
 		-- ---------------- 透视：所有人 + 战利品，方框 + 名字，按类型分色 ----------------
 		local ESP_COLOR = { enemy = C.Red, civ = C.Amber, ally = C.Green,
-			other = C.Sub, loot = C.White }
+			other = C.Sub, loot = C.White, spot = C.Dim }
 		local ESP_KEY = { enemy = "pdTEnemy", civ = "pdTCiv", ally = "pdTAlly",
-			other = "pdTOther", loot = "pdTLoot" }
+			other = "pdTOther", loot = "pdTLoot", spot = "pdTSpot" }
 		local ESP_BOX = { enemy = Vector3.new(3, 5.5, 2.2), civ = Vector3.new(3, 5.5, 2.2),
 			ally = Vector3.new(3, 5.5, 2.2), other = Vector3.new(3, 5.5, 2.2),
-			loot = Vector3.new(1.8, 1.8, 1.8) }
+			loot = Vector3.new(1.8, 1.8, 1.8), spot = Vector3.new(1.8, 1.8, 1.8) }
 
 		local function pdEspPart(inst)
+			if not inst then return nil end
 			if inst:IsA("BasePart") then return inst end
 			return inst:FindFirstChild("Head") or inst:FindFirstChild("HumanoidRootPart")
 				or inst.PrimaryPart or inst:FindFirstChildOfClass("Part")
@@ -7222,6 +7280,7 @@ boot = function(lang)
 			if kind == "civ" then return 2 end
 			if kind == "ally" then return 3 end
 			if kind == "loot" then return 4 end
+			if kind == "spot" then return 6 end
 			return 5
 		end
 
@@ -7235,12 +7294,19 @@ boot = function(lang)
 					end
 				end
 			end
-			if pd.LootEsp or pd.AutoDone then
+			if pd.LootEsp or pd.AutoDone or pd.AllPrompts then
+				-- 自动完成开着时把**所有**要跑的交互点都画出来（不然用户看着像"高亮没用"）：
+				-- 战利品白色，其它交互点暗灰；装包点不画。
 				for _, s in ipairs(pd.spots) do     -- pd.spots 扫描时已经算好挂 prompt 的部件；不再重算 loot
 					local part = s.part or pdEspPart(s.p.Parent)
-					if s.loot and part then
-						list[#list + 1] = { part = part, kind = "loot",
-							name = s.p.Name, rng = pd.LootRange }
+					if part and not s.dep then
+						if s.loot then
+							list[#list + 1] = { part = part, kind = "loot",
+								name = s.p.Name, rng = pd.LootRange }
+						elseif pd.AutoDone or pd.AllPrompts then
+							list[#list + 1] = { part = part, kind = "spot",
+								name = (s.part and s.part.Name) or s.p.Name, rng = pd.LootRange }
+						end
 					end
 				end
 			end
@@ -7509,6 +7575,43 @@ boot = function(lang)
 			end
 		end
 
+		-- 关禁闭（用户点名要的功能）：近战糊脸两秒都杀不掉的警卫 = 服务端根本不认
+		-- 这个远程，继续换着目标贴就是"在警卫附近窜来窜去"。改成整批扔到远处，
+		-- 心跳每 0.4 秒钉住一次（不是它网络所有权的主人挪不动就是挪不动，无害）。
+		local function pdVoidPut(model)
+			if pd.voidSet[model] then return end
+			local mine = getRoot()
+			if not mine then return end
+			if not pd.voidPos then
+				pd.voidPos = mine.Position + Vector3.new(1500, 400, 1500)
+			end
+			pd.voidN = pd.voidN + 1
+			pd.voidSet[model] = pd.voidN
+			if not pd.voidWarn then
+				pd.voidWarn = true
+				notify(L("pdVoidHint"), C.Amber)
+			end
+		end
+
+		local function pdVoidPin(now)
+			if not (pd.KillAll and pd.voidPos) then return end
+			if now - pd.pinAt < 0.4 then return end
+			pd.pinAt = now
+			for model, i in pairs(pd.voidSet) do
+				local keep = false
+				pcall(function()
+					local hrp = model:FindFirstChild("HumanoidRootPart")
+					local hum = model:FindFirstChildOfClass("Humanoid")
+					if hrp and (not hum or hum.Health > 0) then
+						keep = true
+						hrp.CFrame = CFrame.new(pd.voidPos
+							+ Vector3.new((i % 5) * 6, 0, math.floor(i / 5) * 6))
+					end
+				end)
+				if not keep then pd.voidSet[model] = nil end
+			end
+		end
+
 		local function pdKillStep(now)
 			if not pdRemote("MeleeDamage") and not pdRemote("Damage") then
 				if not pd.killWarned then pd.killWarned = true; notify(L("pdKillFail"), C.Amber) end
@@ -7528,7 +7631,8 @@ boot = function(lang)
 					pdScan()
 					local q = {}
 					for _, it in ipairs(pd.Items) do
-						if it.kind == "enemy" and it.hum and it.hum.Health > 0 then q[#q + 1] = it end
+						if it.kind == "enemy" and it.hum and it.hum.Health > 0
+							and not pd.voidSet[it.model] then q[#q + 1] = it end
 					end
 					pd.killList = q
 					if #q == 0 then
@@ -7543,7 +7647,14 @@ boot = function(lang)
 			if not t then return end
 			pdKillFire(t)
 			if now - (pd.killAt2 or now) > 1.5 then
-				if t.hum and t.hum.Health <= 0 then pd.killN = (pd.killN or 0) + 1 end
+				if t.hum and t.hum.Health <= 0 then
+					pd.killN = (pd.killN or 0) + 1
+				else
+					-- 贴脸两轮都杀不掉就不再碰它（窜来窜去的老毛病），扔小黑屋
+					local miss = (pd.killMiss[t.model] or 0) + 1
+					pd.killMiss[t.model] = miss
+					if miss >= 2 then pdVoidPut(t.model) end
+				end
 				pd.killTarget = nil
 			end
 		end
@@ -7647,10 +7758,13 @@ boot = function(lang)
 						local d = (pos - origin).Magnitude
 						local dir = d > 0.01 and (pos - origin).Unit or look
 						local ang = math.deg(math.acos(math.clamp(look:Dot(dir), -1, 1)))
-						if d <= pd.Range and ang <= pd.Fov * 0.5 and pdVisible(cam, t.model) then
+						-- 上一版 FOV 是硬门：目标不在锥里就压根不锁 → 实机"自瞄没反应"。
+						-- 现在锥内优先、锥外也只受自瞄范围限制慢慢转过去。
+						if d <= pd.Range and pdVisible(cam, t.model) then
 							local score = ang
 							if pd.Priority == "near" then score = d
 							elseif pd.Priority == "low" then score = t.hum.Health end
+							if ang > math.max(pd.Fov * 0.5, 8) then score = score + 100000 end
 							if not bscore or score < bscore then best, bscore = t, score end
 						end
 					end
@@ -7807,7 +7921,8 @@ boot = function(lang)
 		local function pdNearbySpot(pos, limit, wantLoot)
 			local best, bd
 			for _, s in ipairs(pd.spots) do
-				if s.pos and s.loot == wantLoot and not pd.Taken[s.p] and not pd.Bad[s.p] then
+				if s.pos and s.loot == wantLoot and not s.dep
+					and not pd.Taken[s.p] and not pd.Bad[s.p] then
 					local d = (s.pos - pos).Magnitude
 					if d <= limit and (not bd or d < bd) then best, bd = s, d end
 				end
@@ -7854,7 +7969,7 @@ boot = function(lang)
 			local origin = root.Position
 			local best, bs
 			for _, s in ipairs(pd.spots) do
-				if s.pos and not pd.Taken[s.p] and not pd.Bad[s.p] then
+				if s.pos and not s.dep and not pd.Taken[s.p] and not pd.Bad[s.p] then
 					if s.loot or pd.AllPrompts then
 						local score = (s.pos - origin).Magnitude + (s.loot and 0 or 5000)
 						if not bs or score < bs then best, bs = s, score end
@@ -7894,7 +8009,7 @@ boot = function(lang)
 			return pd.carry or 0
 		end
 
-		local function pdVan()
+		pdVan = function()
 			local area = pdChild(workspace, "BagSecuredArea", "SecuredArea", "EscapeArea")
 			if not area then return nil end
 			return area:FindFirstChild("FloorPart") or area.PrimaryPart
@@ -7946,8 +8061,12 @@ boot = function(lang)
 			end
 			local s = pdPickSpot()
 			if not s then
-				local van = pdVan()
-				if van then pdMoveTo(van.Position) end
+				-- 没目标：只有手上真有包才去车边丢包。空手也传送过去 = 用户报的
+				-- "一直传送到车上 也没拿战利品"（装包点被当战利品的循环）。
+				if pdBags() > 0 then
+					pdDumpBags()
+					return
+				end
 				if done == 0 then
 					pdStatus.Text = (pd.lootN == 0) and L("pdNoLoot") or L("pdNothing")
 					if not pd.warned then
@@ -8002,7 +8121,7 @@ boot = function(lang)
 				local ok, err = pcall(pdAutoDoneStep)
 				if not ok then
 					-- 出错不能把循环打断（断了就是"点了没反应"），写进诊断行接着跑
-					pd.err = tostring(err)
+					pd.err, pd.errAt = tostring(err), os.clock()
 					pdStatus.Text = string.format(L("pdErrFmt"), tostring(err):sub(1, 60))
 					task.wait(1)
 				end
@@ -8136,11 +8255,15 @@ boot = function(lang)
 		--    每段逻辑都用 pcall 兜住，出错写进 pd.err 显示在诊断行上，绝不把循环打断
 		--    （一旦断连，用户看到的就是"点了没反应"）。
 		local pdTicker = 0
+		-- 报错只在最近 12 秒内挂红：修好之后诊断行会自己恢复（不然一次瞬时报错永远挡住守卫数）
+		local function pdErrLive()
+			return pd.err and (os.clock() - (pd.errAt or 0) < 12)
+		end
 		local function pdDiagText()
-			if pd.err then return string.format(L("pdErrFmt"), tostring(pd.err):sub(1, 60)) end
+			if pdErrLive() then return string.format(L("pdErrFmt"), tostring(pd.err):sub(1, 90)) end
 			return string.format(L("pdDiagS"), tostring(pd.promptN), tostring(pd.lootN), tostring(pdBags()))
 				.. "   ·   "
-				.. string.format(L("pdDiagA"), tostring(pd.gunN),
+				.. string.format(L("pdDiagA"), tostring(pd.enemyN), tostring(pd.gunN),
 					pd.silent and "✓" or "✗", pd.camOk and "✓" or "✗")
 		end
 
@@ -8149,14 +8272,16 @@ boot = function(lang)
 			local txt = pdDiagText()
 			pdDiagStealth.Text = txt
 			if pdDiagAssault then pdDiagAssault.Text = txt end
-			local col = pd.err and C.Red or ((pd.silent or pd.camOk) and C.Green or C.Dim)
+			local col = pdErrLive() and C.Red or ((pd.silent or pd.camOk) and C.Green or C.Dim)
 			pdDiagStealth.TextColor3 = col
 			if pdDiagAssault then pdDiagAssault.TextColor3 = col end
 		end
 
 		local function pdSafe(fn)
 			local ok, err = pcall(fn)
-			if not ok then pd.err = tostring(err) end
+			if not ok then
+				pd.err, pd.errAt = tostring(err), os.clock()
+			end
 		end
 
 		-- PromptTriggered = 交互真的成了的信号（RealNotorietyLib.Lib.Interact 就靠它）
@@ -8219,6 +8344,7 @@ boot = function(lang)
 					pd.killAt = now
 					pdKillStep(now)
 				end
+				pdVoidPin(now)
 			end)
 			pdSafe(function()
 				if pd.Yell and now - pd.lastYell >= 2 then
