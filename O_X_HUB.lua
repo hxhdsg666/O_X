@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.9.4
+--  Version : 1.9.5
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -552,7 +552,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.9.4",
+	Version = "v1.9.5",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -6831,6 +6831,13 @@ boot = function(lang)
 				pcall(pdAimBind)                        -- 相机锁（排在游戏相机脚本之后写）
 				pcall(pdSilent, true)                   -- 子弹改道；武器表晚加载就靠心跳每 2 秒重试
 				if not pd.silent then notify(L("pdSilentFail"), C.Amber) end
+				-- 3 秒后诊断：没挂上 / 没认出敌人 / 武器表没找到
+				task.delay(3, function()
+					if not pd.Aim then return end
+					if not pd.aimBound then notify("自瞄挂不上：执行器可能拦了 RenderStep", C.Red) end
+					if (pd.enemyN or 0) == 0 then notify("没认出敌人：守卫文件夹名可能不在关键词表里", C.Amber) end
+					if pd.silentN == 0 then notify("静默自瞄没找到武器表：子弹不会跟准星", C.Amber) end
+				end)
 			elseif not pd.Fire then
 				pcall(pdAimUnbind)
 				pcall(pdSilent, false)
@@ -7422,6 +7429,14 @@ boot = function(lang)
 		local function pdInteract(p, part)
 			if not p or not p.Parent then return false end
 			if part and not part.Parent then part = nil end
+			-- 保存原值（交互完还原，不然关掉自动完成后手动互动也废了）
+			local origDist, origHold, origLOS, origEnabled
+			pcall(function()
+				origDist = p.MaxActivationDistance
+				origHold = p.HoldDuration
+				origLOS = p.RequiresLineOfSight
+				origEnabled = p.Enabled
+			end)
 			pcall(function() p.MaxActivationDistance = 9999 end)
 			pcall(function() p.Enabled = true end)
 			pcall(function() p.RequiresLineOfSight = false end)
@@ -7444,17 +7459,23 @@ boot = function(lang)
 				task.wait(0.15)
 			end
 			-- 兜底二：自己发两个远程（RealNotorietyLib 的 Lib.Interact，10 个脚本都用这条）
-			-- 传的是"物品"（挂 prompt 的那个部件），远程按 InteractList[名字].timer 计时
-			local item = part or p.Parent or p
+			-- 传的是 prompt 本身（不是 item），服务器按 InteractList[prompt.Name].timer 计时
 			local startR, compR = pdRemote("StartInteraction"), pdRemote("CompleteInteraction")
 			if startR then
-				pcall(function() startR:FireServer(item) end)
+				pcall(function() startR:FireServer(p) end)
 				task.wait(0.12)
-				if compR then pcall(function() compR:FireServer(item) end) end
+				if compR then pcall(function() compR:FireServer(p) end) end
 				task.wait(0.2)
 			end
 			if part then pdUnsnap() end
 			task.wait(0.12)
+			-- 还原 prompt 属性（关掉自动完成后手动互动还得用）
+			pcall(function()
+				if origDist then p.MaxActivationDistance = origDist end
+				if origHold then p.HoldDuration = origHold end
+				if origLOS ~= nil then p.RequiresLineOfSight = origLOS end
+				if origEnabled ~= nil then p.Enabled = origEnabled end
+			end)
 			-- 成功判据：收到 PromptTriggered，或者 prompt 没了/被关掉（服务器处理完就收走）
 			return (pd.hit ~= nil) or (p.Parent == nil) or (p.Enabled == false)
 		end
@@ -7555,6 +7576,11 @@ boot = function(lang)
 			if not (hum and hum.Parent and model and model.Parent and hum.Health > 0) then return end
 			local root = hum.RootPart or model:FindFirstChild("HumanoidRootPart")
 			local mine = getRoot()
+			if not mine then
+				-- 角色没加载完（刚复活/传送中），等一帧再试
+				task.wait(0.2)
+				mine = getRoot()
+			end
 			if root and mine then
 				pcall(function() mine.CFrame = CFrame.new(root.Position, root.Position + root.CFrame.LookVector) end)
 			end
@@ -8053,6 +8079,13 @@ boot = function(lang)
 
 		-- 一步：扫 → 满了就去丢 → 挑目标 →（箱子里的话先开箱）→ 贴上去按
 		local function pdAutoDoneStep()
+			-- 用户原话："先把警卫给黑屋 然后再自动完成"
+			-- 如果 KillAll 开着且还有活警卫没处理完，先等它跑完
+			if pd.KillAll and pd.killList and #pd.killList > 0 then
+				pdStatus.Text = "等警卫清完..."
+				task.wait(0.5)
+				return
+			end
 			pdScan()
 			if pd.Cameras then pdCameras() end
 			if pdBags() >= pd.CarryMax then
