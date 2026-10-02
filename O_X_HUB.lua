@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.9.7
+--  Version : 1.9.8
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -552,7 +552,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.9.7",
+	Version = "v1.9.8",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -6346,7 +6346,7 @@ boot = function(lang)
 			locked = nil, hit = nil, frozen = false, silentOrig = {},
 			silent = false, silentN = 0, gunN = 0, camOk = false, aimAt = 0,
 			promptN = 0, lootN = 0, enemyN = 0, diagAt = 0, err = nil, errAt = 0,
-			dcache = nil, dcAt = 0, killMiss = {}, voidSet = {}, voidPos = nil, voidN = 0, voidAt = 0, pinAt = 0, voidWarn = false, _ncHooked = false,
+			dcache = nil, dcAt = 0, killMiss = {}, voidSet = {}, voidPos = nil, voidN = 0, voidAt = 0, pinAt = 0, voidWarn = false, _ncHooked = false, aimFnCalls = 0, aimNoTarget = 0, aimNoPos = 0,
 		}
 		local pdAutoDoneLoop            -- 先声明：潜入页的开关要用它
 		local pdEspSweep                -- 透视收尾（多处要用）
@@ -7448,6 +7448,7 @@ boot = function(lang)
 				task.wait(0.25)                                  -- let server register position
 			end
 			pd.hit = nil
+			pdStatus.Text = "按 prompt... " .. tostring(p.Name)
 			local fx = ex("fireproximityprompt")
 			if fx then pcall(fx, p) end
 			pcall(function() p:InputHoldBegin() end)
@@ -7460,6 +7461,7 @@ boot = function(lang)
 			end
 			-- 兜底二：自己发两个远程（RealNotorietyLib 的 Lib.Interact，10 个脚本都用这条）
 			-- 传的是 prompt 本身（不是 item），服务器按 InteractList[prompt.Name].timer 计时
+			pdStatus.Text = "发远程... " .. tostring(p.Name)
 			local startR, compR = pdRemote("StartInteraction"), pdRemote("CompleteInteraction")
 			if startR then
 				pcall(function() startR:FireServer(p) end)
@@ -8019,7 +8021,9 @@ boot = function(lang)
 				pd.Bad[s.p] = true
 				return false, "nopos"
 			end
+			pdStatus.Text = "移动中... " .. tostring((s.part and s.part.Name) or "?")
 			pdMoveTo(pos)
+			pdStatus.Text = "交互中... " .. tostring((s.part and s.part.Name) or "?")
 			local done = pdInteract(s.p, s.part or pdPartOf(s.p))
 			if done then
 				pd.Taken[s.p] = true
@@ -8040,6 +8044,7 @@ boot = function(lang)
 				end
 			end
 			pd.Bad[s.p] = true
+			notify("交互失败: " .. tostring((s.part and s.part.Name) or "?"), C.Amber)
 			return false, "fail"
 		end
 
@@ -8177,10 +8182,12 @@ boot = function(lang)
 				-- （开箱、撬棍、放电锯、刷卡在游戏里都只是别的 ProximityPrompt，所以统一处理）
 				local box = pdNearbySpot(s.pos, 30, false)
 				if box then
-					pdStatus.Text = string.format(L("pdOpening"), tostring((box.part and box.part.Name) or "?"))
+					pdStatus.Text = "发现箱子: " .. tostring((box.part and box.part.Name) or "?") .. " → 去开"
 					pdRunSpot(box, true)                        -- allowEquip=true：开箱也能放撬棍/电锯/卡
 					pdScan()
 					s = pdPickSpot() or s
+				else
+					pdStatus.Text = "战利品无箱子: " .. tostring((s.part and s.part.Name) or "?")
 				end
 			end
 			pdStatus.Text = string.format(L("pdGoing"), tostring((s.part and s.part.Name) or "?"))
@@ -8292,16 +8299,19 @@ boot = function(lang)
 		local pdAimConn = nil
 		local pdAimFn = function()
 			if SHUTDOWN or not (pd.Aim or pd.Fire) then return end
+			pd.aimFnCalls = (pd.aimFnCalls or 0) + 1
 			local cam = workspace.CurrentCamera
 			if not cam then return end
 			local target = pdPick(cam)
 			if not target then
 				pd.locked = nil
+				pd.aimNoTarget = (pd.aimNoTarget or 0) + 1
 				return
 			end
 			local pos = pdAimPos(target.model)
 			if not pos then
 				pd.locked = nil
+				pd.aimNoPos = (pd.aimNoPos or 0) + 1
 				return
 			end
 			pd.locked = pos                                       -- 静默自瞄改子弹方向用的就是它
@@ -8351,10 +8361,18 @@ boot = function(lang)
 		end
 		local function pdDiagText()
 			if pdErrLive() then return string.format(L("pdErrFmt"), tostring(pd.err):sub(1, 90)) end
-			return string.format(L("pdDiagS"), tostring(pd.promptN), tostring(pd.lootN), tostring(pdBags()))
+			local base = string.format(L("pdDiagS"), tostring(pd.promptN), tostring(pd.lootN), tostring(pdBags()))
 				.. "   ·   "
 				.. string.format(L("pdDiagA"), tostring(pd.enemyN), tostring(pd.gunN),
 					pd.silent and "✓" or "✗", pd.camOk and "✓" or "✗")
+			-- v1.9.7: 实机诊断信息（只在 Aim/Fire 开启时显示）
+			if pd.Aim or pd.Fire then
+				local bound = pd.aimBound == "bind" and "B" or (pd.aimBound == "step" and "S" or "-")
+				local calls = tostring(pd.aimFnCalls or 0)
+				local locked = pd.locked and "✓" or "✗"
+				base = base .. " [" .. bound .. ":" .. calls .. ":" .. locked .. "]"
+			end
+			return base
 		end
 
 		local function pdDiagSweep()
