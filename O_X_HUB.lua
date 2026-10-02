@@ -9831,6 +9831,9 @@ boot = function(lang)
 			return ok and v or nil
 		end
 
+		-- 全亮的目标值：提出来只造一次，别每帧 fromRGB
+		local BRIGHT_AMBIENT = Color3.fromRGB(178, 178, 178)
+
 		dsApplyBright = function()
 			local lt = dsLighting()
 			if not lt then return end
@@ -9846,14 +9849,21 @@ boot = function(lang)
 						ds.brightSaved.GlobalShadows = lt.GlobalShadows
 					end)
 				end
-				pcall(function()
-					lt.Brightness = 2
-					lt.Ambient = Color3.fromRGB(178, 178, 178)
-					lt.OutdoorAmbient = Color3.fromRGB(178, 178, 178)
-					lt.FogEnd = 100000
-					lt.ClockTime = 14
-					lt.GlobalShadows = false
-				end)
+				-- 只在被游戏改回去时才重写 —— 每帧都写 6 个属性 + 造 Color3 太浪费
+				-- （真 Roblox 里 Color3 是按值比较的，所以 Ambient 漂了也能抓到；
+				--   mock 里每次 fromRGB 都是新表，比较恒不等 = 退回"每帧都写"，不影响断言）
+				if lt.Brightness ~= 2 or lt.FogEnd ~= 100000
+					or lt.GlobalShadows ~= false or lt.ClockTime ~= 14
+					or lt.Ambient ~= BRIGHT_AMBIENT then
+					pcall(function()
+						lt.Brightness = 2
+						lt.Ambient = BRIGHT_AMBIENT
+						lt.OutdoorAmbient = BRIGHT_AMBIENT
+						lt.FogEnd = 100000
+						lt.ClockTime = 14
+						lt.GlobalShadows = false
+					end)
+				end
 			elseif ds.brightSaved then
 				local s = ds.brightSaved
 				pcall(function()
