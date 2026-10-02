@@ -8524,7 +8524,22 @@ boot = function(lang)
 		end))
 	end
 
-	pdBuild()
+	local pdOk, pdErr = pcall(pdBuild)
+	if not pdOk then
+		warn("[O_X HUB] Notoriety 初始化失败:", tostring(pdErr))
+		-- 在屏幕上显示错误，让用户能看到
+		pcall(function()
+			local errLabel = Instance.new("TextLabel")
+			errLabel.Name = "NotorietyError"
+			errLabel.Size = UDim2.new(0, 400, 0, 100)
+			errLabel.Position = UDim2.new(0.5, -200, 0.5, -50)
+			errLabel.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+			errLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			errLabel.Text = "Notoriety 脚本加载失败:\n" .. tostring(pdErr):sub(1, 200)
+			errLabel.TextSize = 14
+			errLabel.Parent = game:GetService("CoreGui")
+		end)
+	end
 
 	-- 快捷键
 	track(UserInputService.InputBegan:Connect(function(input, processed)
