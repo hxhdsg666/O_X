@@ -230,7 +230,7 @@ Roblox 挂着不动 20 分钟会把你踢出去。开启后，游戏一触发 `L
 
 | 开关 / 滑块 | 说明 |
 | --- | --- |
-| NPC 自瞄 | 每帧算目标在屏幕上的偏移，用 `mousemoverel` 推鼠标 —— **准星真的动**，子弹跟着准星走（游戏是第一人称，转视角不改枪口就是这个原因）。`mousemoverel` 拿不到时才退成 `mousemoveabs`，最后才是直接写相机 `CFrame` |
+| NPC 自瞄 | 每帧直接写 `Camera.CFrame`（跟随速度滑块控制 lerp 比例）—— **准星真的动**，子弹跟着准星走（游戏是第一人称，转视角不改枪口就是这个原因）。手机端没有 `mousemoverel`，所以走相机写入；PC 端执行器有 `mousemoverel` 时也能用 |
 | 自动开火 | `Tool:Activate()` → `mouse1click` → `VirtualUser`，依次降级 |
 | 只瞄敌人 | **默认开**。只锁 `Workspace.Police` 里的人；平民、队友、AI 补位的都不用管。玩家角色（`Players:GetPlayerFromCharacter`）永远不瞄 |
 | 锁头 | 默认开；关掉打身体 |
@@ -238,7 +238,7 @@ Roblox 挂着不动 20 分钟会把你踢出去。开启后，游戏一触发 `L
 | 全场透视 | 所有人 + 战利品都挂**名牌 + 方框**（`BillboardGui` + `BoxHandleAdornment`，都 `AlwaysOnTop`），按类型分色：**红 = 敌人，琥珀 = 平民，绿 = 队友，白 = 战利品**；没有 `Highlight` 那种 31 个的数量上限 |
 | 无限体力 | 体力一直拉满，跑图不喘 |
 | 无限弹药 | 拦 `Bullet` 远程把 `UseAmmo` 改成 `false`；执行器没有 `getrawmetatable` 时退成直接写角色弹药字段 |
-| 全灭警察 | 有 `RemoteKey` 就对每个守卫 `Damage:FireServer(...)`（不用贴脸）；没有就贴到身上用 `MeleeDamage` |
+| 全灭警察 | 队列式：贴到守卫身上（`CFrame` 过去 + 锚定）→ `MeleeDamage:FireServer(model, 999, 100)` ×2 → 有 `RemoteKey` 时补一发 `Damage:FireServer(...)` → 1.5 秒还没死就换下一个。心跳 0.12s 处理一个，全图挨个来 |
 | 优先目标 | 准星最近 / 距离最近 / 血量最低 |
 | 视场角 / 自瞄范围 / 跟随速度 | 10°~360° / 20~1000 / 20~100%（跟得越慢越像人手，越小越稳） |
 
