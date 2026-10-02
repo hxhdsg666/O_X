@@ -125,7 +125,7 @@ Roblox 挂着不动 20 分钟会把你踢出去。开启后，游戏一触发 `L
 | 服务器 | Place ID | 面板 |
 | --- | --- | --- |
 | 自然灾害模拟器 | `189707` | 传送 / 农场 |
-| 劫案 | `21532277` | 潜入 / 强攻 |
+| Notoriety | `21532277` | 潜入 / 强攻 |
 
 点卡片会打开一个**独立窗口**（和飞行窗口一个套路：顶栏可拖、`－` 收成悬浮胶囊、`✕` 关掉、
 打开时播一段开场动画）。窗口左边是分区，右边是内容。
@@ -174,61 +174,64 @@ Roblox 挂着不动 20 分钟会把你踢出去。开启后，游戏一触发 `L
 关掉开关就停。**关掉服务器窗口不会停**（不然挂机就白挂了）；
 但点主窗口 `✕` 结束整个脚本时会一起停掉。
 
-### 服务器脚本：劫案（place `21532277`）
+### 服务器脚本：Notoriety（place `21532277`）
 
-主游戏（大厅）里没有脚本，所以这个面板分两种形态：
+**Notoriety** 就是那款 Payday 风格的 Roblox 劫案游戏（主游戏 = 大厅，地图是同一 universe 下的其它 place）。
+脚本里用到的场景结构：
+
+| 东西 | 位置 |
+| --- | --- |
+| 敌人（警卫 / 警察） | `Workspace.Police` |
+| 平民 | `Workspace.Citizens` |
+| 战利品 | `Workspace.BigLoot`（老图是 `Workspace.Lootables`） |
+| 撤离点 | `Workspace.BagSecuredArea.FloorPart` |
+| 远程 | `ReplicatedStorage.RS_Package.Remotes`（`StartInteraction` / `CompleteInteraction` / `ThrowBag`） |
+
+> 这些名字来自社区里几个开源 Notoriety 脚本（DarkHub、rblxploit、JBR/RealNotorietyLib、notoriety-autowin），
+> 不是我猜的。游戏大更新改了文件夹名的话，脚本里都在 `pdChild(...)` / `pdRemote(name)` 里，改一处就行。
+
+面板分两种形态：
 
 | 你在哪 | 面板长什么样 |
 | --- | --- |
 | 主游戏（`game.PlaceId == 21532277`） | 只说「正在更新 / 主游戏暂无脚本」，左侧两个分区不出现 |
 | 任意劫案地图（同一个 universe 的其它 place） | 右上角显示「地图：珠宝店」，左侧出现 `潜入 / 强攻` |
 
-判定用 `game.GameId == 16680835`（Roblox 里同一个 universe 的所有 place 共用 `GameId`），
-所以在主游戏里注入、进地图之后照样能打开面板。
-
-地图名走 `MarketplaceService:GetProductInfo`；拿不到就查脚本里的 `PD.Maps` 表，再拿不到才显示
-`#placeId`：
-
-```lua
-local PD = {
-	Place  = 21532277,
-	Game   = 16680835,
-	Maps   = { [88880001] = "珠宝店" },   -- 光显示 #12345678 的地图就往这里补一条
-	...
-}
-```
-
-> 如果哪天这张地图被分到了**另一个 universe**（GameId 不一样），把它的 placeId 加进 `PD.Maps`
-> 也会照样放行。
+判定用 `game.GameId == 16680835`（同一个 universe 的所有 place 共用 `GameId`），所以在主游戏里注入、
+进地图之后照样能开面板。地图名走 `MarketplaceService:GetProductInfo`，拿不到就查 `PD.Maps`，
+再拿不到才显示 `#placeId`。
 
 **潜入**
 
 | 开关 / 滑块 | 说明 |
 | --- | --- |
-| 自动交互 | 自动触发附近的 `ProximityPrompt` / `ClickDetector`（按钮、保险箱、目标点这类） |
-| 交互范围 | 5 ~ 60 studs |
-| 目标高亮 | 给范围内能交互的东西描绿框，隔墙可见 |
-| 高亮范围 | 20 ~ 300 studs |
+| 自动完成 | 主流程：找战利品 → 过去 → 交互（`StartInteraction` / 按住 / `CompleteInteraction`）→ 瞬移到撤离点 → `ThrowBag` → 下一件，循环到没得拿 |
+| 自动交互 | 只在范围内顺手按附近所有 `ProximityPrompt` / `ClickDetector`（不走路线） |
+| 瞬移 | 开 = 直接 `CFrame` 过去；关 = 按下面的速度跑过去（参考脚本是 75 studs/s 的 tween，速度检测更友好） |
+| 目标高亮 | 给战利品 / 交互点挂白字名牌，隔墙可见 |
+| 交互范围 / 高亮范围 / 移动速度 | 5~80 / 20~600 / 20~300 |
 
-同一个目标 0.8 秒只会被触发一次，一帧最多碰 6 个 —— 别把远程调用打爆。
+- 面板右上角有实时进度「自动完成 · 已拿走 3 件」，每次拿一件还会弹一条提示条 —— 不会出现"点了没反应"
+- 同一件战利品只处理一次（弱键表记着），换图后自动清空
+- 交互最多重试 3 次：成功的话 prompt 会被销毁或 `Enabled = false`，那就提前结束
+- 只做「拿东西 + 送包」，不会自动点 Ready / 自动回大厅（那属于挂机刷，要的话说一声）
 
 **强攻**
 
 | 开关 / 滑块 | 说明 |
 | --- | --- |
-| NPC 自瞄 | 把镜头锁到视野里的敌人身上 |
-| 自动开火 | 锁定之后自动扣扳机 |
-| 忽略队友 / 己方 NPC | **默认开**。玩家角色永远不瞄；NPC 按名字关键词过滤（`ally` / `friend` / `crew` / `friendly` / `teammate` / `hostage` / `civilian`，在 `PD.AllyKw` 里改） |
+| NPC 自瞄 | 视角转到敌人身上 **同时**用执行器的鼠标函数把准星压到头上（`mousemoveabs` / `mousemoverel`）→ 子弹跟着准星走，跟手动瞄准一个路子，不是改射线 |
+| 自动开火 | `Tool:Activate()` → `mouse1click` → `VirtualUser`，依次降级 |
+| 只瞄敌人 | **默认开**。只锁 `Workspace.Police` 里的人；平民、队友、AI 补位的都不用管。玩家角色（`Players:GetPlayerFromCharacter`）永远不瞄 |
+| 锁头 | 默认开；关掉打身体 |
 | 隔墙也瞄 | 默认关 = 只瞄射线打得通的 |
-| NPC 透视 | 只给敌人描边，队友不描 |
+| 全场透视 | 所有人 + 战利品都挂名字，按类型分色：**红 = 敌人，琥珀 = 平民，绿 = 队友，白 = 战利品**；用 `BillboardGui`（`AlwaysOnTop`），没有 `Highlight` 那种 31 个的数量上限 |
 | 优先目标 | 准星最近 / 距离最近 / 血量最低 |
-| 视场角 | 10° ~ 360° |
-| 自瞄范围 | 20 ~ 1000 studs |
+| 视场角 / 自瞄范围 | 10°~360° / 20~1000（透视范围写死 600 studs） |
 
-- NPC 每 0.4 秒扫一次 `workspace`（`Humanoid` + `Health > 0`），自瞄只吃这份缓存 —— 地图大到卡帧就把间隔拉长
-- 自动开火三层降级：执行器 `mouse1click` → 官方 `Tool:Activate()` → `VirtualUser:Button1Down`
-- 描边用 `Highlight`，最多同时 30 个（超了引擎会自己丢）
-- **✕ 只关窗口**，潜入 / 强攻的状态继续跑（跟农场的道理一样）；点主窗口 `✕` 结束脚本时才会全停，并把留在场景里的描边收干净
+- NPC 每 0.4 秒扫一次 `workspace`（`Humanoid` + `Health > 0`），自瞄和透视都吃这份缓存
+- 鼠标被锁在屏幕中心的游戏（`MouseBehavior.LockCenter`）只转视角、不动鼠标，免得每帧抖
+- **✕ 只关窗口**，两个分区的状态继续跑；主窗口 `✕` 结束脚本时才全停，并把挂在场景里的透视清干净
 
 ### 飞行（独立窗口）
 独立小窗，顶栏可拖动：
@@ -286,7 +289,7 @@ local PD = {
 | `sfx_notify` | 提示音 | mp3, 8301 B |
 | `sfx_close` | 关闭音效 | mp3, 8377 B |
 | `srv_nds` | 自然灾害模拟器图标 | 128×128, 2214 B |
-| `srv_heist` | 劫案服务器图标 | 128×128, 2897 B |
+| `srv_heist` | Notoriety 服务器图标 | 128×128, 2897 B |
 | `sfx_deny` | 「不在对应服务器里」的音效 | mp3, 14061 B |
 
 执行器不支持文件 API 时会自动降级：图标变成代码画的 `O` 字 LOGO，国旗变成 `ZH` / `EN` 文字块，不会报错。
