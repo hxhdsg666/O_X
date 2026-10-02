@@ -177,6 +177,11 @@ Roblox 挂着不动 20 分钟会把你踢出去。开启后，游戏一触发 `L
 ### 服务器脚本：Notoriety（place `21532277`）
 
 **Notoriety** 就是那款 Payday 风格的 Roblox 劫案游戏（主游戏 = 大厅，地图是同一 universe 下的其它 place）。
+**v1.9.7 修复**（对照第二轮实机反馈）：
+- **自瞄终于能锁了** —— 三个根因全修：①`pdVisible` 不再做硬门（手机端相机贴墙 raycast 必败，之前目标被墙挡一下就完全不锁），现在只当加分项；②`pdTouching` 不再挡相机写入（手机端手指一直在屏幕上，之前相机压根不转）；③`BindToRenderStep` 优先级从 Camera+1 提到 Camera+5，盖过游戏自带相机脚本
+- **静默自瞄三层兜底** —— ①`getupvalue(shoot,28)` 标准路径 ②暴力遍历全部 upvalue + getgc 搜子弹表 ③`hookmetamethod(game,"__namecall")` 拦 `Bullet:FireServer` 改方向（Rivals 做法）
+- **开箱能放工具了** —— 自动完成里开箱/撬棍/刷卡那一步从 `allowEquip=false` 改成 `true`，之前只会空手按 prompt，现在会放撬棍/电锯/刷卡
+
 **v1.9.5 修复**（对照实机反馈）：
 - 自动完成真的能用了 —— StartInteraction / CompleteInteraction 远程参数从部件改成 prompt 本身（之前发错参数，服务器根本不认）
 - 关掉自动完成后手动互动恢复 —— 进交互前保存 prompt 原值，退出时还原
@@ -238,7 +243,7 @@ Roblox 挂着不动 20 分钟会把你踢出去。开启后，游戏一触发 `L
 
 | 开关 / 滑块 | 说明 |
 | --- | --- |
-| NPC 自瞄 | 每帧直接写 `Camera.CFrame`（跟随速度滑块控制 lerp 比例）—— **准星真的动**，子弹跟着准星走（游戏是第一人称，转视角不改枪口就是这个原因）。手机端没有 `mousemoverel`，所以走相机写入；PC 端执行器有 `mousemoverel` 时也能用 |
+| NPC 自瞄 | 每帧直接写 `Camera.CFrame`（跟随速度滑块控制 lerp 比例）—— **准星真的动**，子弹跟着准星走。静默自瞄三层兜底：①`getupvalue` 包子弹表 ②暴力搜全部 upvalue + getgc ③`hookmetamethod` 拦 `Bullet:FireServer` 改方向（参考 Rivals 做法）。可见性只做加分不做硬门，手机触屏不再挡相机 |
 | 自动开火 | `Tool:Activate()` → `mouse1click` → `VirtualUser`，依次降级 |
 | 只瞄敌人 | **默认开**。认人不再靠文件夹：名字 / 祖先带 Police·Guard·Cop·SWAT·Officer·Sheriff 等关键词就算敌人（**增援是直接刷在地上的，不在 `Police` 文件夹里**，上一版就是因此"瞄不到人"）；玩家角色（含 AI 补位 bot）永远是队友不瞄，平民不瞄 |
 | 锁头 | 默认开；关掉打身体 |
