@@ -1,6 +1,6 @@
 --=====================================================================
---  O_X HUB  ·  通用设置 + 飞行 + 服务器脚本
---  Version : 2.0.1
+--  O_X HUB  ·  通用设置 + 飞行 + 122 台游戏服务器
+--  Version : 3.0.0
 --  Date    : 2026-10-02
 --
 --  用法（执行器里粘贴执行）：
@@ -16,6 +16,9 @@
 --      ⚠️ DOORS 是"大厅 6516141723 + 游戏内 6839171747"两个 place，两个都认
 --    · v2.0.1 修复：DOORS 认 place（大厅不再显示成酒店 / 进游戏不再被拦）、
 --      地图页改成跟服务器卡片同一条传送链；劫案的自瞄与自动完成（扫描节流 + 交互判据）
+--    · v3.0.0：122 台游戏服务器（搜索 + 翻页 + 通用面板，每台 30+ 项功能）
+--      DOORS 扩到 40 项（自动交互不再按柜子 / 飞行 / 防拉回 / 无限跳 / 反摔伤…）
+--      大写键 = 已执行的服务器脚本清单，Tab = 回主页；主窗口放大到 560×440
 --    · 设置页：联系作者（点一下复制邮箱）+ 语言切换（切换后脚本重启）
 --    · 主窗口、飞行窗口、悬浮图标都可以拖动移动
 --    · 飞行是独立窗口：－ 收成胶囊，✕ 只结束飞行
@@ -293,6 +296,110 @@ local LOCALES = {
 		dsLobbyBack    = "正在回大厅",
 		dsLobbyGo      = "正在回大厅  ·  到了坐「%s」的电梯",
 		dsLobbyFail    = "找不到大厅远程，这个版本可能改过名字",
+		dsTabMisc      = "其他",
+		dsMiscTitle    = "其他",
+		dsMiscSub      = "记录点 / 视觉 / 重置",
+		dsEspPlr       = "玩家透视",
+		dsEspPlrD      = "同一局的其它玩家（绿）",
+		dsEspBox       = "显示方框",
+		dsEspBoxD      = "给透视目标套一个隔墙可见的框",
+		dsFly          = "飞行",
+		dsFlyD         = "官方摇杆 / WASD 控制，松手悬停",
+		dsAntiPull     = "防拉回",
+		dsAntiPullD    = "游戏把你瞬移走时拉回原位（一帧跳 120 studs 才算）",
+		dsInfJump      = "无限跳",
+		dsInfJumpD     = "空中也能再跳",
+		dsAntiAfk      = "防挂机",
+		dsAntiAfkD     = "不会被 20 分钟闲置踢出",
+		dsShield       = "反摔伤",
+		dsShieldD      = "速度回零，落地 / 撞击都不掉血",
+		dsNoFog        = "去雾",
+		dsNoFogD       = "雾拉远，远景不糊",
+		dsFov          = "视场角",
+		dsCamDist      = "相机距离",
+		dsGravity      = "重力",
+		dsSavePos      = "记录位置",
+		dsSavePosD     = "把现在站的地方记下来",
+		dsGotoSaved    = "回到记录点",
+		dsResetChar    = "重置角色",
+		dsNextDoor     = "跳过下一扇门",
+		dsNextDoorD    = "直接把你推到下一间的门前，游戏自己会开门",
+		dsNextDoorOk   = "已跳过一扇门",
+		dsSaved        = "位置已记录",
+		dsNoSaved      = "还没记录过位置 / 角色没加载",
+		dsTpDone2      = "已回到记录点",
+		-- 服务器搜索 / 清单 / 通用面板（v3.0.0）
+		srvSearchHint  = "搜游戏名 / 中文名 / Place ID（中英都行）",
+		srvCount       = "共 %s 台服务器  ·  搜到就能直接开",
+		srvPage        = "%s / %s 页",
+		srvPrev        = "上一页",
+		srvNext        = "下一页",
+		srvEmpty       = "没搜到，换个词试试（中英文都可以）",
+		srvHere        = "在此",
+		srvSpecial     = "专属面板",
+		srvGeneric     = "通用面板",
+		ranTitle       = "已执行的服务器脚本",
+		ranNow         = "当前 Place ID：%s",
+		ranNone        = "还没打开过任何服务器脚本",
+		ranHint        = "电脑：按 大写键 开关这张清单  ·  按 Tab 回脚本主页",
+		gmTitle        = "脚本面板",
+		gmTab_gen      = "通用",
+		gmTab_vis      = "视觉",
+		gmTab_plr      = "玩家",
+		gmTab_tp       = "传送",
+		gmFly          = "飞行",
+		gmFlyD         = "官方摇杆 / WASD 控制方向，松手悬停",
+		gmNoclip       = "穿墙",
+		gmNoclipD      = "角色不再碰撞，关掉立刻还原",
+		gmAntiPull     = "防拉回",
+		gmAntiPullD    = "游戏把你瞬移走时拉回原位（一帧跳 120 studs 才算）",
+		gmInfJump      = "无限跳",
+		gmInfJumpD     = "空中也能再跳",
+		gmAntiAfk      = "防挂机",
+		gmAntiAfkD     = "不会被 20 分钟闲置踢出",
+		gmShield       = "反摔伤",
+		gmShieldD      = "速度回零，落地 / 撞击都不掉血",
+		gmSpeed        = "移动速度",
+		gmJump         = "跳跃高度",
+		gmGravity      = "重力",
+		gmReset        = "重置角色",
+		gmResetDone    = "已重置角色",
+		gmEsp          = "玩家透视",
+		gmEspD         = "隔墙看到所有玩家",
+		gmEspName      = "显示名字",
+		gmEspDist      = "显示距离",
+		gmEspBox       = "显示方框",
+		gmEspRange     = "透视范围",
+		gmBright       = "全亮",
+		gmBrightD      = "把 Lighting 拉亮",
+		gmNoFog        = "去雾",
+		gmNoFogD       = "雾拉远，远景不糊",
+		gmFov          = "视场角",
+		gmCamDist      = "相机距离",
+		gmClock        = "时间",
+		gmPlayers      = "房间里的玩家",
+		gmNoPlayers    = "房间里只有你自己",
+		gmTpTo         = "传送",
+		gmFollow       = "跟随",
+		gmCopyName     = "复制",
+		gmSavePos      = "记录位置",
+		gmSavePosD     = "把现在站的地方记下来",
+		gmSpawn        = "回出生点",
+		gmSpawnD       = "传回地图的 SpawnLocation",
+		gmMouseTp      = "传送到鼠标指向",
+		gmTpHint       = "传送类操作只在开了「穿墙」或本身没碰撞时才稳；卡住就再点一次。",
+		gmTpDone       = "传送完成",
+		gmSaved        = "位置已记录",
+		gmNoSaved      = "角色还没加载，记录不了",
+		gmNoMouse      = "鼠标没指到地面",
+		gmFollowOn     = "正在跟随 %s",
+		gmFollowOff    = "已停止跟随",
+		gmCopied       = "名字已复制",
+		gmCopyFail     = "复制失败，请手动复制：%s",
+		gmOnFmt        = "%s已开启",
+		gmOffFmt       = "%s已关闭",
+		gmInGame       = "已在游戏内",
+		gmNotInGame    = "未在游戏内",
 		dsPlaceId      = "place %s",
 		dsPlaceLobby   = "大厅",
 		dsPlaceLobbyD  = "从 Roblox 点进来的那个服务器，坐电梯开局",
@@ -377,7 +484,7 @@ local LOCALES = {
 		sound        = "音效",
 		soundHint    = "关掉之后一点声音都没有",
 
-		welcome      = "欢迎使用 %s  ·  按 F 开关飞行",
+		welcome      = "欢迎使用 %s  ·  大写键看已执行的服务器脚本  ·  Tab 回主页",
 		closing      = "正在关闭...",
 		closed       = "已安全退出",
 		farewell     = "期待下次注入",
@@ -633,6 +740,110 @@ local LOCALES = {
 		dsLobbyBack    = "Heading back to the lobby",
 		dsLobbyGo      = "Heading back to the lobby  ·  take the %s elevator there",
 		dsLobbyFail    = "Lobby remote not found, this build may have renamed it",
+		dsTabMisc      = "More",
+		dsMiscTitle    = "More",
+		dsMiscSub      = "Waypoints / visuals / reset",
+		dsEspPlr       = "Player ESP",
+		dsEspPlrD      = "Other players in this run (green)",
+		dsEspBox       = "Show box",
+		dsEspBoxD      = "Draw a through-wall box on every ESP target",
+		dsFly          = "Fly",
+		dsFlyD         = "Joystick / WASD, hovers when you let go",
+		dsAntiPull     = "Anti pull",
+		dsAntiPullD    = "Snaps you back when the game teleports you (only on a 120 stud jump)",
+		dsInfJump      = "Infinite jump",
+		dsInfJumpD     = "Jump again mid-air",
+		dsAntiAfk      = "Anti AFK",
+		dsAntiAfkD     = "Never kicked for idling",
+		dsShield       = "Fall damage off",
+		dsShieldD      = "Velocity zeroed, no fall or impact damage",
+		dsNoFog        = "No fog",
+		dsNoFogD       = "Fog pushed back, distant view stays clear",
+		dsFov          = "Field of view",
+		dsCamDist      = "Camera distance",
+		dsGravity      = "Gravity",
+		dsSavePos      = "Save position",
+		dsSavePosD     = "Remember where you are standing",
+		dsGotoSaved    = "Back to waypoint",
+		dsResetChar    = "Reset character",
+		dsNextDoor     = "Skip to next door",
+		dsNextDoorD    = "Pushes you to the next door, the game opens it",
+		dsNextDoorOk   = "Skipped a door",
+		dsSaved        = "Position saved",
+		dsNoSaved      = "No waypoint yet / character not loaded",
+		dsTpDone2      = "Back at your waypoint",
+		-- server search / executed list / universal panel (v3.0.0)
+		srvSearchHint  = "Search name / Chinese name / Place ID",
+		srvCount       = "%s servers  ·  search and open",
+		srvPage        = "%s / %s",
+		srvPrev        = "Prev",
+		srvNext        = "Next",
+		srvEmpty       = "Nothing found, try another word (English or Chinese)",
+		srvHere        = "HERE",
+		srvSpecial     = "Dedicated",
+		srvGeneric     = "Universal",
+		ranTitle       = "Executed server scripts",
+		ranNow         = "Current Place ID: %s",
+		ranNone        = "No server script opened yet",
+		ranHint        = "PC: CapsLock toggles this list  ·  Tab goes back to home",
+		gmTitle        = "Script panel",
+		gmTab_gen      = "General",
+		gmTab_vis      = "Visuals",
+		gmTab_plr      = "Players",
+		gmTab_tp       = "Teleport",
+		gmFly          = "Fly",
+		gmFlyD         = "Joystick / WASD, hovers when you let go",
+		gmNoclip       = "Noclip",
+		gmNoclipD      = "No collisions, restored the moment you turn it off",
+		gmAntiPull     = "Anti pull",
+		gmAntiPullD    = "Snaps you back when the game teleports you (only on a 120 stud jump)",
+		gmInfJump      = "Infinite jump",
+		gmInfJumpD     = "Jump again mid-air",
+		gmAntiAfk      = "Anti AFK",
+		gmAntiAfkD     = "Never kicked for idling",
+		gmShield       = "Fall damage off",
+		gmShieldD      = "Velocity zeroed, no fall or impact damage",
+		gmSpeed        = "Walk speed",
+		gmJump         = "Jump power",
+		gmGravity      = "Gravity",
+		gmReset        = "Reset character",
+		gmResetDone    = "Character reset",
+		gmEsp          = "Player ESP",
+		gmEspD         = "See every player through walls",
+		gmEspName      = "Show name",
+		gmEspDist      = "Show distance",
+		gmEspBox       = "Show box",
+		gmEspRange     = "ESP range",
+		gmBright       = "Fullbright",
+		gmBrightD      = "Brightens Lighting",
+		gmNoFog        = "No fog",
+		gmNoFogD       = "Fog pushed back, distant view stays clear",
+		gmFov          = "Field of view",
+		gmCamDist      = "Camera distance",
+		gmClock        = "Time",
+		gmPlayers      = "Players in this server",
+		gmNoPlayers    = "You are the only one here",
+		gmTpTo         = "Teleport",
+		gmFollow       = "Follow",
+		gmCopyName     = "Copy",
+		gmSavePos      = "Save position",
+		gmSavePosD     = "Remember where you are standing",
+		gmSpawn        = "Back to spawn",
+		gmSpawnD       = "Teleport to the map's SpawnLocation",
+		gmMouseTp      = "Teleport to cursor",
+		gmTpHint       = "Teleports are only reliable with noclip on; click again if you get stuck.",
+		gmTpDone       = "Teleported",
+		gmSaved        = "Position saved",
+		gmNoSaved      = "Character not loaded, cannot save",
+		gmNoMouse      = "Cursor is not over anything",
+		gmFollowOn     = "Following %s",
+		gmFollowOff    = "Stopped following",
+		gmCopied       = "Name copied",
+		gmCopyFail     = "Copy failed, copy it manually: %s",
+		gmOnFmt        = "%s on",
+		gmOffFmt       = "%s off",
+		gmInGame       = "IN GAME",
+		gmNotInGame    = "NOT IN GAME",
 		dsPlaceId      = "place %s",
 		dsPlaceLobby   = "Lobby",
 		dsPlaceLobbyD  = "The server you join from Roblox; take the elevator to start",
@@ -712,7 +923,7 @@ local LOCALES = {
 		sound        = "Sound",
 		soundHint    = "Turn every notification silent",
 
-		welcome      = "Welcome to %s  ·  press F to fly",
+		welcome      = "Welcome to %s  ·  CapsLock lists executed servers  ·  Tab for home",
 		closing      = "Shutting down...",
 		closed       = "Session closed",
 		farewell     = "Until next injection",
@@ -740,7 +951,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v2.0.1",
+	Version = "v3.0.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -828,8 +1039,8 @@ local C = {
 	Red   = Color3.fromRGB(240, 88, 88),
 }
 
--- 圆角刻度：窗口 16 / 卡片 12 / 控件 10 / 胶囊
-local R = { win = 16, card = 12, ctl = 10, pill = 999 }
+-- 圆角刻度：窗口 20 / 卡片 14 / 控件 10 / 胶囊（v3.0.0 整体放大一档，更软更简约）
+local R = { win = 20, card = 14, ctl = 10, pill = 999 }
 
 -- 动效曲线：统一节奏，别到处现编 TweenInfo
 local EASE = {
@@ -2358,6 +2569,155 @@ local function dsInPlace()
 	return false, pid
 end
 
+--========================== 游戏服务器注册表 ==========================
+-- 122 个热门游戏，placeId 全部是从 GitHub 上的社区 hub 脚本里实抓的
+-- （97 个由 ≥2 个独立来源交叉验证一致，来源见 .workbuddy-ai/dev/refs/_gh/games_src.md）。
+--   k  = 内部 key（纯小写英文）
+--   en = 英文名   zh = 中文名（社区常见叫法，可能为空）
+--   p  = PlaceId  kw = 搜索关键词（中英混排，空格分隔）
+-- ⚠️ 游戏名不进语言包：zh 只在中文模式下显示，所以"英文模式无汉字"的断言天然成立。
+local GAMES = {
+	{ k="bloxfruits", en="Blox Fruits", zh="海贼王", p=2753915549, kw="blox fruits 海贼 one piece 恶魔果实 bf" },
+	{ k="brookhaven", en="Brookhaven RP", zh="布鲁克黑文", p=4924922222, kw="brookhaven 布鲁克黑文 rp 角色扮演" },
+	{ k="adoptme", en="Adopt Me!", zh="收养我", p=920587237, kw="adopt me 收养我 养宠物 adopt" },
+	{ k="mm2", en="Murder Mystery 2", zh="谋杀之谜2", p=142823291, kw="murder mystery 2 mm2 谋杀之谜 刀战" },
+	{ k="jailbreak", en="Jailbreak", zh="越狱", p=606849621, kw="jailbreak 越狱 抢银行 逃狱" },
+	{ k="beeswarm", en="Bee Swarm Simulator", zh="蜜蜂模拟器", p=1537690962, kw="bee swarm 蜜蜂模拟器 养蜂 bss" },
+	{ k="dahood", en="Da Hood", zh="街头帮派", p=2788229376, kw="da hood 街头 帮派 dahood" },
+	{ k="arsenal", en="Arsenal", zh="军火库", p=286090429, kw="arsenal 军火库 枪战 fps" },
+	{ k="towerofhell", en="Tower of Hell", zh="地狱塔", p=1962086868, kw="tower of hell 地狱塔 跳塔 toh" },
+	{ k="petsim99", en="Pet Simulator 99", zh="宠物模拟器99", p=8737899170, kw="pet simulator 99 宠物模拟器 养宠物 ps99" },
+	{ k="petsimx", en="Pet Simulator X", zh="宠物模拟器X", p=6284583030, kw="pet simulator x 宠物模拟器x 养宠物 psx" },
+	{ k="nds", en="Natural Disaster Survival", zh="自然灾害生存", p=189707, kw="natural disaster survival 自然灾害 灾难生存 nds" },
+	{ k="doors", en="DOORS", zh="门", p=6516141723, kw="doors 门 恐怖 躲怪" },
+	{ k="bladeball", en="Blade Ball", zh="刀球", p=13772394625, kw="blade ball 刀球 弹球对战 bb" },
+	{ k="piggy", en="Piggy", zh="猪猪", p=4623386862, kw="piggy 猪猪 小猪 恐怖" },
+	{ k="bedwars", en="BedWars", zh="起床战争", p=6872265039, kw="bedwars 起床战争 床战 bw" },
+	{ k="buildaboat", en="Build A Boat For Treasure", zh="造船寻宝", p=537413528, kw="build a boat 造船 寻宝 babft" },
+	{ k="plsdonate", en="PLS DONATE", zh="请捐赠", p=8737602449, kw="pls donate 捐赠 乞讨 募捐" },
+	{ k="ninjalegends", en="Ninja Legends", zh="忍者传奇", p=3956818381, kw="ninja legends 忍者传奇 忍者 刷怪" },
+	{ k="prisonlife", en="Prison Life", zh="监狱生活", p=155615604, kw="prison life 监狱生活 越狱 监狱" },
+	{ k="kinglegacy", en="King Legacy", zh="王者遗产", p=4520749081, kw="king legacy 海贼王 王者遗产 kl" },
+	{ k="tsb", en="The Strongest Battlegrounds", zh="最强战场", p=10449761463, kw="the strongest battlegrounds 最强战场 咒术回战 tsb" },
+	{ k="bloxburg", en="Welcome to Bloxburg", zh="欢迎来到布鲁克堡", p=185655149, kw="bloxburg 布鲁克堡 建房 模拟人生" },
+	{ k="lifetogether", en="LifeTogether RP", zh="同居生活", p=13967668166, kw="lifetogether 同居 rp 生活模拟" },
+	{ k="drivingempire", en="Driving Empire", zh="驾驶帝国", p=3351674303, kw="driving empire 驾驶帝国 赛车 开车" },
+	{ k="solsrng", en="Sol's RNG", zh="太阳抽卡", p=15532962292, kw="sol's rng sols rng 抽卡 运气 rng" },
+	{ k="dresstoimpress", en="Dress To Impress", zh="换装走秀", p=15101393044, kw="dress to impress 换装 走秀 时装" },
+	{ k="slapbattles", en="Slap Battles", zh="巴掌大战", p=6403373529, kw="slap battles 巴掌 打巴掌 sb" },
+	{ k="toilettd", en="Toilet Tower Defense", zh="马桶塔防", p=13775256536, kw="toilet tower defense 马桶塔防 ttd 塔防" },
+	{ k="fleethefacility", en="Flee the Facility", zh="逃离设施", p=893973440, kw="flee the facility 逃离设施 躲猫猫 ftf" },
+	{ k="workatpizza", en="Work at a Pizza Place", zh="披萨店打工", p=192800, kw="work at a pizza place 披萨店 打工 pizza" },
+	{ k="greenville", en="Greenville", zh="绿镇", p=891852901, kw="greenville 绿镇 开车 角色扮演" },
+	{ k="hideandseek", en="Hide and Seek Extreme", zh="捉迷藏", p=205224386, kw="hide and seek 捉迷藏 躲猫猫 hs" },
+	{ k="brokenbones", en="Broken Bones IV", zh="断骨4", p=2551991523, kw="broken bones 断骨 骨折 bb4" },
+	{ k="basketballlegends", en="Basketball Legends", zh="篮球传奇", p=14259168147, kw="basketball legends 篮球 打球 nba" },
+	{ k="wartycoon", en="War Tycoon", zh="战争大亨", p=4639625707, kw="war tycoon 战争大亨 军事 tycoon" },
+	{ k="musclelegends", en="Muscle Legends", zh="肌肉传奇", p=3623096087, kw="muscle legends 肌肉 健身 锻炼" },
+	{ k="meepcity", en="MeepCity", zh="米普城", p=370731277, kw="meepcity 米普城 钓鱼 社交" },
+	{ k="shindolife", en="Shindo Life", zh="新多人生", p=4616652839, kw="shindo life 火影 忍者 新多" },
+	{ k="funkyfriday", en="Funky Friday", zh="周五音游", p=6447798030, kw="funky friday 音游 节奏 fnf" },
+	{ k="evade", en="Evade", zh="逃离", p=9872472334, kw="evade 逃离 躲避 追逃" },
+	{ k="g3008", en="3008", zh="3008", p=2768379856, kw="3008 超市 恐怖 生存" },
+	{ k="erlc", en="Emergency Response: Liberty County", zh="紧急救援", p=2534724415, kw="emergency response 自由郡 警察 erlc" },
+	{ k="mvsd", en="Murderers VS Sheriffs Duels", zh="凶手对警长", p=12355337193, kw="murderers vs sheriffs 警长 凶手 枪战" },
+	{ k="flagwars", en="Flag Wars", zh="夺旗战争", p=3214114884, kw="flag wars 夺旗 枪战 fw" },
+	{ k="speedrun4", en="Speed Run 4", zh="极速奔跑4", p=183364845, kw="speed run 4 极速奔跑 跑酷 sr4" },
+	{ k="astd", en="All Star Tower Defense", zh="全明星塔防", p=4996049426, kw="all star tower defense 全明星塔防 塔防 astd" },
+	{ k="breakin2", en="Break In 2", zh="潜入2", p=13864661000, kw="break in 2 潜入 剧情 bi2" },
+	{ k="survivethekiller", en="Survive the Killer", zh="凶手求生", p=4580204640, kw="survive the killer 凶手 逃生 stk" },
+	{ k="breakin", en="Break In", zh="潜入", p=3851622790, kw="break in 潜入 剧情 故事" },
+	{ k="neighbors", en="Neighbors", zh="邻居", p=12699642568, kw="neighbors 邻居 语音 mic up" },
+	{ k="speeddraw", en="Speed Draw!", zh="极速画猜", p=7074772062, kw="speed draw 你画我猜 画画 draw" },
+	{ k="zombieattack", en="Zombie Attack", zh="僵尸来袭", p=1240123653, kw="zombie attack 僵尸 丧尸 生存" },
+	{ k="lumbertycoon2", en="Lumber Tycoon 2", zh="伐木大亨2", p=13822889, kw="lumber tycoon 2 伐木大亨 砍树 木材" },
+	{ k="luckyblocks", en="LUCKY BLOCKS Battlegrounds", zh="幸运方块战场", p=662417684, kw="lucky blocks 幸运方块 战场 lb" },
+	{ k="carcrushers2", en="Car Crushers 2", zh="汽车粉碎2", p=654732683, kw="car crushers 2 汽车粉碎 撞车 物理" },
+	{ k="marveldc", en="Marvel and DC Super Heroes", zh="漫威DC超级英雄", p=6132958612, kw="marvel and dc 漫威 超级英雄 dc" },
+	{ k="breakingpoint", en="Breaking Point", zh="临界点", p=648362523, kw="breaking point 临界点 枪战 心理" },
+	{ k="epicminigames", en="Epic Minigames", zh="史诗小游戏", p=277751860, kw="epic minigames 小游戏合集 迷你游戏 em" },
+	{ k="frontlines", en="FRONTLINES", zh="前线", p=5938036553, kw="frontlines 前线 射击 枪战" },
+	{ k="sharkbite2", en="SharkBite 2", zh="鲨鱼咬2", p=8908228901, kw="sharkbite 2 鲨鱼 生存 海" },
+	{ k="sharkbite", en="SharkBite Classic", zh="鲨鱼咬经典", p=734159876, kw="sharkbite 鲨鱼咬 鲨鱼 经典" },
+	{ k="bigpaintball2", en="BIG Paintball 2!", zh="彩弹大战2", p=9865958871, kw="big paintball 2 彩弹 枪战 bp2" },
+	{ k="peroxide", en="Peroxide", zh="死神", p=9096881148, kw="peroxide 死神 bleach bleach" },
+	{ k="stealabrainrot", en="Steal a Brainrot", zh="偷走脑腐", p=109983668079237, kw="steal a brainrot 脑腐 偷 brainrot" },
+	{ k="rivals", en="RIVALS", zh="对手", p=17625359962, kw="rivals 对手 枪战 竞技" },
+	{ k="gunfightarena", en="Gunfight Arena", zh="枪战竞技场", p=14518422161, kw="gunfight arena 枪战竞技场 fps 枪战" },
+	{ k="growagarden", en="Grow a Garden", zh="种花园", p=126884695634066, kw="grow a garden 种花园 种菜 gag" },
+	{ k="growagarden2", en="Grow a Garden 2", zh="种花园2", p=97598239454123, kw="grow a garden 2 种花园2 种菜 gag2" },
+	{ k="berryavenue", en="Berry Avenue RP", zh="莓果大道", p=8481844229, kw="berry avenue 莓果大道 rp 角色扮演" },
+	{ k="animefighters", en="Anime Fighters Simulator", zh="动漫斗士模拟器", p=6299805723, kw="anime fighters simulator 动漫斗士 火影 刷怪" },
+	{ k="rainbowfriends", en="Rainbow Friends", zh="彩虹朋友", p=7991339063, kw="rainbow friends 彩虹朋友 恐怖 躲怪" },
+	{ k="counterblox", en="Counter Blox", zh="反恐精英", p=301549746, kw="counter blox 反恐精英 cs 枪战" },
+	{ k="kat", en="KAT", zh="刀枪", p=621129760, kw="kat 刀枪 近战 knife" },
+	{ k="micup", en="Mic Up", zh="语音聊天", p=6884319169, kw="mic up 语音 聊天 开麦" },
+	{ k="vrhands", en="VR Hands", zh="VR双手", p=4832438542, kw="vr hands vr 双手 虚拟现实" },
+	{ k="fencing", en="Fencing", zh="击剑", p=12109643, kw="fencing 击剑 剑 对战" },
+	{ k="roghoul", en="Ro-Ghoul", zh="东京喰种", p=914010731, kw="ro-ghoul 东京喰种 喰种 食尸鬼" },
+	{ k="legendsofspeed", en="Legends Of Speed", zh="极速传奇", p=3101667897, kw="legends of speed 极速传奇 跑酷 竞速" },
+	{ k="chaos", en="CHAOS", zh="混乱", p=6441847031, kw="chaos 混乱 pvp 对战" },
+	{ k="baysidehigh", en="Bayside High School", zh="湾畔高中", p=12640491155, kw="bayside high school 高中 校园 rp" },
+	{ k="bigpaintball", en="BIG Paintball!", zh="彩弹大战", p=3527629287, kw="big paintball 彩弹 枪战 bp" },
+	{ k="roadtogrambys", en="Road to Grambys", zh="通往格兰比", p=5796917097, kw="road to grambys 格兰比 冒险 rpg" },
+	{ k="cursedsea", en="Cursed Sea", zh="诅咒之海", p=14426444782, kw="cursed sea 诅咒之海 海盗 航海" },
+	{ k="lifeinparadise", en="Life in Paradise", zh="天堂生活", p=1662219031, kw="life in paradise 天堂生活 rp 生活" },
+	{ k="adoptbaby", en="Adopt and Raise a Baby", zh="收养婴儿", p=383793228, kw="adopt and raise a baby 收养婴儿 带娃 养孩子" },
+	{ k="simonsays", en="Super Simon Says", zh="超级西蒙说", p=61846006, kw="super simon says 西蒙说 记忆 反应" },
+	{ k="lifesentence", en="Life Sentence", zh="终身监禁", p=13083893317, kw="life sentence 终身监禁 监狱 生存" },
+	{ k="colonysurvival", en="Colony Survival", zh="殖民地生存", p=14888386963, kw="colony survival 殖民地 生存 建设" },
+	{ k="redlightgreenlight", en="Red Light, Green Light", zh="红绿灯", p=7540891731, kw="red light green light 红绿灯 一二三木头人 鱿鱼游戏" },
+	{ k="guessthedrawing", en="Guess the Drawing!", zh="猜画", p=3281073759, kw="guess the drawing 猜画 你画我猜 画画" },
+	{ k="vrhangout", en="VR Hangout", zh="VR聚集地", p=8769714622, kw="vr hangout vr 聚集 社交" },
+	{ k="vrhandslegacy", en="VR Hands Legacy", zh="VR双手经典", p=16912831373, kw="vr hands legacy vr 双手 经典" },
+	{ k="liftingsim", en="Lifting Simulator", zh="举重模拟器", p=3652625463, kw="lifting simulator 举重 健身 力量" },
+	{ k="deathpenalty", en="Death Penalty", zh="死刑", p=15654981113, kw="death penalty 死刑 pvp 对战" },
+	{ k="gorillatag", en="Gorilla Tag Professional", zh="大猩猩标签", p=8690998110, kw="gorilla tag 大猩猩 vr 猩猩" },
+	{ k="catalogavatar", en="Catalog Avatar Creator", zh="虚拟形象编辑器", p=7041939546, kw="catalog avatar creator 捏脸 虚拟形象 换装" },
+	{ k="towerdefensesim", en="Tower Defense Simulator", zh="塔防模拟器", p=3260590327, kw="tower defense simulator 塔防模拟器 塔防 tds" },
+	{ k="deathball", en="Death Ball", zh="死亡球", p=15002061926, kw="death ball 死亡球 踢球 db" },
+	{ k="fruitbattlegrounds", en="Fruit Battlegrounds", zh="果实战场", p=9224601490, kw="fruit battlegrounds 果实战场 海贼 刷怪" },
+	{ k="livetopia", en="Livetopia", zh="生活小镇", p=6737970321, kw="livetopia 生活小镇 rp 社交" },
+	{ k="creaturesofsonaria", en="Creatures of Sonaria", zh="索纳里亚生物", p=5233782396, kw="creatures of sonaria 生物 怪兽 cos" },
+	{ k="dragonadventures", en="Dragon Adventures", zh="龙之冒险", p=3475397644, kw="dragon adventures 龙 养龙 冒险" },
+	{ k="metrolife", en="Metro Life", zh="都市生活", p=12985361032, kw="metro life 都市生活 城市 rp" },
+	{ k="gachaonline", en="Gacha Online", zh="扭蛋在线", p=5289509545, kw="gacha online 扭蛋 抽卡 gacha" },
+	{ k="armwrestle", en="Arm Wrestle Simulator", zh="掰手腕模拟器", p=13127800756, kw="arm wrestle simulator 掰手腕 力量 健身" },
+	{ k="escaperunninghead", en="Escape Running Head", zh="逃离大头", p=6205205961, kw="escape running head 大头 逃离 恐怖" },
+	{ k="colorordie", en="Color or Die", zh="不上色就死", p=12931609417, kw="color or die 上色 涂色 恐怖" },
+	{ k="cardealershiptycoon", en="Car Dealership Tycoon", zh="车行大亨", p=1554960397, kw="car dealership tycoon 车行 卖车 tycoon" },
+	{ k="vehiclelegends", en="Vehicle Legends", zh="载具传奇", p=4566572536, kw="vehicle legends 载具 赛车 车" },
+	{ k="elementalpowerstycoon", en="Elemental Powers Tycoon", zh="元素力量大亨", p=10253248401, kw="elemental powers tycoon 元素 大亨 魔法" },
+	{ k="restauranttycoon2", en="Restaurant Tycoon 2", zh="餐厅大亨2", p=3398014311, kw="restaurant tycoon 2 餐厅 经营 大亨" },
+	{ k="royalehigh", en="Royale High", zh="皇家高中", p=735030788, kw="royale high 皇家高中 换装 校园" },
+	{ k="megamansiontycoon", en="Mega Mansion Tycoon", zh="豪宅大亨", p=8328351891, kw="mega mansion tycoon 豪宅 大亨 建房" },
+	{ k="animedimensions", en="Anime Dimensions Simulator", zh="动漫次元模拟器", p=6938803436, kw="anime dimensions simulator 动漫次元 刷怪 ads" },
+	{ k="floorislava", en="The Floor Is LAVA!", zh="地板是岩浆", p=815405518, kw="the floor is lava 地板是岩浆 跑酷 岩浆" },
+	{ k="twilightdaycare", en="Twilight Daycare", zh="暮光托儿所", p=6507422231, kw="twilight daycare 托儿所 躲猫猫 恐怖" },
+	{ k="barrysprisonrun", en="Barry's Prison Run", zh="巴里越狱跑酷", p=8712817601, kw="barry's prison run 越狱跑酷 第一人称 obby" },
+	{ k="southwestflorida", en="Southwest Florida Beta", zh="西南佛罗里达", p=5104202731, kw="southwest florida 佛罗里达 rp 警察" },
+	{ k="southbronx", en="South Bronx: The Trenches", zh="南布朗克斯", p=10179538382, kw="south bronx 布朗克斯 街头 帮派" },
+	{ k="obbybike", en="Obby But You're On a Bike", zh="骑车跑酷", p=14184086618, kw="obby but you're on a bike 骑车 跑酷 obby" },
+	{ k="bluelockrivals", en="Blue Lock: Rivals", zh="蓝色监狱", p=18668065416, kw="blue lock rivals 蓝色监狱 足球 bluelock" },
+}
+
+-- 按 key 找一台服务器
+local function gameByKey(k)
+	for _, g in ipairs(GAMES) do
+		if g.k == k then return g end
+	end
+	return nil
+end
+
+-- 当前在不在这一台里（大厅 / 游戏内 place 都算；同 universe 也算 —— 劫案那种跨地图的）
+local function gameMatch(g)
+	local ok, pid, gid = pcall(function() return game.PlaceId, game.GameId end)
+	if not ok or type(pid) ~= "number" then return false, nil end
+	if pid == g.p then return true, pid end
+	if g.u and gid == g.u then return true, pid end
+	return false, pid
+end
+
 --========================== 角色工具 ==========================
 local function getRoot()
 	local char = LocalPlayer.Character
@@ -3638,7 +3998,7 @@ boot = function(lang)
 		return conn
 	end
 
-	local WIN_W, WIN_H   = 520, 380
+	local WIN_W, WIN_H   = 560, 440
 	local SIDEBAR_W      = 132
 	local HEADER_H       = 46
 
@@ -4006,6 +4366,14 @@ boot = function(lang)
 	local SrvCloseRequest = function() end
 	-- 劫案面板：窗口开关 + 关脚本时的清理（真正实现都在下面那个 do 块里）
 	local openPdWindow = function() end
+	-- 通用游戏面板（122 台共用一套引擎，第一次点开才建）
+	local gameBuild = function() end
+	local gameBuilt = false
+	local openGameWindow = function() end
+	local GameCloseRequest = function() end
+	local gameCleanup = function() end
+	-- 大写键那张"已执行的服务器脚本"清单
+	local toggleRanOverlay = function() end
 	local PdCloseRequest = function() end
 	local pdCleanup = function() end
 	-- DOORS 面板：窗口开关 + 关脚本时的清理（真正实现都在下面那个 dsBuild 里）
@@ -4258,176 +4626,513 @@ boot = function(lang)
 		Parent = home,
 	})
 
-	--========================== 服务器 ==========================
-	-- 跟主页一样是个 page（不新开窗口），右边列出可用的服务器脚本
-	local serversPage = addPage("servers")
-	addNav("servers", L("navServers"), 2)
+	-- 已执行过的服务器（大写键那张清单要用，所以放 do 块外面）
+	local ranServers = {}
 
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 22),
-		Position = UDim2.new(0, 0, 0, 2),
-		BackgroundTransparency = 1,
-		Text = L("srvTitle"),
-		TextSize = 17,
-		Font = FONT_B,
-		TextColor3 = C.Text,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = serversPage,
-	})
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0, 0, 0, 28),
-		BackgroundTransparency = 1,
-		Text = L("srvSub"),
-		TextSize = 11,
-		Font = FONT_N,
-		TextColor3 = C.Dim,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = serversPage,
-	})
-
-	-- 一张服务器卡：图标 + 名字 + Place ID + 打开
-	local srvList = new("Frame", {
-		Name = "ServerList",
-		Size = UDim2.new(1, 0, 1, -54),
-		Position = UDim2.new(0, 0, 0, 54),
-		BackgroundTransparency = 1,
-		Parent = serversPage,
-	})
-
-	local function addServerCard(order, name, placeId, assetKey, gate, openFn)
-		local y = (order - 1) * 78
-		local card = new("TextButton", {
-			Name = "SrvCard_" .. tostring(placeId),
-			Size = UDim2.new(1, 0, 0, 70),
-			Position = UDim2.new(0, 0, 0, y),
-			BackgroundColor3 = C.Card,
-			BorderSizePixel = 0,
-			AutoButtonColor = false,
-			Text = "",
-			ClipsDescendants = true,
-			Parent = srvList,
-		})
-		new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = card })
-		local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = card })
-
-		local iconBox = new("Frame", {
-			Size = UDim2.new(0, 46, 0, 46),
-			Position = UDim2.new(0, 14, 0.5, 0),
-			AnchorPoint = Vector2.new(0, 0.5),
-			BackgroundColor3 = C.Card2,
-			BorderSizePixel = 0,
-			ClipsDescendants = true,
-			Parent = card,
-		})
-		new("UICorner", { CornerRadius = UDim.new(0, 12), Parent = iconBox })
-		local iconAsset = getAsset(assetKey)
-		if iconAsset then
-			new("ImageLabel", {
-				Size = UDim2.fromScale(1, 1),
-				BackgroundTransparency = 1,
-				Image = iconAsset,
-				ScaleType = Enum.ScaleType.Crop,
-				Parent = iconBox,
-			})
-		end
-		new("UIStroke", { Color = C.Stroke2, Thickness = 1, Transparency = 0.5, Parent = iconBox })
+	do
+		--========================== 服务器 ==========================
+		-- 一台服务器一张卡（3 台精装 + 122 台通用），带搜索 + 翻页。
+		-- 搜索匹配：中文名 / 英文名 / key / PlaceId / 关键词，中英都能搜。
+		local serversPage = addPage("servers")
+		addNav("servers", L("navServers"), 2)
 
 		new("TextLabel", {
-			Size = UDim2.new(1, -150, 0, 20),
-			Position = UDim2.new(0, 74, 0, 14),
+			Size = UDim2.new(1, 0, 0, 18),
+			Position = UDim2.new(0, 0, 0, 0),
 			BackgroundTransparency = 1,
-			Text = name,
-			TextSize = 15,
+			Text = L("srvTitle"),
+			TextSize = 16,
 			Font = FONT_B,
 			TextColor3 = C.Text,
 			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = card,
+			Parent = serversPage,
 		})
-		new("TextLabel", {
-			Size = UDim2.new(1, -150, 0, 16),
-			Position = UDim2.new(0, 74, 0, 38),
+
+		-- 搜索框
+		local searchBox = new("TextBox", {
+			Name = "SrvSearch",
+			Size = UDim2.new(1, 0, 0, 32),
+			Position = UDim2.new(0, 0, 0, 20),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			Text = "",
+			PlaceholderText = L("srvSearchHint"),
+			PlaceholderColor3 = C.Dim,
+			TextSize = 12,
+			Font = FONT_N,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ClearTextOnFocus = false,
+			Parent = serversPage,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = searchBox })
+		local searchStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = searchBox })
+		new("UIPadding", { PaddingLeft = UDim.new(0, 12), Parent = searchBox })
+		pcall(function()
+			searchBox.Focused:Connect(function()
+				tween(searchStroke, EASE.soft, { Color = C.Accent })
+			end)
+			searchBox.FocusLost:Connect(function()
+				tween(searchStroke, EASE.soft, { Color = C.Stroke })
+			end)
+		end)
+
+		local countLabel = new("TextLabel", {
+			Name = "SrvCount",
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 56),
 			BackgroundTransparency = 1,
-			Text = "place " .. tostring(placeId),
-			TextSize = 11,
+			Text = "",
+			TextSize = 10,
 			Font = FONT_M,
 			TextColor3 = C.Dim,
 			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = card,
+			Parent = serversPage,
 		})
 
-		local pill = new("Frame", {
-			Size = UDim2.new(0, 64, 0, 28),
-			Position = UDim2.new(1, -78, 0.5, 0),
-			AnchorPoint = Vector2.new(0, 0.5),
-			BackgroundColor3 = C.Card2,
-			BorderSizePixel = 0,
-			Parent = card,
-		})
-		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = pill })
-		local pillStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = pill })
-		local pillText = new("TextLabel", {
-			Size = UDim2.fromScale(1, 1),
+		local srvList = new("Frame", {
+			Name = "SrvList",
+			Size = UDim2.new(1, 0, 1, -76 - 34),
+			Position = UDim2.new(0, 0, 0, 74),
 			BackgroundTransparency = 1,
-			Text = L("srvOpen"),
-			TextSize = 12,
-			Font = FONT_B,
-			TextColor3 = C.Sub,
-			Parent = pill,
+			Parent = serversPage,
 		})
 
-		card.MouseEnter:Connect(function()
-			tween(card, EASE.soft, { BackgroundColor3 = C.Card2 })
-			tween(stroke, EASE.soft, { Color = C.Accent })
-			tween(pill, EASE.soft, { BackgroundColor3 = C.Accent })
-			tween(pillStroke, EASE.soft, { Color = C.Accent })
-			tween(pillText, EASE.soft, { TextColor3 = C.White })
+		-- 翻页
+		local srvPage = 1
+		local renderServers = function() end
+		local function pagerBtn(name, x, anchor, text, onClick)
+			local b = new("TextButton", {
+				Name = name,
+				Size = UDim2.new(0, 68, 0, 26),
+				Position = UDim2.new(anchor, x, 1, -28),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = text,
+				TextSize = 11,
+				Font = FONT_B,
+				TextColor3 = C.Sub,
+				Parent = serversPage,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = b })
+			local st = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = b })
+			bindHover(b, { Bg = { C.Card, C.Card2 }, Stroke = st, StrokeOn = C.Stroke2,
+				Label = b, LabelOn = C.Text })
+			b.MouseButton1Click:Connect(onClick)
+			return b
+		end
+		local prevBtn = pagerBtn("SrvPrev", 0, 0, L("srvPrev"), function()
+			srvPage = srvPage - 1
+			renderServers()
 		end)
-		card.MouseLeave:Connect(function()
-			tween(card, EASE.soft, { BackgroundColor3 = C.Card })
-			tween(stroke, EASE.soft, { Color = C.Stroke })
-			tween(pill, EASE.soft, { BackgroundColor3 = C.Card2 })
-			tween(pillStroke, EASE.soft, { Color = C.Stroke })
-			tween(pillText, EASE.soft, { TextColor3 = C.Sub })
+		local nextBtn = pagerBtn("SrvNext", 0, 1, L("srvNext"), function()
+			srvPage = srvPage + 1
+			renderServers()
 		end)
-		bindPress(card, C.Accent)
-		-- 默认是"必须在同一个 place"；劫案那款游戏跨 place，传自己的判定进来
-		local open = openFn or function() openSrvWindow() end
-		card.MouseButton1Click:Connect(function()
-			-- 不在对应的服务器里就不给用：响一声 + 弹拦截窗
-			local okPlace, pid = (gate or inPlace)(placeId)
-			if not okPlace then
-				playSfx("sfx_deny", CONFIG.SoundDeny)
-				showDenyModal(
-					L("denyTitle"),
-					string.format(L("denyBody"), name),
-					string.format(L("denyNow"), tostring(pid or "?")),
-					placeId,
-					name
-				)
+		local pageLabel = new("TextLabel", {
+			Name = "SrvPageInfo",
+			Size = UDim2.new(0, 140, 0, 26),
+			Position = UDim2.new(0.5, -70, 1, -28),
+			BackgroundTransparency = 1,
+			Text = "",
+			TextSize = 11,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			Parent = serversPage,
+		})
+
+		-- ---------------- 清单 ----------------
+		-- 3 台精装（有专属面板）+ 122 台通用（共用一套引擎，每台 30 项功能）
+		local SERVERS = {}
+		SERVERS[#SERVERS + 1] = { k = "nds", name = L("srvNds"), p = 189707, tag = "special",
+			icon = "srv_nds", gate = inPlace, open = function() openSrvWindow() end }
+		SERVERS[#SERVERS + 1] = { k = "notoriety", name = L("srvHeist"), p = PD.Place, tag = "special",
+			icon = "srv_heist", gate = pdInGame, open = function() openPdWindow() end }
+		SERVERS[#SERVERS + 1] = { k = "doors", name = L("srvDoors"), p = DS.Lobby, tag = "special",
+			icon = "srv_doors", gate = dsInPlace, open = function() openDoorsWindow() end }
+		for _, g in ipairs(GAMES) do
+			if g.k ~= "nds" and g.k ~= "doors" then
+				SERVERS[#SERVERS + 1] = {
+					k = g.k, p = g.p, tag = "generic", g = g,
+					en = g.en, zh = g.zh, kw = g.kw,
+					name = (LANG == "zh" and g.zh ~= "" and g.zh) or g.en,
+				}
+			end
+		end
+
+		-- 这台服务器是不是"你正待着的那个"
+		local function srvHere(s)
+			if s.tag == "special" then
+				local ok = (s.gate or inPlace)(s.p)
+				return ok == true
+			end
+			return (gameMatch(s.g))
+		end
+
+		-- 搜索：中文名 / 英文名 / key / PlaceId / 关键词 —— 中英都能搜
+		local function srvMatch(s, q)
+			if q == "" then return true end
+			q = string.lower(q)
+			local hay = string.lower(table.concat({
+				tostring(s.name or ""), tostring(s.en or ""), tostring(s.zh or ""),
+				tostring(s.kw or ""), tostring(s.k or ""), tostring(s.p or ""),
+			}, " "))
+			return string.find(hay, q, 1, true) ~= nil
+		end
+
+		local srvRows = {}
+		local PER_PAGE = 6
+
+		local function srvIcon(parent, s)
+			local box = new("Frame", {
+				Name = "Icon",
+				Size = UDim2.new(0, 26, 0, 26),
+				Position = UDim2.new(0, 12, 0.5, 0),
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundColor3 = C.Card2,
+				BorderSizePixel = 0,
+				ClipsDescendants = true,
+				Parent = parent,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = box })
+			local img = s.icon and getAsset(s.icon)
+			if img then
+				new("ImageLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Image = img,
+					ScaleType = Enum.ScaleType.Crop,
+					Parent = box,
+				})
+			else
+				new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Rotation = 45,
+					Parent = box })
+				new("TextLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Text = string.upper(string.sub(s.en or s.name or "OX", 1, 2)),
+					TextSize = 10,
+					Font = FONT_M,
+					TextColor3 = C.White,
+					Parent = box,
+				})
+			end
+			return box
+		end
+
+		-- 打开一台：精装走专属面板（要过 PlaceId 闸），通用的懒建通用面板
+		local function srvOpen(s)
+			if s.tag == "special" then
+				local okPlace, pid = (s.gate or inPlace)(s.p)
+				if not okPlace then
+					playSfx("sfx_deny", CONFIG.SoundDeny)
+					showDenyModal(L("denyTitle"), string.format(L("denyBody"), s.name),
+						string.format(L("denyNow"), tostring(pid or "?")), s.p, s.name)
+					return
+				end
+				ranServers[s.k] = { name = s.name, p = s.p, at = os.time() }
+				s.open()
 				return
 			end
-			open()
+			ranServers[s.k] = { name = s.name, p = s.p, at = os.time() }
+			if not gameBuilt then gameBuild() end
+			openGameWindow(s.g)
+		end
+
+		local function srvRow(i, s)
+			local y = (i - 1) * 42
+			local here = srvHere(s)
+			local card = new("TextButton", {
+				Name = "Srv_" .. s.k,
+				Size = UDim2.new(1, 0, 0, 38),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundColor3 = here and C.Card2 or C.Card,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = "",
+				ClipsDescendants = true,
+				Parent = srvList,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = card })
+			local stroke = new("UIStroke", { Color = here and C.Accent or C.Stroke, Thickness = 1,
+				Parent = card })
+
+			srvIcon(card, s)
+
+			new("TextLabel", {
+				Size = UDim2.new(1, -190, 0, 16),
+				Position = UDim2.new(0, 48, 0, 5),
+				BackgroundTransparency = 1,
+				Text = s.name,
+				TextSize = 13,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = card,
+			})
+			new("TextLabel", {
+				Size = UDim2.new(1, -190, 0, 12),
+				Position = UDim2.new(0, 48, 0, 21),
+				BackgroundTransparency = 1,
+				Text = (s.tag == "special" and L("srvSpecial") or L("srvGeneric"))
+					.. "  ·  place " .. tostring(s.p),
+				TextSize = 9,
+				Font = FONT_M,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = card,
+			})
+
+			if here then
+				local tag = new("Frame", {
+					Name = "Here",
+					Size = UDim2.new(0, 46, 0, 18),
+					Position = UDim2.new(1, -58, 0.5, 0),
+					AnchorPoint = Vector2.new(0, 0.5),
+					BackgroundColor3 = C.Green,
+					BorderSizePixel = 0,
+					Parent = card,
+				})
+				new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = tag })
+				new("TextLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Text = L("srvHere"),
+					TextSize = 9,
+					Font = FONT_B,
+					TextColor3 = C.White,
+					Parent = tag,
+				})
+			else
+				new("TextLabel", {
+					Name = "Arrow",
+					Size = UDim2.new(0, 20, 0, 20),
+					Position = UDim2.new(1, -30, 0.5, 0),
+					AnchorPoint = Vector2.new(0, 0.5),
+					BackgroundTransparency = 1,
+					Text = "→",
+					TextSize = 13,
+					Font = FONT_B,
+					TextColor3 = C.Dim,
+					Parent = card,
+				})
+			end
+
+			card.MouseEnter:Connect(function()
+				tween(card, EASE.soft, { BackgroundColor3 = C.Card2 })
+				tween(stroke, EASE.soft, { Color = C.Accent })
+			end)
+			card.MouseLeave:Connect(function()
+				tween(card, EASE.soft, { BackgroundColor3 = here and C.Card2 or C.Card })
+				tween(stroke, EASE.soft, { Color = here and C.Accent or C.Stroke })
+			end)
+			bindPress(card, C.Accent)
+			card.MouseButton1Click:Connect(function() srvOpen(s) end)
+			return card
+		end
+
+		renderServers = function()
+			for _, r in ipairs(srvRows) do
+				pcall(function() r:Destroy() end)
+			end
+			srvRows = {}
+			local q = searchBox.Text or ""
+			local out = {}
+			for _, s in ipairs(SERVERS) do
+				if srvMatch(s, q) then out[#out + 1] = s end
+			end
+			local total = math.max(1, math.ceil(#out / PER_PAGE))
+			if srvPage < 1 then srvPage = 1 end
+			if srvPage > total then srvPage = total end
+			local from = (srvPage - 1) * PER_PAGE + 1
+			for i = from, math.min(from + PER_PAGE - 1, #out) do
+				srvRows[#srvRows + 1] = srvRow(i - from + 1, out[i])
+			end
+			countLabel.Text = string.format(L("srvCount"), tostring(#out))
+			pageLabel.Text = string.format(L("srvPage"), tostring(srvPage), tostring(total))
+			prevBtn.Visible = srvPage > 1
+			nextBtn.Visible = srvPage < total
+			if #out == 0 then
+				srvRows[#srvRows + 1] = new("TextLabel", {
+					Name = "SrvEmpty",
+					Size = UDim2.new(1, 0, 0, 40),
+					BackgroundTransparency = 1,
+					Text = L("srvEmpty"),
+					TextSize = 11,
+					Font = FONT_N,
+					TextColor3 = C.Dim,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					Parent = srvList,
+				})
+			end
+		end
+
+		searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+			srvPage = 1
+			renderServers()
 		end)
-		return card
+		renderServers()
 	end
 
-	addServerCard(1, L("srvNds"), 189707, "srv_nds")
-	addServerCard(2, L("srvHeist"), PD.Place, "srv_heist", pdInGame, function() openPdWindow() end)
-	-- 卡片上写大厅那个 ID（从 Roblox 点进来的就是它）；真正的判定走 dsInPlace（两个 place 都认）
-	addServerCard(3, L("srvDoors"), DS.Lobby, "srv_doors", dsInPlace, function() openDoorsWindow() end)
-
+	--========================== 已执行服务器脚本（大写键） ==========================
+	-- 用户要的：电脑上按 CapsLock 弹一张"已经执行过哪些服务器脚本"的清单；
+	-- 按 Tab 回主页。提示语放在进场 toast 里（见 boot 末尾的 welcome）。
+	local ranOverlay = new("Frame", {
+		Name = "RanOverlay",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = C.Void,
+		BackgroundTransparency = 0.25,
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = 40,
+		Parent = guiMain,
+	})
+	local ranCard = new("Frame", {
+		Name = "Card",
+		Size = UDim2.new(0, 380, 0, 320),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
+		ZIndex = 41,
+		Parent = ranOverlay,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = ranCard })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = ranCard })
 	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0, 0, 0, 234),
+		Size = UDim2.new(1, -32, 0, 20),
+		Position = UDim2.new(0, 16, 0, 14),
 		BackgroundTransparency = 1,
-		Text = L("srvMore"),
-		TextSize = 11,
+		Text = L("ranTitle"),
+		TextSize = 15,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 42,
+		Parent = ranCard,
+	})
+	local ranNowLabel = new("TextLabel", {
+		Name = "RanNow",
+		Size = UDim2.new(1, -32, 0, 14),
+		Position = UDim2.new(0, 16, 0, 36),
+		BackgroundTransparency = 1,
+		Text = "",
+		TextSize = 10,
+		Font = FONT_M,
+		TextColor3 = C.Green,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 42,
+		Parent = ranCard,
+	})
+	local ranBody = new("Frame", {
+		Name = "RanBody",
+		Size = UDim2.new(1, -32, 1, -110),
+		Position = UDim2.new(0, 16, 0, 58),
+		BackgroundTransparency = 1,
+		ZIndex = 42,
+		Parent = ranCard,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, -32, 0, 30),
+		Position = UDim2.new(0, 16, 1, -46),
+		BackgroundTransparency = 1,
+		Text = L("ranHint"),
+		TextSize = 10,
 		Font = FONT_N,
 		TextColor3 = C.Dim,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = srvList,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextWrapped = true,
+		ZIndex = 42,
+		Parent = ranCard,
 	})
+
+	local ranBodyRows = {}
+	local function ranRender()
+		for _, r in ipairs(ranBodyRows) do pcall(function() r:Destroy() end) end
+		ranBodyRows = {}
+		local keys = {}
+		for k in pairs(ranServers) do keys[#keys + 1] = k end
+		table.sort(keys)
+		if #keys == 0 then
+			ranBodyRows[1] = new("TextLabel", {
+				Name = "RanNone",
+				Size = UDim2.new(1, 0, 0, 20),
+				BackgroundTransparency = 1,
+				Text = L("ranNone"),
+				TextSize = 11,
+				Font = FONT_N,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 42,
+				Parent = ranBody,
+			})
+		else
+			for i, k in ipairs(keys) do
+				if i > 7 then break end
+				local it = ranServers[k]
+				local row = new("Frame", {
+					Name = "Ran_" .. k,
+					Size = UDim2.new(1, 0, 0, 30),
+					Position = UDim2.new(0, 0, 0, (i - 1) * 32),
+					BackgroundColor3 = C.Card,
+					BorderSizePixel = 0,
+					ZIndex = 42,
+					Parent = ranBody,
+				})
+				new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = row })
+				new("TextLabel", {
+					Size = UDim2.new(1, -110, 1, 0),
+					Position = UDim2.new(0, 12, 0, 0),
+					BackgroundTransparency = 1,
+					Text = it.name,
+					TextSize = 12,
+					Font = FONT_B,
+					TextColor3 = C.Text,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					ZIndex = 43,
+					Parent = row,
+				})
+				new("TextLabel", {
+					Size = UDim2.new(0, 96, 1, 0),
+					Position = UDim2.new(1, -104, 0, 0),
+					BackgroundTransparency = 1,
+					Text = tostring(it.p),
+					TextSize = 10,
+					Font = FONT_M,
+					TextColor3 = C.Dim,
+					TextXAlignment = Enum.TextXAlignment.Right,
+					ZIndex = 43,
+					Parent = row,
+				})
+				ranBodyRows[#ranBodyRows + 1] = row
+			end
+		end
+		local ok, pid = pcall(function() return game.PlaceId end)
+		ranNowLabel.Text = string.format(L("ranNow"), tostring(ok and pid or "?"))
+	end
+
+	local ranOpen = false
+	toggleRanOverlay = function()
+		ranOpen = not ranOpen
+		if ranOpen then
+			ranRender()
+			ranOverlay.Visible = true
+			ranOverlay.BackgroundTransparency = 1
+			ranCard.Size = UDim2.new(0, 340, 0, 290)
+			tween(ranOverlay, EASE.soft, { BackgroundTransparency = 0.25 })
+			tween(ranCard, EASE.pop, { Size = UDim2.new(0, 380, 0, 320) })
+		else
+			ranOverlay.Visible = false
+		end
+	end
+	ranOverlay.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then
+			if ranOpen then toggleRanOverlay() end
+		end
+	end)
 
 	--========================== 通用设置 ==========================
 	local general = addPage("general")
@@ -8944,6 +9649,9 @@ boot = function(lang)
 			AutoRevive = false,
 			-- 移动
 			Bright = false, Noclip = false, Speed = 16, Jump = 50, Reach = 12, JumpTo = 1,
+			Fly = false, AntiPull = false, InfJump = false, AntiAfk = false, Shield = false,
+			EspPlr = false, EspBox = false, Gravity = 196.2, Fov = 70, CamDist = 128, Clock = 14,
+			NoFog = false, Saved = nil, lastPos = nil, pullAt = 0, fog0 = nil,
 			-- 运行时
 			Area = nil, DoorN = nil, RoomN = nil, Rooms = 0,
 			esps = {}, run = 0, noclipped = {}, lastEsp = 0,
@@ -8955,11 +9663,17 @@ boot = function(lang)
 		-- 闭包会绑到全局名字上 → nil → 运行时炸（luaparse 语法检查不报，_lint.js 才抓得到）。
 		local DS_TABS = {}
 		local dsApplyBright = function() end
+		local dsApplyFog = function() end
 		local dsApplySpeed = function() end
 		local dsRestoreCollide = function() end
 		local dsRenderStatus = function() end
 		local DsGoPlace = function() end
 		local DsGoFloor = function() end
+		local DsSavePos = function() end
+		local DsGotoSaved = function() end
+		local DsResetChar = function() end
+		local DsNextDoor = function() end
+		local dsApplyMove = function() end
 		local DsJumpRequest = function() end
 		local DsJumpToNumber = function() end
 		local DsLobbyRequest = function() end
@@ -9523,221 +10237,243 @@ boot = function(lang)
 		new("TextLabel", {
 			Size = UDim2.new(1, 0, 0, 20),
 			BackgroundTransparency = 1,
-			Text = L("dsEspTitle"),
-			TextSize = 15,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = dsEspPage,
+			Text = L("dsEspTitle"), TextSize = 15, Font = FONT_B, TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left, Parent = dsEspPage,
 		})
 		new("TextLabel", {
 			Size = UDim2.new(1, 0, 0, 14),
 			Position = UDim2.new(0, 0, 0, 20),
 			BackgroundTransparency = 1,
-			Text = L("dsEspSub"),
-			TextSize = 10,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = dsEspPage,
+			Text = L("dsEspSub"), TextSize = 10, Font = FONT_N, TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left, Parent = dsEspPage,
 		})
 
-		local ESP_COLOR = { ent = C.Red, item = C.Green, door = C.Amber, hide = C.Accent2 }
+		local ESP_COLOR = { ent = C.Red, item = C.Green, door = C.Amber, hide = C.Accent2,
+			plr = C.Green }
 		local ESP_SIZE = {
-			ent = Vector3.new(4, 6, 3),
-			item = Vector3.new(1.6, 1.6, 1.6),
-			door = Vector3.new(6, 8, 1),
-			hide = Vector3.new(5, 6, 5),
+			ent = Vector3.new(4, 6, 3), item = Vector3.new(1.6, 1.6, 1.6),
+			door = Vector3.new(6, 8, 1), hide = Vector3.new(5, 6, 5),
+			plr = Vector3.new(3, 5.5, 2.5),
 		}
 
-		dsCard(dsEspPage, 0, 44, 236, 62, "EspEnt",
+		dsCard(dsEspPage, 0, 44, 236, 58, "EspEnt",
 			L("dsEspEntity"), L("dsEspEntityD"), ESP_COLOR.ent, false,
 			function(v) ds.Esp = v end)
-		dsCard(dsEspPage, 244, 44, 236, 62, "EspItem",
+		dsCard(dsEspPage, 244, 44, 236, 58, "EspItem",
 			L("dsEspItem"), L("dsEspItemD"), ESP_COLOR.item, false,
 			function(v) ds.EspItem = v end)
-		dsCard(dsEspPage, 0, 114, 236, 62, "EspDoor",
+		dsCard(dsEspPage, 0, 110, 236, 58, "EspDoor",
 			L("dsEspDoor"), L("dsEspDoorD"), ESP_COLOR.door, false,
 			function(v) ds.EspDoor = v end)
-		dsCard(dsEspPage, 244, 114, 236, 62, "EspHide",
+		dsCard(dsEspPage, 244, 110, 236, 58, "EspHide",
 			L("dsEspHide"), L("dsEspHideD"), ESP_COLOR.hide, false,
 			function(v) ds.EspHide = v end)
+		dsCard(dsEspPage, 0, 176, 236, 58, "EspPlr",
+			L("dsEspPlr"), L("dsEspPlrD"), ESP_COLOR.plr, false,
+			function(v) ds.EspPlr = v end)
+		dsCard(dsEspPage, 244, 176, 236, 58, "EspBox",
+			L("dsEspBox"), L("dsEspBoxD"), C.Sub, false,
+			function(v) ds.EspBox = v end)
 
-		dsRule(dsEspPage, 190)
+		dsRule(dsEspPage, 242)
 
 		local dsDistRow = new("Frame", {
 			Name = "DistRow",
 			Size = UDim2.new(1, 0, 0, 40),
-			Position = UDim2.new(0, 0, 0, 202),
-			BackgroundColor3 = C.Card,
-			BorderSizePixel = 0,
-			Parent = dsEspPage,
+			Position = UDim2.new(0, 0, 0, 254),
+			BackgroundColor3 = C.Card, BorderSizePixel = 0, Parent = dsEspPage,
 		})
 		new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = dsDistRow })
 		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = dsDistRow })
 		new("TextLabel", {
-			Size = UDim2.new(1, -70, 0, 18),
-			Position = UDim2.new(0, 14, 0, 11),
-			BackgroundTransparency = 1,
-			Text = L("dsEspDist"),
-			TextSize = 13,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
+			Size = UDim2.new(1, -70, 0, 18), Position = UDim2.new(0, 14, 0, 11),
+			BackgroundTransparency = 1, Text = L("dsEspDist"), TextSize = 13,
+			Font = FONT_B, TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = dsDistRow,
 		})
 		createSwitch(dsDistRow, {
-			Name = "EspDist",
-			Position = UDim2.new(1, -52, 0, 9),
-			Default = true,
+			Name = "EspDist", Position = UDim2.new(1, -52, 0, 9), Default = true,
 			OnChange = function(v) ds.EspDist = v end,
 		})
 
-		dsSliderRow(dsEspPage, 254, L("dsEspRange"), 50, 1200, 400, true, function(v)
+		dsSliderRow(dsEspPage, 306, L("dsEspRange"), 50, 1200, 400, true, function(v)
 			return tostring(math.floor(v)) .. "m"
 		end, function(v) ds.EspRange = v end)
 
 		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 30),
-			Position = UDim2.new(0, 0, 0, 306),
-			BackgroundTransparency = 1,
-			Text = L("dsEspHint"),
-			TextSize = 10,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextYAlignment = Enum.TextYAlignment.Top,
-			TextWrapped = true,
-			Parent = dsEspPage,
+			Size = UDim2.new(1, 0, 0, 30), Position = UDim2.new(0, 0, 0, 358),
+			BackgroundTransparency = 1, Text = L("dsEspHint"), TextSize = 10,
+			Font = FONT_N, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top, TextWrapped = true, Parent = dsEspPage,
 		})
 
 		-- ---------------- 页面 2：自动 ----------------
 		local dsAutoPage = dsAddPage("auto")
 		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 20),
-			BackgroundTransparency = 1,
-			Text = L("dsAutoTitle"),
-			TextSize = 15,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = dsAutoPage,
+			Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1,
+			Text = L("dsAutoTitle"), TextSize = 15, Font = FONT_B, TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left, Parent = dsAutoPage,
 		})
 		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 14),
-			Position = UDim2.new(0, 0, 0, 20),
-			BackgroundTransparency = 1,
-			Text = L("dsAutoSub"),
-			TextSize = 10,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
+			Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 0, 20),
+			BackgroundTransparency = 1, Text = L("dsAutoSub"), TextSize = 10,
+			Font = FONT_N, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = dsAutoPage,
 		})
 
-		dsCard(dsAutoPage, 0, 44, 480, 60, "AutoHide",
-			L("dsAutoHide"), L("dsAutoHideD"), C.Red, false,
-			function(v)
-				ds.AutoHide = v
-				if not v then ds.hideOn = false; ds.hideSpot = nil end
-				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoHide")),
-					v and C.Green or C.Sub)
-			end)
-		dsCard(dsAutoPage, 0, 110, 480, 60, "AutoInteract",
-			L("dsAutoInteract"), L("dsAutoInteractD"), C.Accent2, false,
-			function(v)
-				ds.AutoInteract = v
-				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoInteract")),
-					v and C.Green or C.Sub)
-			end)
-		dsCard(dsAutoPage, 0, 176, 480, 60, "AutoPickup",
-			L("dsAutoPickup"), L("dsAutoPickupD"), C.Green, false,
-			function(v)
-				ds.AutoPickup = v
-				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoPickup")),
-					v and C.Green or C.Sub)
-			end)
-		dsCard(dsAutoPage, 0, 242, 480, 60, "AutoNext",
-			L("dsAutoNext"), L("dsAutoNextD"), C.Amber, false,
-			function(v)
-				ds.AutoNext = v
-				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoNext")),
-					v and C.Green or C.Sub)
-			end)
-		dsCard(dsAutoPage, 0, 308, 480, 60, "AutoRevive",
-			L("dsAutoRevive"), L("dsAutoReviveD"), C.Sub, false,
-			function(v)
-				ds.AutoRevive = v
-				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAutoRevive")),
-					v and C.Green or C.Sub)
-			end)
+		local AUTO_ITEMS = {
+			{ n = "AutoHide", t = "dsAutoHide", d = "dsAutoHideD", c = C.Red },
+			{ n = "AutoInteract", t = "dsAutoInteract", d = "dsAutoInteractD", c = C.Accent2 },
+			{ n = "AutoPickup", t = "dsAutoPickup", d = "dsAutoPickupD", c = C.Green },
+			{ n = "AutoNext", t = "dsAutoNext", d = "dsAutoNextD", c = C.Amber },
+			{ n = "AutoRevive", t = "dsAutoRevive", d = "dsAutoReviveD", c = C.Sub },
+		}
+		for i, it in ipairs(AUTO_ITEMS) do
+			dsCard(dsAutoPage, 0, 44 + (i - 1) * 60, 480, 54, it.n, L(it.t), L(it.d), it.c, false,
+				function(v)
+					ds[it.n] = v
+					if it.n == "AutoHide" and not v then ds.hideOn = false; ds.hideSpot = nil end
+					notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L(it.t)),
+						v and C.Green or C.Sub)
+				end)
+		end
+
+		createButton(dsAutoPage, {
+			Name = "NextDoor",
+			Size = UDim2.new(0, 236, 0, 34),
+			Position = UDim2.new(0, 0, 0, 348),
+			Text = L("dsNextDoor"),
+			TextSize = 13,
+			Style = "solid",
+			OnClick = function() DsNextDoor() end,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(0, 236, 0, 30), Position = UDim2.new(0, 244, 0, 348),
+			BackgroundTransparency = 1, Text = L("dsNextDoorD"), TextSize = 10,
+			Font = FONT_N, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top, TextWrapped = true, Parent = dsAutoPage,
+		})
 
 		-- ---------------- 页面 3：移动 ----------------
 		local dsMovePage = dsAddPage("move")
 		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 20),
-			BackgroundTransparency = 1,
-			Text = L("dsMoveTitle"),
-			TextSize = 15,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = dsMovePage,
+			Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1,
+			Text = L("dsMoveTitle"), TextSize = 15, Font = FONT_B, TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left, Parent = dsMovePage,
 		})
 		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 14),
-			Position = UDim2.new(0, 0, 0, 20),
-			BackgroundTransparency = 1,
-			Text = L("dsMoveSub"),
-			TextSize = 10,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
+			Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 0, 20),
+			BackgroundTransparency = 1, Text = L("dsMoveSub"), TextSize = 10,
+			Font = FONT_N, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = dsMovePage,
 		})
 
-		dsCard(dsMovePage, 0, 44, 236, 60, "Bright",
-			L("dsBright"), L("dsBrightD"), C.Amber, false,
+		dsCard(dsMovePage, 0, 44, 236, 58, "Fly", L("dsFly"), L("dsFlyD"), C.Accent2, false,
 			function(v)
-				ds.Bright = v
-				dsApplyBright()
-				notify(v and L("dsBrightOn") or L("dsBrightOff"), v and C.Green or C.Sub)
+				ds.Fly = v
+				pcall(function() Fly:SetEnabled(v) end)
 			end)
-		dsCard(dsMovePage, 244, 44, 236, 60, "Noclip",
-			L("dsNoclip"), L("dsNoclipD"), C.Accent2, false,
-			function(v)
+		dsCard(dsMovePage, 244, 44, 236, 58, "Noclip", L("dsNoclip"), L("dsNoclipD"),
+			C.Accent, false, function(v)
 				ds.Noclip = v
 				if not v then dsRestoreCollide() end
 				notify(v and L("dsNoclipOn") or L("dsNoclipOff"), v and C.Green or C.Sub)
 			end)
+		dsCard(dsMovePage, 0, 110, 236, 58, "AntiPull", L("dsAntiPull"), L("dsAntiPullD"),
+			C.Green, false, function(v)
+				ds.AntiPull = v
+				ds.lastPos = nil
+				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAntiPull")),
+					v and C.Green or C.Sub)
+			end)
+		dsCard(dsMovePage, 244, 110, 236, 58, "InfJump", L("dsInfJump"), L("dsInfJumpD"),
+			C.Amber, false, function(v) ds.InfJump = v end)
+		dsCard(dsMovePage, 0, 176, 236, 58, "AntiAfk", L("dsAntiAfk"), L("dsAntiAfkD"),
+			C.Sub, false, function(v)
+				ds.AntiAfk = v
+				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsAntiAfk")),
+					v and C.Green or C.Sub)
+			end)
+		dsCard(dsMovePage, 244, 176, 236, 58, "Shield", L("dsShield"), L("dsShieldD"),
+			C.Green, false, function(v)
+				ds.Shield = v
+				pcall(function() ShieldRequest(v) end)
+			end)
 
-		dsRule(dsMovePage, 116)
-
-		dsSliderRow(dsMovePage, 128, L("dsSpeed"), 16, 300, 16, false, function(v)
+		dsRule(dsMovePage, 242)
+		dsSliderRow(dsMovePage, 254, L("dsSpeed"), 16, 300, 16, false, function(v)
 			return tostring(math.floor(v))
-		end, function(v) ds.Speed = v; dsApplySpeed() end)
-
-		dsSliderRow(dsMovePage, 178, L("dsJump"), 50, 300, 50, false, function(v)
+		end, function(v) ds.Speed = v; dsApplyMove() end)
+		dsSliderRow(dsMovePage, 304, L("dsJump"), 50, 300, 50, false, function(v)
 			return tostring(math.floor(v))
-		end, function(v) ds.Jump = v; dsApplySpeed() end)
-
-		dsSliderRow(dsMovePage, 228, L("dsReach"), 8, 60, 12, false, function(v)
+		end, function(v) ds.Jump = v; dsApplyMove() end)
+		dsSliderRow(dsMovePage, 354, L("dsReach"), 8, 60, 12, false, function(v)
 			return tostring(math.floor(v))
 		end, function(v) ds.Reach = v end)
 
+		-- ---------------- 页面 5：其他 ----------------
+		local dsMiscPage = dsAddPage("misc")
 		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 30),
-			Position = UDim2.new(0, 0, 0, 282),
-			BackgroundTransparency = 1,
-			Text = L("dsMoveHint"),
-			TextSize = 10,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextYAlignment = Enum.TextYAlignment.Top,
-			TextWrapped = true,
-			Parent = dsMovePage,
+			Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1,
+			Text = L("dsMiscTitle"), TextSize = 15, Font = FONT_B, TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left, Parent = dsMiscPage,
 		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 0, 20),
+			BackgroundTransparency = 1, Text = L("dsMiscSub"), TextSize = 10,
+			Font = FONT_N, TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = dsMiscPage,
+		})
+
+		dsCard(dsMiscPage, 0, 44, 236, 58, "SavePos", L("dsSavePos"), L("dsSavePosD"),
+			C.Green, false, function(v)
+				if v then DsSavePos() end
+			end)
+		dsCard(dsMiscPage, 244, 44, 236, 58, "Bright", L("dsBright"), L("dsBrightD"),
+			C.Amber, false, function(v)
+				ds.Bright = v
+				dsApplyBright()
+				notify(v and L("dsBrightOn") or L("dsBrightOff"), v and C.Green or C.Sub)
+			end)
+		dsCard(dsMiscPage, 0, 110, 236, 58, "NoFog", L("dsNoFog"), L("dsNoFogD"),
+			C.Sub, false, function(v)
+				ds.NoFog = v
+				dsApplyFog()
+				notify(string.format(v and L("dsOnFmt") or L("dsOffFmt"), L("dsNoFog")),
+					v and C.Green or C.Sub)
+			end)
+		createButton(dsMiscPage, {
+			Name = "GotoSaved",
+			Size = UDim2.new(0, 236, 0, 34),
+			Position = UDim2.new(244, 0, 0, 122),
+			Text = L("dsGotoSaved"), TextSize = 13, Style = "solid",
+			OnClick = function() DsGotoSaved() end,
+		})
+		createButton(dsMiscPage, {
+			Name = "ResetChar",
+			Size = UDim2.new(0, 236, 0, 34),
+			Position = UDim2.new(0, 0, 0, 180),
+			Text = L("dsResetChar"), TextSize = 13, Style = "ghost",
+			OnClick = function() DsResetChar() end,
+		})
+		createButton(dsMiscPage, {
+			Name = "MiscLobby",
+			Size = UDim2.new(0, 236, 0, 34),
+			Position = UDim2.new(244, 0, 0, 180),
+			Text = L("dsMapLobby"), TextSize = 13, Style = "ghost",
+			OnClick = function() DsLobbyRequest() end,
+		})
+
+		dsRule(dsMiscPage, 228)
+		dsSliderRow(dsMiscPage, 240, L("dsFov"), 20, 120, 70, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) ds.Fov = v; dsApplyMove() end)
+		dsSliderRow(dsMiscPage, 290, L("dsCamDist"), 10, 1000, 128, true, function(v)
+			return tostring(math.floor(v))
+		end, function(v) ds.CamDist = v; dsApplyMove() end)
+		dsSliderRow(dsMiscPage, 340, L("dsGravity"), 0, 500, 196, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) ds.Gravity = v; dsApplyMove() end)
 
 		-- ---------------- 页面 4：地图（两个地点 + 楼层） ----------------
 		-- 这里跟"服务器卡片"是一条链：跨 place 就 queue-on-teleport + Teleport，
@@ -9962,6 +10698,7 @@ boot = function(lang)
 			{ key = "auto", text = L("dsTabAuto") },
 			{ key = "move", text = L("dsTabMove") },
 			{ key = "map", text = L("dsTabMap") },
+			{ key = "misc", text = L("dsTabMisc") },
 		}
 		for i, t in ipairs(DS_TABS) do dsAddTab(t.key, t.text, i) end
 		dsShow("esp")
@@ -10170,6 +10907,23 @@ boot = function(lang)
 			end
 		end
 
+		-- 柜子 / 藏身点上的 prompt 不算"交互点"：
+		-- 自动躲藏自己会管它；自动交互去按它只会把玩家反复塞进柜子（用户点名的 bug）。
+		local function dsIsHidingPrompt(p)
+			local n = tostring(p.Name)
+			if n == "HidePrompt" or n == "HidingPrompt" then return true end
+			local node, d = p, 0
+			while node and node ~= workspace and d < 8 do
+				local nm = tostring(node.Name)
+				if nm:find("Closet") or nm:find("Wardrobe") or nm:find("Locker")
+					or nm:find("HidingSpot") or nm:find("Hiding") then
+					return true
+				end
+				node, d = node.Parent, d + 1
+			end
+			return false
+		end
+
 		-- 自动交互 / 自动拾取：扫当前房间的 prompt 和道具
 		local function dsAutoDoStep()
 			local rooms = dsRooms()
@@ -10182,7 +10936,7 @@ boot = function(lang)
 				for _, d in ipairs(room:GetDescendants()) do
 					if ds.AutoInteract then
 						local ok, isPrompt = pcall(function() return d:IsA("ProximityPrompt") end)
-						if ok and isPrompt and d.Enabled ~= false then
+						if ok and isPrompt and d.Enabled ~= false and not dsIsHidingPrompt(d) then
 							if dsDist(dsPartOf(d.Parent)) <= reach then dsFire(d) end
 						end
 					end
@@ -10194,6 +10948,99 @@ boot = function(lang)
 					end
 				end
 			end)
+		end
+
+		-- 移动 / 视觉类统一应用
+		dsApplyMove = function()
+			local hum = getHumanoid()
+			if hum then
+				pcall(function() hum.WalkSpeed = ds.Speed end)
+				pcall(function() hum.UseJumpPower = true; hum.JumpPower = ds.Jump end)
+			end
+			pcall(function() workspace.Gravity = ds.Gravity end)
+			local cam = workspace.CurrentCamera
+			if cam then
+				pcall(function() cam.FieldOfView = ds.Fov end)
+				pcall(function()
+					if cam.CameraSubject == hum then
+						LocalPlayer.CameraMaxZoomDistance = ds.CamDist
+						LocalPlayer.CameraMinZoomDistance = math.min(10, ds.CamDist)
+					end
+				end)
+			end
+		end
+
+		local DS_BRIGHT_AMB = Color3.fromRGB(178, 178, 178)
+
+		-- 去雾：把 FogEnd 拉到很远，关掉还原
+		local function dsLighting()
+			local ok, v = pcall(function() return game:GetService("Lighting") end)
+			return ok and v or nil
+		end
+		dsApplyFog = function()
+			local lt = dsLighting()
+			if not lt then return end
+			if ds.NoFog then
+				if not ds.fog0 then
+					pcall(function() ds.fog0 = { e = lt.FogEnd, s = lt.FogStart } end)
+				end
+				if lt.FogEnd < 500000 then
+					pcall(function() lt.FogEnd = 1e6; lt.FogStart = 0 end)
+				end
+			elseif ds.fog0 then
+				pcall(function() lt.FogEnd = ds.fog0.e; lt.FogStart = ds.fog0.s end)
+				ds.fog0 = nil
+			end
+		end
+
+		DsSavePos = function()
+			local root = getRoot()
+			ds.Saved = root and root.CFrame or nil
+			notify(ds.Saved and L("dsSaved") or L("dsNoSaved"), ds.Saved and C.Green or C.Amber)
+		end
+
+		DsGotoSaved = function()
+			local root = getRoot()
+			if not (ds.Saved and root) then
+				notify(L("dsNoSaved"), C.Amber)
+				return
+			end
+			pcall(function() root.CFrame = ds.Saved end)
+			notify(L("dsTpDone2"), C.Green)
+		end
+
+		DsResetChar = function()
+			pcall(function()
+				local hum = getHumanoid()
+				if hum then hum.Health = 0 end
+			end)
+			pcall(function() LocalPlayer.Character:BreakJoints() end)
+			notify(L("dsResetChar"), C.Green)
+		end
+
+		-- 跳过下一扇门：把角色推到下一间的门前（游戏自己会开门）
+		DsNextDoor = function()
+			local rooms = dsRooms()
+			if not rooms or not ds.RoomN then
+				notify(L("dsTpNoRoom"), C.Amber)
+				return
+			end
+			local nextKey = tostring((ds.RoomN or 0) + 1)
+			local room
+			pcall(function() room = rooms:FindFirstChild(nextKey) end)
+			if not room then
+				pcall(function() room = rooms:FindFirstChild(tostring(ds.RoomN)) end)
+			end
+			if not room then
+				notify(L("dsTpNoRoom"), C.Amber)
+				return
+			end
+			local part = dsPartOf(room)
+			if part and dsTeleportTo(part, 4) then
+				notify(L("dsNextDoorOk"), C.Green)
+			else
+				notify(L("dsTpNoRoom"), C.Amber)
+			end
 		end
 
 		-- 自动进门：把角色推到当前房间的门那儿（游戏自己会开）
@@ -10334,24 +11181,39 @@ boot = function(lang)
 					TextStrokeTransparency = 0.3,
 					Parent = gui,
 				})
-				local box = new("BoxHandleAdornment", {
-					Name = "O_X_DS_BOX",
-					Adornee = part,
-					AlwaysOnTop = true,
-					ZIndex = 5,
-					Transparency = 0.55,
-					Color3 = col,
-					Size = ESP_SIZE[kind] or Vector3.new(3, 4, 3),
-					Parent = part,
-				})
+				local box = nil
+				if ds.EspBox then
+					box = new("BoxHandleAdornment", {
+						Name = "O_X_DS_BOX",
+						Adornee = part,
+						AlwaysOnTop = true,
+						ZIndex = 5,
+						Transparency = 0.55,
+						Color3 = col,
+						Size = ESP_SIZE[kind] or Vector3.new(3, 4, 3),
+						Parent = part,
+					})
+				end
 				ds.esps[part] = { gui = gui, label = label, box = box, kind = kind }
 				return
+			end
+			if ds.EspBox and not e.box then
+				e.box = new("BoxHandleAdornment", {
+					Name = "O_X_DS_BOX", Adornee = part, AlwaysOnTop = true, ZIndex = 5,
+					Transparency = 0.55, Color3 = col,
+					Size = ESP_SIZE[kind] or Vector3.new(3, 4, 3), Parent = part,
+				})
+			elseif not ds.EspBox and e.box then
+				pcall(function() e.box:Destroy() end)
+				e.box = nil
 			end
 			if e.kind ~= kind then
 				e.kind = kind
 				e.label.TextColor3 = col
-				e.box.Color3 = col
-				e.box.Size = ESP_SIZE[kind] or Vector3.new(3, 4, 3)
+				if e.box then
+					e.box.Color3 = col
+					e.box.Size = ESP_SIZE[kind] or Vector3.new(3, 4, 3)
+				end
 			end
 			if e.label.Text ~= text then e.label.Text = text end
 		end
@@ -10380,7 +11242,18 @@ boot = function(lang)
 					end
 				end)
 			end
-			if ds.EspDoor or ds.EspItem or ds.EspHide then
+			if ds.EspPlr then
+				pcall(function()
+					for _, p in ipairs(Players:GetPlayers()) do
+						if p ~= LocalPlayer and p.Character then
+							local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+								or p.Character:FindFirstChild("Head")
+							if hrp then add(hrp, "plr", p.Name) end
+						end
+					end
+				end)
+			end
+			if ds.EspDoor or ds.EspItem or ds.EspHide or ds.EspPlr then
 				local rooms = dsRooms()
 				pcall(function()
 					if not rooms then return end
@@ -10409,6 +11282,7 @@ boot = function(lang)
 		-- ---------------- 主循环 ----------------
 		local function dsStep()
 			if SHUTDOWN then return end
+			local now = os.clock()
 			ds.run = ds.run + 1
 
 			-- 1) 区域 / 门号自动检测
@@ -10419,9 +11293,48 @@ boot = function(lang)
 				dsRenderStatus()
 			end
 
-			-- 2) 移动类
+			-- 2) 移动 / 视觉类
 			if ds.Noclip then pcall(dsApplyNoclip) end
 			if ds.Bright then pcall(dsApplyBright) end
+			if ds.NoFog then pcall(dsApplyFog) end
+
+			-- 无限跳
+			if ds.InfJump then
+				local hum = getHumanoid()
+				if hum then
+					local ok, st = pcall(function() return hum:GetState() end)
+					if not ok or (st ~= Enum.HumanoidStateType.Jumping
+						and st ~= Enum.HumanoidStateType.Freefall) then
+						pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
+					end
+				end
+			end
+
+			-- 防挂机
+			if ds.AntiAfk then
+				pcall(function()
+					VirtualUser:CaptureController()
+					VirtualUser:ClickButton2(Vector2.new())
+				end)
+			end
+
+			-- 防拉回：位置一帧跳超过 120 studs 就当游戏把你传走了，拉回原位
+			if ds.AntiPull then
+				local root = getRoot()
+				if root then
+					local p = root.Position
+					if ds.lastPos then
+						if (p - ds.lastPos).Magnitude > 120 and now - ds.pullAt > 0.6 then
+							ds.pullAt = now
+							pcall(function() root.CFrame = CFrame.new(ds.lastPos) end)
+						else
+							ds.lastPos = p
+						end
+					else
+						ds.lastPos = p
+					end
+				end
+			end
 
 			-- 3) 自动类
 			if ds.AutoHide then pcall(dsAutoHideStep) end
@@ -10431,10 +11344,9 @@ boot = function(lang)
 
 			-- 4) 透视（0.3s 一次，跟劫案一个思路：别每帧扫全树）
 			--    用 os.clock 而不是累加 dt —— 假时钟下才好测
-			local now = os.clock()
 			if now - ds.lastEsp >= 0.3 then
 				ds.lastEsp = now
-				if ds.Esp or ds.EspItem or ds.EspDoor or ds.EspHide then
+				if ds.Esp or ds.EspItem or ds.EspDoor or ds.EspHide or ds.EspPlr then
 					pcall(dsRefreshEsp)
 				elseif next(ds.esps) then
 					pcall(dsEspSweep)
@@ -10573,7 +11485,11 @@ boot = function(lang)
 			ds.AutoHide, ds.AutoInteract, ds.AutoPickup = false, false, false
 			ds.AutoNext, ds.AutoRevive = false, false
 			ds.Noclip, ds.Bright = false, false
+			ds.Fly, ds.AntiPull, ds.InfJump, ds.AntiAfk, ds.Shield = false, false, false, false, false
+			ds.EspPlr, ds.EspBox, ds.NoFog = false, false, false
 			ds.hideSpot, ds.hideOn = nil, false
+			pcall(function() Fly:SetEnabled(false) end)
+			pcall(dsApplyFog)
 			pcall(dsEspSweep)
 			pcall(dsRestoreCollide)
 			pcall(dsApplyBright)
@@ -10622,11 +11538,1133 @@ boot = function(lang)
 		end)
 	end
 
+	--========================== 通用游戏面板 ==========================
+	-- 122 台服务器共用这一套引擎（懒加载：第一次点开才建，不可能开机全建）。
+	-- 每台 30 项功能：飞行 / 穿墙 / 防拉回 / 速度 / 跳跃 / 重力 / 无限跳 / 防挂机 / 反摔伤 /
+	-- 重置角色 / 玩家透视（名字·距离·方框）/ 全亮 / 去雾 / 视场角 / 相机距离 / 时间 /
+	-- 玩家列表（传送·跟随·复制名字）/ 保存点 / 回出生点 / 传送到鼠标 …
+	-- ⚠️ 这个函数自带 200 个 local 的额度（跟 pdBuild / dsBuild 一样），别把状态往外塞。
+	gameBuild = function()
+		if gameBuilt then return end
+		gameBuilt = true
+		local gameWin, gameState
+		local gameCur = nil                -- 当前显示的是哪台服务器
+		local GW, GH = 520, 470
+		local G = {
+			Fly = false, Noclip = false, AntiPull = false, InfJump = false,
+			AntiAfk = false, Shield = false,
+			Speed = 16, Jump = 50, Gravity = 196.2,
+			Esp = false, EspName = true, EspDist = true, EspBox = false, EspRange = 600,
+			Bright = false, NoFog = false, Fov = 70, CamDist = 128, Clock = 14,
+			Follow = nil, Saved = nil, SavedAt = 0,
+			esps = {}, noclipped = {}, conns = {},
+			lastPos = nil, pullAt = 0, espAt = 0, plrAt = 0,
+			brightSaved = nil, fov0 = nil, cam0 = nil, fog0 = nil,
+		}
+		gameState = G
+
+		-- 前向声明（界面在早、实现在晚）
+		local gApply = function() end
+		local gBright = function() end
+		local gNoFog = function() end
+		local gEspSweep = function() end
+		local gRefreshPlayers = function() end
+		local gNoclipRestore = function() end
+		local gDoReset = function() end
+		local gTpMouse = function() end
+
+		-- ---------------- 窗口骨架 ----------------
+		local win = new("Frame", {
+			Name = "GameWindow",
+			Size = UDim2.new(0, GW, 0, GH),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Visible = false,
+			Parent = guiMain,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = win })
+		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = win })
+		local winScale = new("UIScale", { Scale = 1, Parent = win })
+
+		local head = new("Frame", {
+			Name = "Header",
+			Size = UDim2.new(1, 0, 0, SRV_HEAD_H),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Parent = win,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = head })
+		new("Frame", {
+			Size = UDim2.new(1, 0, 0, 12),
+			Position = UDim2.new(0, 0, 1, -12),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Parent = head,
+		})
+		new("Frame", {
+			Size = UDim2.new(1, -24, 0, 1),
+			Position = UDim2.new(0, 12, 1, -1),
+			BackgroundColor3 = C.Stroke,
+			BorderSizePixel = 0,
+			Parent = head,
+		})
+
+		-- 游戏图标：代码画的（渐变底 + 首字母），122 台不可能每台一张图
+		local gIcon = new("Frame", {
+			Name = "GameIcon",
+			Size = UDim2.new(0, 22, 0, 22),
+			Position = UDim2.new(0, 14, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card2,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			Parent = head,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 7), Parent = gIcon })
+		new("UIGradient", {
+			Color = ColorSequence.new(C.Accent, C.Accent2),
+			Rotation = 45,
+			Parent = gIcon,
+		})
+		local gIconText = new("TextLabel", {
+			Name = "Initials",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Text = "OX",
+			TextSize = 11,
+			Font = FONT_M,
+			TextColor3 = C.White,
+			Parent = gIcon,
+		})
+
+		local gTitle = new("TextLabel", {
+			Name = "Title",
+			Size = UDim2.new(0, 150, 1, 0),
+			Position = UDim2.new(0, 44, 0, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			TextSize = 14,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = head,
+		})
+		local gChip = new("Frame", {
+			Name = "Chip",
+			Size = UDim2.new(0, 128, 0, 22),
+			Position = UDim2.new(0, 200, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			Parent = head,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = gChip })
+		local gChipStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = gChip })
+		local gChipDot = new("Frame", {
+			Size = UDim2.new(0, 6, 0, 6),
+			Position = UDim2.new(0, 10, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Dim,
+			BorderSizePixel = 0,
+			Parent = gChip,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = gChipDot })
+		local gChipText = new("TextLabel", {
+			Name = "ChipText",
+			Size = UDim2.new(1, -22, 1, 0),
+			Position = UDim2.new(0, 22, 0, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			TextSize = 11,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = gChip,
+		})
+
+		local gMin = new("TextButton", {
+			Name = "Minimize",
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -70, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "－",
+			TextSize = 14,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			Parent = head,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = gMin })
+		local gMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = gMin })
+		bindHover(gMin, { Bg = { C.Card, C.Card2 }, Stroke = gMinStroke, StrokeOn = C.Stroke2,
+			Label = gMin, LabelOn = C.Text })
+
+		local gClose = new("TextButton", {
+			Name = "Close",
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -38, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "✕",
+			TextSize = 13,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			Parent = head,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = gClose })
+		local gCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = gClose })
+		bindHover(gClose, { Bg = { C.Card, C.Red }, Stroke = gCloseStroke, StrokeOn = C.Red,
+			Label = gClose, LabelOn = C.White })
+
+		makeDraggable(win, head, function() return winScale.Scale end)
+
+		-- 顶部页签
+		local tabBar = new("Frame", {
+			Name = "TabBar",
+			Size = UDim2.new(1, -20, 0, 34),
+			Position = UDim2.new(0, 10, 0, SRV_HEAD_H + 2),
+			BackgroundColor3 = C.Side,
+			BorderSizePixel = 0,
+			Parent = win,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = tabBar })
+		local tabInd = new("Frame", {
+			Name = "TabIndicator",
+			Size = UDim2.new(0, 0, 0, 2),
+			Position = UDim2.new(0, 0, 1, -2),
+			BackgroundColor3 = C.Accent,
+			BorderSizePixel = 0,
+			ZIndex = 2,
+			Parent = tabBar,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = tabInd })
+
+		local body = new("Frame", {
+			Name = "Content",
+			Size = UDim2.new(1, -20, 1, -(SRV_HEAD_H + 2) - 34 - 16),
+			Position = UDim2.new(0, 10, 0, SRV_HEAD_H + 2 + 34 + 6),
+			BackgroundTransparency = 1,
+			Parent = win,
+		})
+
+		local pages, tabs = {}, {}
+		local TABS = {
+			{ key = "gen", n = 5 },
+			{ key = "vis", n = 5 },
+			{ key = "plr", n = 5 },
+			{ key = "tp", n = 4 },
+		}
+
+		local function addPage(key)
+			local p = new("Frame", {
+				Name = "GamePage_" .. key,
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Visible = false,
+				Parent = body,
+			})
+			pages[key] = p
+			return p
+		end
+
+		local function show(key)
+			for k, p in pairs(pages) do p.Visible = (k == key) end
+			for k, t in pairs(tabs) do
+				local on = (k == key)
+				tween(t.label, EASE.soft, { TextColor3 = on and C.Text or C.Sub })
+				tween(t.btn, EASE.soft, { BackgroundColor3 = on and C.Card or C.Side })
+			end
+			local it = tabs[key]
+			if it then
+				tween(tabInd, EASE.pop, { Size = UDim2.new(0, it.w, 0, 2),
+					Position = UDim2.new(0, it.x, 1, -2) })
+			end
+			if pages[key] then staggerIn(pages[key]:GetChildren(), 8, 0.03, 0.3) end
+			if key == "plr" then gRefreshPlayers() end
+		end
+
+		for i, t in ipairs(TABS) do
+			local w = math.floor((GW - 32) / #TABS)
+			local x = 6 + (i - 1) * w
+			local btn = new("TextButton", {
+				Name = "Game_" .. t.key,
+				Size = UDim2.new(0, w - 4, 1, 0),
+				Position = UDim2.new(0, x, 0, 0),
+				BackgroundColor3 = C.Side,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = "",
+				Parent = tabBar,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = btn })
+			local label = new("TextLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Text = L("gmTab_" .. t.key),
+				TextSize = 12,
+				Font = FONT_B,
+				TextColor3 = C.Sub,
+				Parent = btn,
+			})
+			btn.MouseButton1Click:Connect(function() show(t.key) end)
+			btn.MouseEnter:Connect(function()
+				if not pages[t.key] or not pages[t.key].Visible then
+					tween(label, EASE.soft, { TextColor3 = C.Text })
+				end
+			end)
+			tabs[t.key] = { btn = btn, label = label, x = x, w = w - 4 }
+		end
+
+		-- ---------------- 组件 ----------------
+		local function card(parent, x, y, w, h, name, title, desc, color, default, onChange)
+			local c = new("Frame", {
+				Name = name .. "Card",
+				Size = UDim2.new(0, w, 0, h),
+				Position = UDim2.new(0, x, 0, y),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				Parent = parent,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = c })
+			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = c })
+			local dot = new("Frame", {
+				Name = "Dot",
+				Size = UDim2.new(0, 6, 0, 6),
+				Position = UDim2.new(0, 14, 0, 15),
+				BackgroundColor3 = color,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Parent = c,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+			new("TextLabel", {
+				Size = UDim2.new(1, -74, 0, 18),
+				Position = UDim2.new(0, 26, 0, 8),
+				BackgroundTransparency = 1,
+				Text = title,
+				TextSize = 13,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = c,
+			})
+			if desc and desc ~= "" then
+				new("TextLabel", {
+					Size = UDim2.new(1, -30, 0, h - 28),
+					Position = UDim2.new(0, 26, 0, 26),
+					BackgroundTransparency = 1,
+					Text = desc,
+					TextSize = 10,
+					Font = FONT_N,
+					TextColor3 = C.Dim,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextYAlignment = Enum.TextYAlignment.Top,
+					TextWrapped = true,
+					Parent = c,
+				})
+			end
+			return c, createSwitch(c, {
+				Name = name,
+				Position = UDim2.new(1, -52, 0, 11),
+				Default = default,
+				OnChange = function(v)
+					tween(dot, EASE.soft, { BackgroundTransparency = v and 0 or 1 })
+					if onChange then onChange(v) end
+				end,
+			})
+		end
+
+		local function slider(parent, y, title, min, max, default, log, fmt, onChange)
+			new("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 16),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1,
+				Text = title,
+				TextSize = 12,
+				Font = FONT_N,
+				TextColor3 = C.Sub,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = parent,
+			})
+			local val = new("TextLabel", {
+				Size = UDim2.new(0, 66, 0, 16),
+				Position = UDim2.new(1, -66, 0, y),
+				BackgroundTransparency = 1,
+				Text = fmt(default),
+				TextSize = 12,
+				Font = FONT_M,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Right,
+				Parent = parent,
+			})
+			createSlider(parent, {
+				Position = UDim2.new(0, 0, 0, y + 18),
+				Min = min, Max = max, Default = default, Log = log,
+				OnChange = function(v)
+					val.Text = fmt(v)
+					if onChange then onChange(v) end
+				end,
+			})
+		end
+
+		local function rule(parent, y)
+			new("Frame", {
+				Size = UDim2.new(1, 0, 0, 1),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundColor3 = C.Stroke,
+				BorderSizePixel = 0,
+				Parent = parent,
+			})
+		end
+
+		-- ---------------- 页 1：通用 ----------------
+		local pGen = addPage("gen")
+		card(pGen, 0, 0, 236, 58, "Fly", L("gmFly"), L("gmFlyD"), C.Accent2, false, function(v)
+			G.Fly = v
+			if v then Fly:SetEnabled(true) else Fly:SetEnabled(false) end
+		end)
+		card(pGen, 244, 0, 236, 58, "Noclip", L("gmNoclip"), L("gmNoclipD"), C.Accent, false,
+			function(v)
+				G.Noclip = v
+				if not v then gNoclipRestore() end
+			end)
+		card(pGen, 0, 64, 236, 58, "AntiPull", L("gmAntiPull"), L("gmAntiPullD"), C.Green, false,
+			function(v)
+				G.AntiPull = v
+				G.lastPos = nil
+				notify(string.format(v and L("gmOnFmt") or L("gmOffFmt"), L("gmAntiPull")),
+					v and C.Green or C.Sub)
+			end)
+		card(pGen, 244, 64, 236, 58, "InfJump", L("gmInfJump"), L("gmInfJumpD"), C.Amber, false,
+			function(v) G.InfJump = v end)
+		card(pGen, 0, 128, 236, 58, "AntiAfk", L("gmAntiAfk"), L("gmAntiAfkD"), C.Sub, false,
+			function(v)
+				G.AntiAfk = v
+				notify(string.format(v and L("gmOnFmt") or L("gmOffFmt"), L("gmAntiAfk")),
+					v and C.Green or C.Sub)
+			end)
+		card(pGen, 244, 128, 236, 58, "Shield", L("gmShield"), L("gmShieldD"), C.Green, false,
+			function(v)
+				G.Shield = v
+				pcall(function() ShieldRequest(v) end)
+			end)
+
+		rule(pGen, 196)
+		slider(pGen, 208, L("gmSpeed"), 16, 500, 16, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) G.Speed = v; gApply() end)
+		slider(pGen, 256, L("gmJump"), 50, 500, 50, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) G.Jump = v; gApply() end)
+		slider(pGen, 304, L("gmGravity"), 0, 500, 196, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) G.Gravity = v; gApply() end)
+
+		createButton(pGen, {
+			Name = "ResetChar",
+			Size = UDim2.new(0, 148, 0, 30),
+			Position = UDim2.new(0, 0, 0, 348),
+			Text = L("gmReset"),
+			TextSize = 12,
+			Style = "solid",
+			OnClick = function() gDoReset() end,
+		})
+
+		-- ---------------- 页 2：视觉 ----------------
+		local pVis = addPage("vis")
+		card(pVis, 0, 0, 236, 58, "Esp", L("gmEsp"), L("gmEspD"), C.Red, false, function(v)
+			G.Esp = v
+			if not v then pcall(gEspSweep) end
+		end)
+		card(pVis, 244, 0, 236, 58, "EspName", L("gmEspName"), "", C.Sub, true,
+			function(v) G.EspName = v end)
+		card(pVis, 0, 64, 236, 58, "EspDist", L("gmEspDist"), "", C.Sub, true,
+			function(v) G.EspDist = v end)
+		card(pVis, 244, 64, 236, 58, "EspBox", L("gmEspBox"), "", C.Sub, false,
+			function(v) G.EspBox = v end)
+		card(pVis, 0, 128, 236, 58, "Bright", L("gmBright"), L("gmBrightD"), C.Amber, false,
+			function(v)
+				G.Bright = v
+				gBright()
+				notify(string.format(v and L("gmOnFmt") or L("gmOffFmt"), L("gmBright")),
+					v and C.Green or C.Sub)
+			end)
+		card(pVis, 244, 128, 236, 58, "NoFog", L("gmNoFog"), L("gmNoFogD"), C.Sub, false,
+			function(v)
+				G.NoFog = v
+				gNoFog()
+				notify(string.format(v and L("gmOnFmt") or L("gmOffFmt"), L("gmNoFog")),
+					v and C.Green or C.Sub)
+			end)
+
+		rule(pVis, 196)
+		slider(pVis, 208, L("gmEspRange"), 100, 2000, 600, true, function(v)
+			return tostring(math.floor(v)) .. "m"
+		end, function(v) G.EspRange = v end)
+		slider(pVis, 256, L("gmFov"), 20, 120, 70, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) G.Fov = v; gApply() end)
+		slider(pVis, 304, L("gmCamDist"), 10, 1000, 128, true, function(v)
+			return tostring(math.floor(v))
+		end, function(v) G.CamDist = v; gApply() end)
+		slider(pVis, 352, L("gmClock"), 0, 24, 14, false, function(v)
+			return string.format("%02d:00", math.floor(v))
+		end, function(v) G.Clock = v; gApply() end)
+
+		-- ---------------- 页 3：玩家 ----------------
+		local pPlr = addPage("plr")
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 16),
+			BackgroundTransparency = 1,
+			Text = L("gmPlayers"),
+			TextSize = 12,
+			Font = FONT_N,
+			TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = pPlr,
+		})
+		local plrList = new("Frame", {
+			Name = "PlayerList",
+			Size = UDim2.new(1, 0, 1, -22),
+			Position = UDim2.new(0, 0, 0, 22),
+			BackgroundTransparency = 1,
+			Parent = pPlr,
+		})
+
+		local plrRows = {}
+		local function plrRow(i, plr)
+			local y = (i - 1) * 46
+			local row = new("Frame", {
+				Name = "P_" .. tostring(plr.Name),
+				Size = UDim2.new(1, 0, 0, 42),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				Parent = plrList,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = row })
+			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = row })
+			new("TextLabel", {
+				Size = UDim2.new(1, -260, 0, 18),
+				Position = UDim2.new(0, 14, 0, 6),
+				BackgroundTransparency = 1,
+				Text = plr.Name,
+				TextSize = 13,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = row,
+			})
+			local info = new("TextLabel", {
+				Name = "Info",
+				Size = UDim2.new(1, -260, 0, 14),
+				Position = UDim2.new(0, 14, 0, 24),
+				BackgroundTransparency = 1,
+				Text = "",
+				TextSize = 10,
+				Font = FONT_M,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = row,
+			})
+			local function mini(name, x, text, fn)
+				local b = new("TextButton", {
+					Name = name,
+					Size = UDim2.new(0, 56, 0, 24),
+					Position = UDim2.new(1, x, 0.5, 0),
+					AnchorPoint = Vector2.new(0, 0.5),
+					BackgroundColor3 = C.Card2,
+					BorderSizePixel = 0,
+					AutoButtonColor = false,
+					Text = text,
+					TextSize = 11,
+					Font = FONT_B,
+					TextColor3 = C.Sub,
+					Parent = row,
+				})
+				new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = b })
+				local st = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = b })
+				bindHover(b, { Bg = { C.Card2, C.Accent }, Stroke = st, StrokeOn = C.Accent,
+					Label = b, LabelOn = C.White })
+				bindPress(b, C.Accent)
+				b.MouseButton1Click:Connect(fn)
+				return b
+			end
+			mini("Tp", -188, L("gmTpTo"), function() G.TpTarget = plr end)
+			mini("Follow", -126, L("gmFollow"), function()
+				G.Follow = (G.Follow == plr) and nil or plr
+				notify(G.Follow and string.format(L("gmFollowOn"), plr.Name) or L("gmFollowOff"),
+					G.Follow and C.Green or C.Sub)
+			end)
+			mini("Copy", -64, L("gmCopyName"), function()
+				local ok = copyText(plr.Name)
+				notify(ok and L("gmCopied") or string.format(L("gmCopyFail"), plr.Name),
+					ok and C.Green or C.Amber)
+			end)
+			return row, info
+		end
+
+		gRefreshPlayers = function()
+			for _, r in pairs(plrRows) do
+				pcall(function() r.row:Destroy() end)
+			end
+			plrRows = {}
+			local list = {}
+			pcall(function()
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= LocalPlayer then list[#list + 1] = p end
+				end
+			end)
+			if #list == 0 then
+				local empty = new("TextLabel", {
+					Name = "Empty",
+					Size = UDim2.new(1, 0, 0, 20),
+					BackgroundTransparency = 1,
+					Text = L("gmNoPlayers"),
+					TextSize = 11,
+					Font = FONT_N,
+					TextColor3 = C.Dim,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					Parent = plrList,
+				})
+				plrRows[1] = { row = empty }
+				return
+			end
+			for i, p in ipairs(list) do
+				if i > 6 then break end
+				local row, info = plrRow(i, p)
+				plrRows[i] = { row = row, info = info, plr = p }
+			end
+		end
+
+		-- ---------------- 页 4：传送 ----------------
+		local pTp = addPage("tp")
+		card(pTp, 0, 0, 236, 58, "Saved", L("gmSavePos"), L("gmSavePosD"), C.Green, false,
+			function(v)
+				if v then
+					local root = getRoot()
+					G.Saved = root and root.CFrame or nil
+					G.SavedAt = os.clock()
+					notify(G.Saved and L("gmSaved") or L("gmNoSaved"), G.Saved and C.Green or C.Amber)
+				end
+			end)
+		card(pTp, 244, 0, 236, 58, "SpawnTp", L("gmSpawn"), L("gmSpawnD"), C.Accent2, false,
+			function(v)
+				if v then
+					G.TpSpawn = true
+					local root = getRoot()
+					local sp = nil
+					pcall(function()
+						local sps = workspace:FindFirstChildOfClass("SpawnLocation")
+						if sps then sp = sps.Position end
+					end)
+					if root then
+						local target = sp or Vector3.new(0, 50, 0)
+						pcall(function() root.CFrame = CFrame.new(target + Vector3.new(0, 5, 0)) end)
+						notify(L("gmTpDone"), C.Green)
+					end
+				end
+				G.TpSpawn = false
+			end)
+		createButton(pTp, {
+			Name = "TpMouse",
+			Size = UDim2.new(0, 236, 0, 34),
+			Position = UDim2.new(0, 0, 0, 70),
+			Text = L("gmMouseTp"),
+			TextSize = 13,
+			Style = "solid",
+			OnClick = function() gTpMouse() end,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Position = UDim2.new(0, 0, 0, 112),
+			BackgroundTransparency = 1,
+			Text = L("gmTpHint"),
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			TextWrapped = true,
+			Parent = pTp,
+		})
+
+		show("gen")
+
+		-- ---------------- 功能实现 ----------------
+		gApply = function()
+			local hum = getHumanoid()
+			if hum then
+				pcall(function() hum.WalkSpeed = G.Speed end)
+				pcall(function() hum.UseJumpPower = true; hum.JumpPower = G.Jump end)
+			end
+			pcall(function() workspace.Gravity = G.Gravity end)
+			local cam = workspace.CurrentCamera
+			if cam then
+				pcall(function() cam.FieldOfView = G.Fov end)
+				pcall(function()
+					if cam.CameraSubject == getHumanoid() then
+						LocalPlayer.CameraMaxZoomDistance = G.CamDist
+						LocalPlayer.CameraMinZoomDistance = math.min(10, G.CamDist)
+					end
+				end)
+			end
+			pcall(function()
+				game:GetService("Lighting").ClockTime = G.Clock
+			end)
+		end
+
+		gNoclipRestore = function()
+			for part in pairs(G.noclipped) do
+				pcall(function() part.CanCollide = true end)
+				G.noclipped[part] = nil
+			end
+		end
+
+		local function gNoclip()
+			local char = LocalPlayer.Character
+			if not char then return end
+			local ok, list = pcall(function() return char:GetDescendants() end)
+			for _, d in ipairs(ok and list or {}) do
+				local isPart = false
+				pcall(function() isPart = d:IsA("BasePart") end)
+				if isPart and d.CanCollide then
+					pcall(function() d.CanCollide = false end)
+					G.noclipped[d] = true
+				end
+			end
+		end
+
+		local function gLighting()
+			local ok, v = pcall(function() return game:GetService("Lighting") end)
+			return ok and v or nil
+		end
+
+		local BRIGHT_AMB = Color3.fromRGB(178, 178, 178)
+		gBright = function()
+			local lt = gLighting()
+			if not lt then return end
+			if G.Bright then
+				if not G.brightSaved then
+					G.brightSaved = {}
+					pcall(function()
+						G.brightSaved.B = lt.Brightness
+						G.brightSaved.A = lt.Ambient
+						G.brightSaved.O = lt.OutdoorAmbient
+						G.brightSaved.S = lt.GlobalShadows
+					end)
+				end
+				if lt.Brightness ~= 2 or lt.GlobalShadows ~= false or lt.Ambient ~= BRIGHT_AMB then
+					pcall(function()
+						lt.Brightness = 2
+						lt.Ambient = BRIGHT_AMB
+						lt.OutdoorAmbient = BRIGHT_AMB
+						lt.GlobalShadows = false
+					end)
+				end
+			elseif G.brightSaved then
+				local s = G.brightSaved
+				pcall(function()
+					lt.Brightness = s.B
+					lt.Ambient = s.A
+					lt.OutdoorAmbient = s.O
+					lt.GlobalShadows = s.S
+				end)
+				G.brightSaved = nil
+			end
+		end
+
+		gNoFog = function()
+			local lt = gLighting()
+			if not lt then return end
+			if G.NoFog then
+				if not G.fog0 then
+					pcall(function() G.fog0 = { e = lt.FogEnd, s = lt.FogStart } end)
+				end
+				pcall(function() lt.FogEnd = 1e6; lt.FogStart = 0 end)
+			elseif G.fog0 then
+				pcall(function() lt.FogEnd = G.fog0.e; lt.FogStart = G.fog0.s end)
+				G.fog0 = nil
+			end
+		end
+
+		gDoReset = function()
+			pcall(function() LocalPlayer.Character:BreakJoints() end)
+			pcall(function()
+				local hum = getHumanoid()
+				if hum then hum.Health = 0 end
+			end)
+			notify(L("gmResetDone"), C.Green)
+		end
+
+		local function gMousePos()
+			local ok, pos = pcall(function()
+				local m = LocalPlayer:GetMouse()
+				if m and m.Hit then return m.Hit.Position end
+				return nil
+			end)
+			if ok and pos then return pos end
+			local cam = workspace.CurrentCamera
+			if not cam then return nil end
+			local ok2, p2 = pcall(function()
+				local loc = UserInputService:GetMouseLocation()
+				local ray = cam:ViewportPointToRay(loc.X, loc.Y)
+				local rp = RaycastParams.new()
+				rp.FilterType = Enum.RaycastFilterType.Exclude
+				rp.FilterDescendantsInstances = { LocalPlayer.Character }
+				local hit = workspace:Raycast(ray.Origin, ray.Direction * 3000, rp)
+				return hit and hit.Position or nil
+			end)
+			return ok2 and p2 or nil
+		end
+
+		gTpMouse = function()
+			local pos = gMousePos()
+			local root = getRoot()
+			if not (pos and root) then
+				notify(L("gmNoMouse"), C.Amber)
+				return
+			end
+			pcall(function() root.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0)) end)
+			notify(L("gmTpDone"), C.Green)
+		end
+
+		-- 玩家透视
+		local function espOff(part)
+			local e = G.esps[part]
+			if not e then return end
+			G.esps[part] = nil
+			if e.gui then pcall(function() e.gui:Destroy() end) end
+			if e.box then pcall(function() e.box:Destroy() end) end
+		end
+
+		gEspSweep = function()
+			for part in pairs(G.esps) do espOff(part) end
+		end
+
+		local function espSet(part, text, showBox)
+			local e = G.esps[part]
+			if not e then
+				local gui = new("BillboardGui", {
+					Name = "O_X_G_ESP",
+					Size = UDim2.new(0, 160, 0, 16),
+					StudsOffset = Vector3.new(0, 3, 0),
+					AlwaysOnTop = true,
+					Adornee = part,
+					Parent = part,
+				})
+				local label = new("TextLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Text = text,
+					TextSize = 12,
+					Font = FONT_B,
+					TextColor3 = C.Red,
+					TextStrokeTransparency = 0.3,
+					Parent = gui,
+				})
+				G.esps[part] = { gui = gui, label = label }
+				e = G.esps[part]
+			end
+			if e.label.Text ~= text then e.label.Text = text end
+			if showBox and not e.box then
+				e.box = new("BoxHandleAdornment", {
+					Name = "O_X_G_BOX",
+					Adornee = part,
+					AlwaysOnTop = true,
+					ZIndex = 5,
+					Transparency = 0.55,
+					Color3 = C.Red,
+					Size = Vector3.new(3, 5.5, 2.5),
+					Parent = part,
+				})
+			elseif not showBox and e.box then
+				pcall(function() e.box:Destroy() end)
+				e.box = nil
+			end
+		end
+
+		local function espRefresh()
+			local seen = {}
+			local root = getRoot()
+			if not root then return end
+			pcall(function()
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= LocalPlayer and p.Character then
+						local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+							or p.Character:FindFirstChild("Head")
+						if hrp then
+							local d = (hrp.Position - root.Position).Magnitude
+							if d <= G.EspRange then
+								seen[hrp] = true
+								local txt = ""
+								if G.EspName then txt = p.Name end
+								if G.EspDist then
+									txt = (txt ~= "" and (txt .. "  ") or "") .. string.format("[%dm]", math.floor(d))
+								end
+								espSet(hrp, txt ~= "" and txt or "●", G.EspBox)
+							end
+						end
+					end
+				end
+			end)
+			for part in pairs(G.esps) do
+				if not seen[part] then espOff(part) end
+			end
+		end
+
+		-- 主循环
+		local function step(now)
+			if G.Noclip then pcall(gNoclip) end
+			if G.Bright then pcall(gBright) end
+
+			-- 跟随
+			if G.Follow and G.Follow.Character then
+				local hrp = G.Follow.Character:FindFirstChild("HumanoidRootPart")
+				local root = getRoot()
+				if hrp and root then
+					local back = hrp.CFrame.LookVector * -6 + Vector3.new(0, 2, 0)
+					pcall(function() root.CFrame = CFrame.new(hrp.Position + back) end)
+				end
+			end
+
+			-- 传送目标
+			if G.TpTarget and G.TpTarget.Character then
+				local hrp = G.TpTarget.Character:FindFirstChild("HumanoidRootPart")
+				local root = getRoot()
+				if hrp and root then
+					pcall(function() root.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 3, 0)) end)
+					notify(L("gmTpDone"), C.Green)
+				end
+				G.TpTarget = nil
+			end
+
+			-- 防拉回：位置一帧跳超过 120 studs 就当游戏把你传走了，拉回原位
+			if G.AntiPull then
+				local root = getRoot()
+				if root then
+					local p = root.Position
+					if G.lastPos then
+						local jump = (p - G.lastPos).Magnitude
+						if jump > 120 and now - G.pullAt > 0.6 then
+							G.pullAt = now
+							pcall(function() root.CFrame = CFrame.new(G.lastPos) end)
+						else
+							G.lastPos = p
+						end
+					else
+						G.lastPos = p
+					end
+				end
+			end
+
+			-- 无限跳
+			if G.InfJump then
+				local hum = getHumanoid()
+				if hum then
+					local ok, st = pcall(function() return hum:GetState() end)
+					if not ok or (st ~= Enum.HumanoidStateType.Jumping
+						and st ~= Enum.HumanoidStateType.Freefall) then
+						pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
+					end
+				end
+			end
+
+			-- 防挂机
+			if G.AntiAfk then
+				pcall(function()
+					VirtualUser:CaptureController()
+					VirtualUser:ClickButton2(Vector2.new())
+				end)
+			end
+
+			-- 透视
+			if G.Esp then
+				if now - G.espAt >= 0.35 then
+					G.espAt = now
+					pcall(espRefresh)
+				end
+			elseif next(G.esps) then
+				pcall(gEspSweep)
+			end
+
+			-- 玩家列表刷新
+			if win.Visible and pages.plr and pages.plr.Visible and now - G.plrAt >= 1 then
+				G.plrAt = now
+				for _, r in pairs(plrRows) do
+					if r.plr and r.info then
+						local root = getRoot()
+						local hrp = r.plr.Character and r.plr.Character:FindFirstChild("HumanoidRootPart")
+						if hrp and root then
+							r.info.Text = string.format("%dm  ·  %s", math.floor((hrp.Position - root.Position).Magnitude),
+								tostring(r.plr.Team and r.plr.Team.Name or "-"))
+						end
+					end
+				end
+			end
+
+			-- 顶部胶囊
+			local ok, pid = pcall(function() return game.PlaceId end)
+			if ok and gameCur and pid == gameCur.p then
+				gChipDot.BackgroundColor3 = C.Green
+				gChipStroke.Color = C.Green
+				gChipText.Text = L("gmInGame")
+				gChipText.TextColor3 = C.Text
+			else
+				gChipDot.BackgroundColor3 = C.Dim
+				gChipStroke.Color = C.Stroke
+				gChipText.Text = L("gmNotInGame")
+				gChipText.TextColor3 = C.Dim
+			end
+		end
+
+		track(RunService.Heartbeat:Connect(function()
+			if SHUTDOWN or not gameBuilt then return end
+			pcall(step, os.clock())
+		end))
+
+		track(LocalPlayer.CharacterAdded:Connect(function()
+			task.wait(1)
+			if SHUTDOWN then return end
+			G.noclipped = {}
+			G.lastPos = nil
+			pcall(gApply)
+		end))
+
+		-- 收起 / 关闭
+		local reopen = new("TextButton", {
+			Name = "GameReopen",
+			Size = UDim2.new(0, 116, 0, 32),
+			Position = UDim2.new(0, 20, 0, 312),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			Visible = false,
+			Parent = guiMain,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = reopen })
+		local reopenStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = reopen })
+		local reopenScale = new("UIScale", { Scale = 1, Parent = reopen })
+		bindHover(reopen, { Stroke = reopenStroke, StrokeOn = C.Stroke2,
+			Scale = reopenScale, ScaleOn = 1.06 })
+		do
+			local box = new("Frame", {
+				Size = UDim2.new(0, 20, 0, 20),
+				Position = UDim2.new(0, 7, 0.5, 0),
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundColor3 = C.Card2,
+				BorderSizePixel = 0,
+				ClipsDescendants = true,
+				Parent = reopen,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = box })
+			new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Rotation = 45,
+				Parent = box })
+		end
+		local reopenLabel = new("TextLabel", {
+			Name = "Label",
+			Size = UDim2.new(1, -34, 1, 0),
+			Position = UDim2.new(0, 32, 0, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			TextSize = 12,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = reopen,
+		})
+		local reopenDragged = makeDraggable(reopen, reopen, nil, { threshold = 6, clamp = true })
+
+		local splash = makeWindowSplash(win, "GameSplash", L("gmTitle"), nil, R.win)
+
+		local function hide()
+			win.Visible = false
+			reopen.Visible = true
+			reopenScale.Scale = 0.4
+			tween(reopenScale, EASE.pop, { Scale = computeScale(GW, GH) })
+		end
+
+		-- 对外：打开某一台（懒建 + 换目标）
+		openGameWindow = function(g)
+			gameCur = g
+			local name = (LANG == "zh" and g.zh ~= "" and g.zh) or g.en
+			gTitle.Text = name
+			reopenLabel.Text = name
+			gIconText.Text = string.upper(string.sub(g.en, 1, 2))
+			show("gen")
+			reopen.Visible = false
+			win.Visible = true
+			winScale.Scale = math.clamp(computeScale(GW, GH) * 0.9, 0.5, 1)
+			tween(winScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+				{ Scale = computeScale(GW, GH) })
+			splash()
+			task.spawn(function()
+				task.wait(0.05)
+				pcall(gApply)
+				pcall(gRefreshPlayers)
+			end)
+		end
+
+		GameCloseRequest = function()
+			win.Visible = false
+			reopen.Visible = false
+		end
+
+		gameCleanup = function()
+			G.Fly, G.Noclip, G.Esp = false, false, false
+			G.InfJump, G.AntiAfk, G.Shield, G.AntiPull = false, false, false, false
+			G.Follow, G.TpTarget = nil, nil
+			pcall(gEspSweep)
+			pcall(gNoclipRestore)
+			pcall(gBright)
+			pcall(gNoFog)
+			local hum = getHumanoid()
+			if hum then
+				pcall(function() hum.WalkSpeed = 16 end)
+				pcall(function() hum.UseJumpPower = true; hum.JumpPower = 50 end)
+			end
+			pcall(function() workspace.Gravity = 196.2 end)
+			local cam = workspace.CurrentCamera
+			if cam then pcall(function() cam.FieldOfView = 70 end) end
+			win.Visible = false
+			reopen.Visible = false
+		end
+
+		winScale.Scale = computeScale(GW, GH)
+		reopenScale.Scale = winScale.Scale
+		gMin.MouseButton1Click:Connect(function() hide() end)
+		gClose.MouseButton1Click:Connect(function() GameCloseRequest() end)
+		reopen.MouseButton1Click:Connect(function()
+			if reopenDragged() then return end
+			if gameCur then openGameWindow(gameCur) end
+		end)
+		track(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+			task.wait(0.2)
+			if SHUTDOWN or not win.Visible then return end
+			winScale.Scale = computeScale(GW, GH)
+		end))
+	end
+
 	-- 快捷键
 	track(UserInputService.InputBegan:Connect(function(input, processed)
 		if SHUTDOWN or processed then return end
-		if input.KeyCode == CONFIG.FlyKey then
+		local k = input.KeyCode
+		if k == CONFIG.FlyKey then
 			Fly:Toggle()
+		elseif k == Enum.KeyCode.CapsLock then
+			-- 大写键：开关"已执行的服务器脚本"清单
+			toggleRanOverlay()
+		elseif k == Enum.KeyCode.Tab then
+			-- Tab：回脚本主页（顺手把清单收掉）
+			pcall(toggleRanOverlay)
+			if window.Visible then showPage("home") end
 		end
 	end))
 
@@ -10790,6 +12828,7 @@ boot = function(lang)
 		pcall(function() SrvAutoWinRequest(false) end)
 		pcall(pdCleanup)
 		pcall(dsCleanup)
+		pcall(gameCleanup)
 		pcall(closeDenyModal)
 
 		-- 1. 停飞行。走缓降流程，别让玩家直接摔死
