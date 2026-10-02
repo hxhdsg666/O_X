@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.9.0
+--  Version : 1.9.1
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -61,7 +61,7 @@ local LOCALES = {
 		srvOpen      = "打开",
 		srvMore      = "更多服务器还在做",
 		srvNds       = "自然灾害模拟器",
-		srvHeist     = "劫案",
+		srvHeist     = "Notoriety",
 
 		denyTitle    = "未在对应服务器内",
 		denyBody     = "这个脚本只能在「%s」里用，你现在不在这个服务器。",
@@ -99,7 +99,7 @@ local LOCALES = {
 		farmOff      = "自动获胜已关闭",
 		farmHint     = "开启期间角色会被按在出生点。游戏开局把你传去场地，也会被立刻拉回来。",
 
-		-- 劫案面板（place 21532277 = 主游戏，universe 16680835 = 整款游戏）
+		-- 劫案面板（Notoriety · place 21532277 = 主游戏，universe 16680835 = 整款游戏）
 		pdMainTag      = "主游戏",
 		pdMapTag       = "地图：%s",
 		pdDetecting    = "识别地图中...",
@@ -112,30 +112,41 @@ local LOCALES = {
 		pdTabAssault   = "强攻",
 
 		pdStealthTitle = "潜入",
-		pdStealthSub   = "自动处理目标，尽量别闹出动静",
+		pdStealthSub   = "自动拿战利品、自动把包送走",
+		pdAutoDone     = "自动完成",
+		pdAutoDoneD    = "自己跑向每个战利品 → 交互 → 丢到撤离点，循环到没东西可拿",
 		pdAutoAct      = "自动交互",
-		pdAutoActD     = "自动触发附近的按钮 / 保险箱 / 目标点",
+		pdAutoActD     = "附近有按钮 / 保险箱就顺手按一下（不走路线）",
+		pdTp           = "瞬移",
+		pdTpD          = "关掉就按下面的速度跑过去",
+		pdLootEsp      = "目标高亮",
+		pdLootEspD     = "给战利品和交互点挂名字，隔墙可见",
 		pdActRange     = "交互范围",
-		pdObjEsp       = "目标高亮",
-		pdObjEspD      = "给附近能交互的东西描边，隔墙也能看见",
-		pdObjRange     = "高亮范围",
+		pdLootRange    = "高亮范围",
+		pdMoveSpeed    = "移动速度",
+		pdGrab         = "自动完成  ·  已拿走 %s 件",
+		pdNoLoot       = "没找到能拿的战利品，等着刷新",
+		pdDoneOn       = "自动完成已开启",
+		pdDoneOff      = "自动完成已关闭",
 		pdActOn        = "自动交互已开启  ·  范围 %s",
 		pdActOff       = "自动交互已关闭",
-		pdObjEspOn     = "目标高亮已开启",
-		pdObjEspOff    = "目标高亮已关闭",
+		pdLootOn       = "目标高亮已开启",
+		pdLootOff      = "目标高亮已关闭",
 
 		pdAssaultTitle = "强攻",
-		pdAssaultSub   = "自瞄 NPC，不瞄队友和己方 NPC",
+		pdAssaultSub   = "自瞄只锁敌人，外带全场透视",
 		pdAim          = "NPC 自瞄",
-		pdAimD         = "把准星锁到视野里的敌人身上",
+		pdAimD         = "视角转到敌人身上，同时把准星压到头上，子弹跟着准星走",
 		pdFire         = "自动开火",
 		pdFireD        = "锁定目标后自动扣扳机",
-		pdAlly         = "忽略队友 / 己方 NPC",
-		pdAllyD        = "名字里带 ally / friend / crew / hostage 这类词的不瞄",
+		pdOnlyEnemy    = "只瞄敌人",
+		pdOnlyEnemyD   = "只锁 Police 里的守卫；平民、队友、AI 补位都不瞄",
+		pdHead         = "锁头",
+		pdHeadD        = "关掉就打身体",
 		pdWalls        = "隔墙也瞄",
 		pdWallsD       = "关掉只瞄看得见的",
-		pdNpcEsp       = "NPC 透视",
-		pdNpcEspD      = "只给敌人描边",
+		pdEsp          = "全场透视",
+		pdEspD         = "红=敌人 琥珀=平民 绿=队友 白=战利品",
 		pdPriority     = "优先目标",
 		pdPriCross     = "准星最近",
 		pdPriNear      = "距离最近",
@@ -144,7 +155,15 @@ local LOCALES = {
 		pdAimRange     = "自瞄范围",
 		pdAimOn        = "NPC 自瞄已开启  ·  优先 %s",
 		pdAimOff       = "NPC 自瞄已关闭",
-		pdNoNpc        = "附近没有能锁定的 NPC",
+		pdEspOn        = "全场透视已开启",
+		pdEspOff       = "全场透视已关闭",
+		pdNoNpc        = "附近没有能锁定的敌人",
+
+		pdTEnemy       = "敌人",
+		pdTCiv         = "平民",
+		pdTAlly        = "队友",
+		pdTOther       = "NPC",
+		pdTLoot        = "战利品",
 
 
 
@@ -249,7 +268,7 @@ local LOCALES = {
 		srvOpen      = "Open",
 		srvMore      = "More servers are on the way",
 		srvNds       = "Natural Disaster Survival",
-		srvHeist     = "Heist",
+		srvHeist     = "Notoriety",
 
 		denyTitle    = "Wrong game",
 		denyBody     = "This script only works in %s. You are not in that game right now.",
@@ -286,7 +305,7 @@ local LOCALES = {
 		farmOff      = "Auto win off",
 		farmHint     = "While on, you are pinned to spawn. If the round sends you to the field, you get pulled right back.",
 
-		-- Heist panel (place 21532277 = main game, universe 16680835)
+		-- Heist panel (Notoriety · place 21532277 = main game, universe 16680835)
 		pdMainTag      = "Main game",
 		pdMapTag       = "Map: %s",
 		pdDetecting    = "Detecting map...",
@@ -299,30 +318,41 @@ local LOCALES = {
 		pdTabAssault   = "Assault",
 
 		pdStealthTitle = "Stealth",
-		pdStealthSub   = "Runs the objectives for you, quietly",
+		pdStealthSub   = "Takes the loot and drops the bags for you",
+		pdAutoDone     = "Auto complete",
+		pdAutoDoneD    = "Walks to every loot, interacts, stashes it, repeats",
 		pdAutoAct      = "Auto interact",
-		pdAutoActD     = "Triggers nearby buttons, safes and objectives",
+		pdAutoActD     = "Presses nearby buttons and safes (no loot route)",
+		pdTp           = "Teleport",
+		pdTpD          = "Off = run there at the speed below",
+		pdLootEsp      = "Loot highlight",
+		pdLootEspD     = "Name tags on loot and interactables, through walls",
 		pdActRange     = "Interact range",
-		pdObjEsp       = "Objective highlight",
-		pdObjEspD      = "Outlines nearby interactables through walls",
-		pdObjRange     = "Highlight range",
+		pdLootRange    = "Highlight range",
+		pdMoveSpeed    = "Move speed",
+		pdGrab         = "Auto complete  ·  %s grabbed",
+		pdNoLoot       = "No loot to grab, waiting for respawn",
+		pdDoneOn       = "Auto complete on",
+		pdDoneOff      = "Auto complete off",
 		pdActOn        = "Auto interact on  ·  range %s",
 		pdActOff       = "Auto interact off",
-		pdObjEspOn     = "Objective highlight on",
-		pdObjEspOff    = "Objective highlight off",
+		pdLootOn       = "Loot highlight on",
+		pdLootOff      = "Loot highlight off",
 
 		pdAssaultTitle = "Assault",
-		pdAssaultSub   = "Aims at NPCs only, never teammates or friendly NPCs",
+		pdAssaultSub   = "Aims at enemies only, plus full ESP",
 		pdAim          = "NPC aimbot",
-		pdAimD         = "Locks the crosshair onto enemies in view",
+		pdAimD         = "Turns the view and puts the crosshair on the head, bullets follow it",
 		pdFire         = "Auto fire",
 		pdFireD        = "Pulls the trigger while locked",
-		pdAlly         = "Ignore teammates and friendly NPCs",
-		pdAllyD        = "Anything named ally / friend / crew / hostage is skipped",
+		pdOnlyEnemy    = "Enemies only",
+		pdOnlyEnemyD   = "Only guards in Police; civilians, teammates and AI bots are skipped",
+		pdHead         = "Head lock",
+		pdHeadD        = "Off = aim at the body",
 		pdWalls        = "Aim through walls",
 		pdWallsD       = "Off = visible targets only",
-		pdNpcEsp       = "NPC highlight",
-		pdNpcEspD      = "Outlines enemies only",
+		pdEsp          = "Full ESP",
+		pdEspD         = "Red enemy, amber civ, green ally, white loot",
 		pdPriority     = "Priority",
 		pdPriCross     = "Closest to crosshair",
 		pdPriNear      = "Closest",
@@ -331,7 +361,15 @@ local LOCALES = {
 		pdAimRange     = "Aim range",
 		pdAimOn        = "NPC aimbot on  ·  priority %s",
 		pdAimOff       = "NPC aimbot off",
-		pdNoNpc        = "No NPC to lock onto nearby",
+		pdEspOn        = "Full ESP on",
+		pdEspOff       = "Full ESP off",
+		pdNoNpc        = "No enemy to lock onto nearby",
+
+		pdTEnemy       = "enemy",
+		pdTCiv         = "civilian",
+		pdTAlly        = "teammate",
+		pdTOther       = "npc",
+		pdTLoot        = "loot",
 
 
 
@@ -430,7 +468,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.9.0",
+	Version = "v1.9.1",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -6206,12 +6244,15 @@ boot = function(lang)
 	local function pdBuild()
 		local PD_W, PD_H = 520, 480
 		local pd = {
-			AutoAct = false, ActRange = 15,
-			ObjEsp  = false, ObjRange = 80,
-			Aim     = false, Fire = false, Priority = "cross",
-			Fov     = 90, Range = 300, Walls = false, Ally = true, NpcEsp = false,
-			Npcs = {}, Marks = {}, scanAt = 0, names = {},
+			AutoDone = false, AutoAct = false, Tp = true, MoveSpeed = 75,
+			ActRange = 15, LootEsp = false, LootRange = 200,
+			Aim = false, Fire = false, OnlyEnemy = true, Head = true,
+			Walls = false, Esp = false, Priority = "cross",
+			Fov = 90, Range = 300, EspRange = 600,          -- ponytail: 透视范围写死 600，页面放不下滑块了
+			Items = {}, Esps = {}, Taken = setmetatable({}, { __mode = "k" }),
+			prompts = {}, clicks = {}, scanAt = 0, names = {}, run = 0,
 		}
+		local pdAutoDoneLoop            -- 先声明：潜入页的开关要用它
 
 		-- ---------------- 窗口骨架（跟服务器窗口同款：拖动 / － 胶囊 / ✕ 关窗） ----------------
 		local pdWin = new("Frame", {
@@ -6534,6 +6575,32 @@ boot = function(lang)
 			})
 		end
 
+		-- 标题 / 说明两行
+		local function pdHead(page, title, sub)
+			new("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 20),
+				Position = UDim2.new(0, 0, 0, 2),
+				BackgroundTransparency = 1,
+				Text = title,
+				TextSize = 16,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = page,
+			})
+			new("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 14),
+				Position = UDim2.new(0, 0, 0, 24),
+				BackgroundTransparency = 1,
+				Text = sub,
+				TextSize = 11,
+				Font = FONT_N,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = page,
+			})
+		end
+
 		-- ---------- 页：主游戏（没脚本） ----------
 		local pdUpdatePage = pdAddPage("update")
 		new("TextLabel", {
@@ -6574,87 +6641,74 @@ boot = function(lang)
 		-- ---------- 页：潜入 ----------
 		local pdStealth = pdAddPage("stealth")
 		pdAddNav("stealth", L("pdTabStealth"), 1)
+		pdHead(pdStealth, L("pdStealthTitle"), L("pdStealthSub"))
 
-		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 20),
-			Position = UDim2.new(0, 0, 0, 2),
+		-- 自动完成跑到哪一步了（这个是"点了有反应"的关键反馈）
+		local pdStatus = new("TextLabel", {
+			Name = "HeistStatus",
+			Size = UDim2.new(0, 190, 0, 14),
+			Position = UDim2.new(1, -190, 0, 4),
 			BackgroundTransparency = 1,
-			Text = L("pdStealthTitle"),
-			TextSize = 16,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = pdStealth,
-		})
-		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 14),
-			Position = UDim2.new(0, 0, 0, 24),
-			BackgroundTransparency = 1,
-			Text = L("pdStealthSub"),
+			Text = "",
 			TextSize = 11,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
+			Font = FONT_M,
+			TextColor3 = C.Green,
+			TextXAlignment = Enum.TextXAlignment.Right,
 			Parent = pdStealth,
 		})
 
-		pdRow(pdStealth, 44, "AutoAct", L("pdAutoAct"), L("pdAutoActD"), false, function(v)
+		pdRow(pdStealth, 44, "AutoDone", L("pdAutoDone"), L("pdAutoDoneD"), false, function(v)
+			pd.AutoDone = v
+			if v then
+				notify(L("pdDoneOn"), C.Green)
+				task.spawn(pdAutoDoneLoop)
+			else
+				pd.run = pd.run + 1
+				pdStatus.Text = ""
+				notify(L("pdDoneOff"), C.Red)
+			end
+		end)
+		pdRow(pdStealth, 84, "AutoAct", L("pdAutoAct"), L("pdAutoActD"), false, function(v)
 			pd.AutoAct = v
 			notify(v and string.format(L("pdActOn"), tostring(pd.ActRange)) or L("pdActOff"),
 				v and C.Green or C.Red)
 		end)
-		pdSlider(pdStealth, 92, L("pdActRange"), 5, 60, pd.ActRange, function(v) pd.ActRange = v end)
-
-		pdRow(pdStealth, 148, "ObjEsp", L("pdObjEsp"), L("pdObjEspD"), false, function(v)
-			pd.ObjEsp = v
-			notify(v and L("pdObjEspOn") or L("pdObjEspOff"), v and C.Green or C.Red)
+		pdRow(pdStealth, 124, "Tp", L("pdTp"), L("pdTpD"), true, function(v) pd.Tp = v end)
+		pdRow(pdStealth, 164, "LootEsp", L("pdLootEsp"), L("pdLootEspD"), false, function(v)
+			pd.LootEsp = v
+			notify(v and L("pdLootOn") or L("pdLootOff"), v and C.Green or C.Red)
 		end)
-		pdSlider(pdStealth, 196, L("pdObjRange"), 20, 300, pd.ObjRange, function(v) pd.ObjRange = v end)
+
+		pdSlider(pdStealth, 212, L("pdActRange"), 5, 80, pd.ActRange, function(v) pd.ActRange = v end)
+		pdSlider(pdStealth, 258, L("pdLootRange"), 20, 600, pd.LootRange, function(v) pd.LootRange = v end)
+		pdSlider(pdStealth, 304, L("pdMoveSpeed"), 20, 300, pd.MoveSpeed, function(v) pd.MoveSpeed = v end)
 
 		-- ---------- 页：强攻 ----------
 		local pdAssault = pdAddPage("assault")
 		pdAddNav("assault", L("pdTabAssault"), 2)
+		pdHead(pdAssault, L("pdAssaultTitle"), L("pdAssaultSub"))
 
-		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 20),
-			Position = UDim2.new(0, 0, 0, 2),
-			BackgroundTransparency = 1,
-			Text = L("pdAssaultTitle"),
-			TextSize = 16,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = pdAssault,
-		})
-		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 14),
-			Position = UDim2.new(0, 0, 0, 24),
-			BackgroundTransparency = 1,
-			Text = L("pdAssaultSub"),
-			TextSize = 11,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = pdAssault,
-		})
-
-		-- 优先目标的词条名（提示条里也要用）
 		local PRI_KEY = { cross = "pdPriCross", near = "pdPriNear", low = "pdPriLow" }
 
 		pdRow(pdAssault, 44, "Aim", L("pdAim"), L("pdAimD"), false, function(v)
 			pd.Aim = v
 			notify(v and string.format(L("pdAimOn"), L(PRI_KEY[pd.Priority])) or L("pdAimOff"),
 				v and C.Green or C.Red)
-			if v and #pd.Npcs == 0 then notify(L("pdNoNpc"), C.Amber) end
+			if v and #pd.Items == 0 then notify(L("pdNoNpc"), C.Amber) end
 		end)
 		pdRow(pdAssault, 84, "Fire", L("pdFire"), L("pdFireD"), false, function(v) pd.Fire = v end)
-		pdRow(pdAssault, 124, "Ally", L("pdAlly"), L("pdAllyD"), true, function(v) pd.Ally = v end)
-		pdRow(pdAssault, 164, "Walls", L("pdWalls"), L("pdWallsD"), false, function(v) pd.Walls = v end)
-		pdRow(pdAssault, 204, "NpcEsp", L("pdNpcEsp"), L("pdNpcEspD"), false, function(v) pd.NpcEsp = v end)
+		pdRow(pdAssault, 124, "OnlyEnemy", L("pdOnlyEnemy"), L("pdOnlyEnemyD"), true,
+			function(v) pd.OnlyEnemy = v end)
+		pdRow(pdAssault, 164, "Head", L("pdHead"), L("pdHeadD"), true, function(v) pd.Head = v end)
+		pdRow(pdAssault, 204, "Walls", L("pdWalls"), L("pdWallsD"), false, function(v) pd.Walls = v end)
+		pdRow(pdAssault, 244, "Esp", L("pdEsp"), L("pdEspD"), false, function(v)
+			pd.Esp = v
+			notify(v and L("pdEspOn") or L("pdEspOff"), v and C.Green or C.Red)
+		end)
 
 		new("TextLabel", {
 			Size = UDim2.new(1, 0, 0, 14),
-			Position = UDim2.new(0, 0, 0, 250),
+			Position = UDim2.new(0, 0, 0, 286),
 			BackgroundTransparency = 1,
 			Text = L("pdPriority"),
 			TextSize = 12,
@@ -6682,7 +6736,7 @@ boot = function(lang)
 			local btn = new("TextButton", {
 				Name = "HeistPri_" .. key,
 				Size = UDim2.new(0, 108, 0, 26),
-				Position = UDim2.new(0, (i - 1) * 116, 0, 268),
+				Position = UDim2.new(0, (i - 1) * 116, 0, 302),
 				BackgroundColor3 = C.Card,
 				BorderSizePixel = 0,
 				AutoButtonColor = false,
@@ -6705,8 +6759,8 @@ boot = function(lang)
 		end
 		pdPriApply("cross")
 
-		pdSlider(pdAssault, 304, L("pdFov"), 10, 360, pd.Fov, function(v) pd.Fov = v end)
-		pdSlider(pdAssault, 352, L("pdAimRange"), 20, 1000, pd.Range, function(v) pd.Range = v end)
+		pdSlider(pdAssault, 332, L("pdFov"), 10, 360, pd.Fov, function(v) pd.Fov = v end)
+		pdSlider(pdAssault, 378, L("pdAimRange"), 20, 1000, pd.Range, function(v) pd.Range = v end)
 
 		pdShow("stealth")
 
@@ -6729,7 +6783,6 @@ boot = function(lang)
 		end
 
 		-- 地图名：先问 Roblox 要这个 place 的名字，拿不到再查手动表，最后退成 #id
-		-- （GetProductInfo 在部分执行器/副作用环境下不可用，所以必须能降级）
 		local function pdMapName(pid)
 			if pd.names[pid] then return pd.names[pid] end
 			local name
@@ -6761,40 +6814,38 @@ boot = function(lang)
 			end)
 		end
 
-		-- ---------------- 扫描：交互物 / NPC ----------------
-		-- ponytail: 每 0.4 秒全树扫一次，够用但地图超大时会吃帧；
-		-- 真要优化就换 CollectionService 标签，或者把间隔拉长。
-		local prompts, clicks = {}, {}
+		-- ---------------- Notoriety 里的位置 ----------------
+		-- 结构：Workspace.Police（敌人）/ Citizens（平民）/ BigLoot·Lootables（战利品）/
+		-- BagSecuredArea（撤离点）/ Cameras。名字随版本可能变，所以全部 FindFirstChild + 兜底。
+		local CIV_FOLDERS  = { "Citizens", "Civilians", "Hostages" }
+		local ALLY_FOLDERS = { "Crew", "Crewmates", "Teammates", "Allies" }
 
-		local function pdIsAlly(model)
-			if Players:GetPlayerFromCharacter(model) then return true end
-			if not pd.Ally then return false end
-			local node, depth = model, 0
-			while node and node ~= workspace and depth < 4 do
-				local n = string.lower(tostring(node.Name))
-				for _, kw in ipairs(PD.AllyKw) do
-					if string.find(n, kw, 1, true) then return true end
-				end
-				node, depth = node.Parent, depth + 1
+		local function pdChild(parent, ...)
+			if not parent then return nil end
+			for _, n in ipairs({ ... }) do
+				local c = parent:FindFirstChild(n)
+				if c then return c end
 			end
-			return false
+			return nil
 		end
 
-		local function pdScan()
-			local ps, cs, npcs = {}, {}, {}
-			for _, d in ipairs(workspace:GetDescendants()) do
-				if d:IsA("ProximityPrompt") then
-					if d.Enabled then ps[#ps + 1] = d end
-				elseif d:IsA("ClickDetector") then
-					cs[#cs + 1] = d
-				elseif d:IsA("Humanoid") then
-					local model = d.Parent
-					if model and d.Health > 0 and not pdIsAlly(model) then
-						npcs[#npcs + 1] = { model = model, hum = d }
-					end
-				end
-			end
-			prompts, clicks, pd.Npcs = ps, cs, npcs
+		local function pdLoot()
+			return pdChild(workspace, "BigLoot", "Lootables", "Loot", "Lootable")
+		end
+
+		local function pdPack()
+			local ok, rs = pcall(function() return game:GetService("ReplicatedStorage") end)
+			if not ok or not rs then return nil end
+			return rs:FindFirstChild("RS_Package")
+		end
+
+		-- 远程名就那几个，递归找最省事（RS_Package 的层级改过几次）
+		local function pdRemote(name)
+			local pack = pdPack()
+			if not pack then return nil end
+			local ok, r = pcall(function() return pack:FindFirstChild(name, true) end)
+			if ok then return r end
+			return nil
 		end
 
 		local function pdPos(inst)
@@ -6818,98 +6869,295 @@ boot = function(lang)
 			return (pos - root.Position).Magnitude
 		end
 
-		-- ---------------- 高亮（目标 / NPC 共用一套） ----------------
-		local function pdMark(inst, on, c1, c2)
-			local hl = pd.Marks[inst]
-			if not on then
-				if hl then
-					pd.Marks[inst] = nil
-					pcall(function() hl:Destroy() end)
+		-- 敌我识别：按文件夹认最稳（Police = 敌人，Citizens = 平民）
+		-- ponytail: 玩家一律当队友（Notoriety 是合作劫案，没有敌对玩家）；真有 PvP 再按 Team 判。
+		local function pdKind(model)
+			local node, depth = model, 0
+			while node and node ~= workspace and depth < 8 do
+				local n = node.Name
+				if n == "Police" or n == "Enemies" or n == "Security" then return "enemy" end
+				for _, f in ipairs(CIV_FOLDERS) do
+					if n == f then return "civ" end
 				end
-				return
+				for _, f in ipairs(ALLY_FOLDERS) do
+					if n == f then return "ally" end
+				end
+				node, depth = node.Parent, depth + 1
 			end
-			if hl then
-				if hl.Parent then return end
-				pd.Marks[inst] = nil
+			local plr = Players:GetPlayerFromCharacter(model)
+			if plr then
+				return (plr == LocalPlayer) and "me" or "ally"
 			end
-			local n = 0
-			for _ in pairs(pd.Marks) do n = n + 1 end
-			if n >= 30 then return end      -- ponytail: Highlight 太多引擎会自己丢，卡 30 个
-			pd.Marks[inst] = new("Highlight", {
-				Name = "O_X_HL",
-				FillColor = c1 or C.Accent,
-				OutlineColor = c2 or C.Accent2,
-				FillTransparency = 0.62,
-				OutlineTransparency = 0,
-				DepthMode = Enum.HighlightDepthMode.AlwaysOn,
-				Parent = inst,
-			})
+			local nm = string.lower(tostring(model.Name))
+			for _, kw in ipairs(PD.AllyKw) do
+				if string.find(nm, kw, 1, true) then return "ally" end
+			end
+			return "other"
 		end
 
-		local function pdRefreshMarks()
-			local seen = {}
-			if pd.NpcEsp then
-				for _, t in ipairs(pd.Npcs) do
-					seen[t.model] = true
-					pdMark(t.model, true, C.Accent, C.Accent2)
-				end
-			end
-			if pd.ObjEsp then
-				for _, p in ipairs(prompts) do
-					local d = pdDist(p)
-					if d and d <= pd.ObjRange then
-						local target = p.Parent or p
-						seen[target] = true
-						pdMark(target, true, C.Green, C.Amber)
+		-- ---------------- 扫描：交互点 / 人物 ----------------
+		-- ponytail: 每 0.4 秒全树扫一次；地图大到卡帧就把间隔拉长或改 CollectionService 标签
+		local function pdScan()
+			local ps, cs, list = {}, {}, {}
+			for _, d in ipairs(workspace:GetDescendants()) do
+				if d:IsA("ProximityPrompt") then
+					if d.Enabled then ps[#ps + 1] = d end
+				elseif d:IsA("ClickDetector") then
+					cs[#cs + 1] = d
+				elseif d:IsA("Humanoid") then
+					local model = d.Parent
+					if model and d.Health > 0 then
+						list[#list + 1] = { model = model, hum = d, kind = pdKind(model) }
 					end
 				end
 			end
-			for inst in pairs(pd.Marks) do
-				if not seen[inst] then pdMark(inst, false) end
+			pd.prompts, pd.clicks, pd.Items = ps, cs, list
+		end
+
+		-- ---------------- 透视：所有人 + 战利品，按类型分色 ----------------
+		local ESP_COLOR = { enemy = C.Red, civ = C.Amber, ally = C.Green,
+			other = C.Sub, loot = C.White, me = C.White }
+		local ESP_KEY = { enemy = "pdTEnemy", civ = "pdTCiv", ally = "pdTAlly",
+			other = "pdTOther", loot = "pdTLoot" }
+
+		local function pdEspPart(inst)
+			if inst:IsA("BasePart") then return inst end
+			return inst:FindFirstChild("Head") or inst:FindFirstChild("HumanoidRootPart")
+				or inst.PrimaryPart or inst:FindFirstChildOfClass("Part")
+		end
+
+		local function pdEspOff(inst)
+			local e = pd.Esps[inst]
+			if e then
+				pd.Esps[inst] = nil
+				pcall(function() e.gui:Destroy() end)
 			end
 		end
 
-		-- ---------------- 自动交互 ----------------
+		local function pdEspSet(part, kind, text)
+			local e = pd.Esps[part]
+			if not e then
+				local gui = new("BillboardGui", {          -- BillboardGui 没有 Highlight 那种数量上限
+					Name = "O_X_ESP",
+					Size = UDim2.new(0, 150, 0, 16),
+					StudsOffset = Vector3.new(0, 2.2, 0),
+					AlwaysOnTop = true,
+					Adornee = part,
+					Parent = part,
+				})
+				local label = new("TextLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Text = text,
+					TextSize = 12,
+					Font = FONT_B,
+					TextColor3 = ESP_COLOR[kind] or C.White,
+					TextStrokeTransparency = 0.3,
+					Parent = gui,
+				})
+				pd.Esps[part] = { gui = gui, label = label, kind = kind }
+				return
+			end
+			if e.kind ~= kind then
+				e.kind = kind
+				e.label.TextColor3 = ESP_COLOR[kind] or C.White
+			end
+			if e.label.Text ~= text then e.label.Text = text end
+		end
+
+		local function pdRank(kind)
+			if kind == "enemy" then return 1 end
+			if kind == "civ" then return 2 end
+			if kind == "ally" then return 3 end
+			if kind == "loot" then return 4 end
+			return 5
+		end
+
+		local function pdRefreshEsp()
+			local seen, list = {}, {}
+			if pd.Esp then
+				for _, t in ipairs(pd.Items) do
+					if t.kind ~= "me" then
+						local part = pdEspPart(t.model)
+						if part then list[#list + 1] = { part = part, kind = t.kind, name = t.model.Name } end
+					end
+				end
+			end
+			if pd.LootEsp then
+				local folder = pdLoot()
+				if folder then
+					for _, d in ipairs(folder:GetDescendants()) do
+						local p = d:IsA("ProximityPrompt") and d or d:FindFirstChildOfClass("ProximityPrompt")
+						if p and p.Parent then
+							local part = pdEspPart(p.Parent)
+							if part then
+								list[#list + 1] = { part = part, kind = "loot", name = p.Parent.Name }
+							end
+						end
+					end
+				end
+			end
+			table.sort(list, function(a, b) return pdRank(a.kind) < pdRank(b.kind) end)
+			local n = 0
+			for _, it in ipairs(list) do
+				local rng = (it.kind == "loot") and pd.LootRange or pd.EspRange
+				local dist = pdDist(it.part)
+				if dist and dist <= rng then
+					n = n + 1
+					if n <= 60 then       -- ponytail: 一屏最多挂 60 个名字，再多没意义还掉帧
+						seen[it.part] = true
+						pdEspSet(it.part, it.kind,
+							string.format("%s  %s  %sm", tostring(it.name), L(ESP_KEY[it.kind]),
+								tostring(math.floor(dist))))
+					end
+				end
+			end
+			for part in pairs(pd.Esps) do
+				if not seen[part] then pdEspOff(part) end
+			end
+		end
+
+		-- ---------------- 潜入：交互 + 自动完成 ----------------
+		local function pdMoveTo(pos)
+			local root = getRoot()
+			if not root or not pos then return false end
+			if pd.Tp then
+				return pcall(function() root.CFrame = CFrame.new(pos) end)
+			end
+			local dist = (pos - root.Position).Magnitude
+			local tw = TweenService:Create(root,
+				TweenInfo.new(math.max(dist / pd.MoveSpeed, 0.05), Enum.EasingStyle.Linear),
+				{ CFrame = CFrame.new(pos) })
+			tw:Play()
+			pcall(function() tw.Completed:Wait() end)
+			return true
+		end
+
+		local function pdInteract(p)
+			if not p or not p.Parent then return end
+			pcall(function() p.RequiresLineOfSight = false end)
+			local hold = 0
+			pcall(function() hold = tonumber(p.HoldDuration) or 0 end)
+			if hold > 5 then hold = 1 end            -- 有些锁是 20 秒的假 HoldDuration，别卡死
+			local fire = execFn("fireproximityprompt")
+			local start, finish = pdRemote("StartInteraction"), pdRemote("CompleteInteraction")
+			-- 最多试 3 次：交互成功的话 prompt 会被销毁 / 关掉，那就提前结束
+			for _ = 1, 3 do
+				if not p.Parent or p.Enabled == false then break end
+				if fire then pcall(fire, p) end
+				if hold > 0.05 then
+					if start and finish then
+						pcall(function() start:FireServer(p) end)
+						task.wait(hold)
+						pcall(function() finish:FireServer(p) end)
+					else
+						pcall(function()
+							p:InputHoldBegin()
+							task.wait(hold)
+							p:InputHoldEnd()
+						end)
+					end
+				end
+				task.wait(0.15)
+			end
+		end
+
+		-- 自动完成：找战利品 -> 过去 -> 交互 -> 送到撤离点 -> 循环
+		pdAutoDoneLoop = function()
+			if SHUTDOWN or not pd.AutoDone then return end
+			pd.run = pd.run + 1
+			local me = pd.run
+			local throwBag = pdRemote("ThrowBag")
+			local van = pdChild(workspace, "BagSecuredArea", "SecuredArea", "EscapeVan")
+			local done, warned = 0, false
+			while pd.AutoDone and not SHUTDOWN and pd.run == me do
+				local target, tpos
+				local folder = pdLoot()
+				if folder then
+					for _, d in ipairs(folder:GetDescendants()) do
+						local p = d:IsA("ProximityPrompt") and d or d:FindFirstChildOfClass("ProximityPrompt")
+						if p and p.Enabled and not pd.Taken[p] then
+							local pos = pdPos(p)
+							if pos then target, tpos = p, pos break end
+						end
+					end
+				end
+				if not target then
+					if not warned then
+						warned = true
+						notify(L("pdNoLoot"), C.Amber)
+					end
+					task.wait(2)
+				else
+					pd.Taken[target] = true
+					done = done + 1
+					local msg = string.format(L("pdGrab"), tostring(done))
+					pdStatus.Text = msg
+					notify(msg, C.Accent)
+					pdMoveTo(tpos)
+					task.wait(0.2)
+					pdInteract(target)
+					if van and throwBag then
+						local vpos = pdPos(van)
+						if vpos then
+							pdMoveTo(vpos + Vector3.new(0, 3, 0))
+							task.wait(0.25)
+							local root = getRoot()
+							local dir = Vector3.new(0, 0, -1)
+							if root then
+								local d = vpos - root.Position
+								if d.Magnitude > 0.1 then dir = d.Unit end
+							end
+							pcall(function() throwBag:FireServer(dir) end)
+							task.wait(1.2)
+						end
+					end
+					task.wait(0.15)
+				end
+			end
+			pd.AutoDone = false
+			pdStatus.Text = ""
+		end
+
 		local promptAt = setmetatable({}, { __mode = "k" })
 
 		local function pdAutoAct()
 			local now = os.clock()
-			local firePrompt = execFn("fireproximityprompt")
+			local fire = execFn("fireproximityprompt")
 			local n = 0
-			for _, p in ipairs(prompts) do
+			for _, p in ipairs(pd.prompts) do
 				local d = pdDist(p)
 				if d and d <= pd.ActRange and (promptAt[p] or -1) + 0.8 <= now then
 					promptAt[p] = now
-					local ok = firePrompt and pcall(firePrompt, p)
-					if not ok then
-						-- 官方路子：HoldDuration 为 0 时立刻触发
-						pcall(function()
-							p:InputHoldBegin()
-							p:InputHoldEnd()
-						end)
-					end
+					pcall(function() p.RequiresLineOfSight = false end)
+					if fire then pcall(fire, p) end
+					pcall(function()
+						p:InputHoldBegin()
+						p:InputHoldEnd()
+					end)
 					n = n + 1
 					if n >= 6 then break end     -- 一帧最多碰 6 个，别把远程调用打爆
 				end
 			end
-			local fireClick = execFn("fireclickdetector")
-			if fireClick then
-				for _, c in ipairs(clicks) do
+			local click = execFn("fireclickdetector")
+			if click then
+				for _, c in ipairs(pd.clicks) do
 					local d = pdDist(c)
 					if d and d <= pd.ActRange and (promptAt[c] or -1) + 0.8 <= now then
 						promptAt[c] = now
-						pcall(fireClick, c)
+						pcall(click, c)
 					end
 				end
 			end
 		end
 
-		-- ---------------- 自瞄 ----------------
+		-- ---------------- 强攻：准星锁头 + 自动开火 ----------------
 		local function pdAimPos(model)
 			local head = model:FindFirstChild("Head")
-			if head and head.Position then return head.Position end
+			if pd.Head and head and head.Position then return head.Position end
 			local root = model:FindFirstChild("HumanoidRootPart")
 			if root and root.Position then return root.Position end
+			if head and head.Position then return head.Position end
 			local hum = model:FindFirstChildOfClass("Humanoid")
 			if hum and hum.RootPart then return hum.RootPart.Position end
 			return nil
@@ -6922,29 +7170,38 @@ boot = function(lang)
 			return workspace:Raycast(origin, pos - origin, params) == nil
 		end
 
+		-- 把自己人的种类全排掉：只瞄敌人（OnlyEnemy 关掉后才放开平民 / 其他 NPC）
+		local function pdTargetable(kind)
+			if kind == "enemy" then return true end
+			if pd.OnlyEnemy then return false end
+			return kind == "civ" or kind == "other"
+		end
+
 		local function pdPick(cam)
 			local origin = cam.CFrame.Position
 			local look = cam.CFrame.LookVector
 			local half = math.rad(pd.Fov) * 0.5
 			local best, bestScore
-			for _, t in ipairs(pd.Npcs) do
-				local pos = pdAimPos(t.model)
-				if pos then
-					local delta = pos - origin
-					local dist = delta.Magnitude
-					if dist > 0.5 and dist <= pd.Range then
-						local ang = math.acos(math.clamp(delta.Unit:Dot(look), -1, 1))
-						if ang <= half and (pd.Walls or pdVisible(origin, pos, t.model)) then
-							local score
-							if pd.Priority == "near" then
-								score = dist
-							elseif pd.Priority == "low" then
-								score = t.hum.Health
-							else
-								score = ang
-							end
-							if not bestScore or score < bestScore then
-								best, bestScore = t, score
+			for _, t in ipairs(pd.Items) do
+				if pdTargetable(t.kind) then
+					local pos = pdAimPos(t.model)
+					if pos then
+						local delta = pos - origin
+						local dist = delta.Magnitude
+						if dist > 0.5 and dist <= pd.Range then
+							local ang = math.acos(math.clamp(delta.Unit:Dot(look), -1, 1))
+							if ang <= half and (pd.Walls or pdVisible(origin, pos, t.model)) then
+								local score
+								if pd.Priority == "near" then
+									score = dist
+								elseif pd.Priority == "low" then
+									score = t.hum.Health
+								else
+									score = ang
+								end
+								if not bestScore or score < bestScore then
+									best, bestScore = t, score
+								end
 							end
 						end
 					end
@@ -6953,27 +7210,48 @@ boot = function(lang)
 			return best, origin
 		end
 
-		-- 开火：执行器 API -> 官方 Tool:Activate -> VirtualUser，能扣扳机就行
+		-- 视角转到目标 + 用执行器的鼠标函数把光标压到目标身上。
+		-- 两个都做：锁鼠标的（准星在屏幕中心）和自由光标的（准星跟鼠标）都覆盖到。
+		local function pdApplyAim(cam, pos)
+			local origin = cam.CFrame.Position
+			pcall(function() cam.CFrame = CFrame.new(origin, pos) end)
+			-- 鼠标被锁在屏幕中心的那种游戏，准星本来就跟着视角走，再动鼠标只会每帧抖一下
+			local locked = false
+			pcall(function() locked = UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter end)
+			if locked then return end
+			local abs, rel = execFn("mousemoveabs"), execFn("mousemoverel")
+			if not (abs or rel) then return end
+			local ok, sp = pcall(function() return cam:WorldToScreenPoint(pos) end)
+			if not ok or not sp then return end
+			if abs then
+				pcall(abs, sp.X, sp.Y)
+			elseif rel then
+				local loc = UserInputService:GetMouseLocation()
+				pcall(rel, sp.X - loc.X, sp.Y - loc.Y)
+			end
+		end
+
 		local function pdFire()
-			local m1 = execFn("mouse1click")
-			if m1 and pcall(m1) then return end
 			local char = LocalPlayer.Character
 			local tool = char and char:FindFirstChildOfClass("Tool")
 			if tool and pcall(function() tool:Activate() end) then return end
+			local m1 = execFn("mouse1click")
+			if m1 and pcall(m1) then return end
 			local ok, vu = pcall(function() return game:GetService("VirtualUser") end)
 			if ok and vu then
 				pcall(function() vu:Button1Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame) end)
+				pcall(function() vu:ClickButton1(Vector2.new(0, 0)) end)
 			end
 		end
 
 		track(RunService.Heartbeat:Connect(function()
 			if SHUTDOWN then return end
-			if not (pd.AutoAct or pd.ObjEsp or pd.NpcEsp or pd.Aim or pd.Fire) then return end
+			if not (pd.AutoAct or pd.Esp or pd.LootEsp or pd.Aim or pd.Fire) then return end
 			local now = os.clock()
 			if now - pd.scanAt < 0.4 then return end
 			pd.scanAt = now
 			pdScan()
-			pdRefreshMarks()
+			pdRefreshEsp()
 			if pd.AutoAct then pdAutoAct() end
 		end))
 
@@ -6985,7 +7263,7 @@ boot = function(lang)
 			if not target then return end
 			local pos = pdAimPos(target.model)
 			if not pos then return end
-			pcall(function() cam.CFrame = CFrame.new(origin, pos) end)
+			pdApplyAim(cam, pos)
 			if pd.Fire then pdFire() end
 		end))
 
@@ -7072,10 +7350,12 @@ boot = function(lang)
 			pdReopen.Visible = false
 		end
 
-		-- 结束整个脚本时：停掉所有开关，把留在 workspace 里的高亮收干净
+		-- 结束整个脚本时：停掉所有开关，把挂在场景里的透视收干净
 		pdCleanup = function()
-			pd.AutoAct, pd.ObjEsp, pd.NpcEsp, pd.Aim, pd.Fire = false, false, false, false, false
-			for inst in pairs(pd.Marks) do pdMark(inst, false) end
+			pd.AutoDone, pd.AutoAct, pd.LootEsp, pd.Esp = false, false, false, false
+			pd.Aim, pd.Fire = false, false
+			pd.run = pd.run + 1
+			for part in pairs(pd.Esps) do pdEspOff(part) end
 			pdWin.Visible = false
 			pdReopen.Visible = false
 		end
