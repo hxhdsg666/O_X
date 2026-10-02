@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行 + 122 台游戏服务器
---  Version : 3.0.0
+--  Version : 3.0.2
 --  Date    : 2026-10-02
 --
 --  用法（执行器里粘贴执行）：
@@ -296,6 +296,128 @@ local LOCALES = {
 		dsLobbyBack    = "正在回大厅",
 		dsLobbyGo      = "正在回大厅  ·  到了坐「%s」的电梯",
 		dsLobbyFail    = "找不到大厅远程，这个版本可能改过名字",
+		gmFullHealth   = "生命拉满",
+		gmFullHealthD  = "血量一直保持满（客户端）",
+		gmInvisible    = "隐身",
+		gmInvisibleD   = "自己的角色变透明",
+		gmFreeze       = "冻结自己",
+		gmFreezeD      = "把自己钉在原地（关掉立刻解开）",
+		gmAutoJump     = "自动跳跃",
+		gmAutoJumpD    = "一直跳",
+		gmQuickRespawn = "快速重生",
+		gmQuickRespawnD= "每 2 秒重置一次角色",
+		gmAutoSit      = "自动坐下",
+		gmAutoSitD     = "附近有座位就坐上去",
+		gmSpin         = "自转",
+		gmSpinD        = "角色原地转圈",
+		gmLockCam      = "锁定鼠标",
+		gmLockCamD     = "鼠标锁在屏幕中心（FPS 手感）",
+		gmCross        = "屏幕准星",
+		gmCrossD       = "屏幕正中心画一个十字",
+		gmSelfEsp      = "自身高亮",
+		gmSelfEspD     = "给自己套一个绿色描边",
+		gmCrossSize    = "准星大小",
+		gkHitSound     = "命中音效",
+		gkSens2        = "灵敏度",
+		gkThird        = "第三人称",
+		gkNoBob        = "无相机晃动",
+		gkRebirth      = "自动重生",
+		gkAutoSell     = "自动全卖",
+		gkFish         = "自动钓鱼",
+		gkPlant        = "自动种植",
+		gkQuest        = "自动任务",
+		gkNoclip       = "穿墙",
+		gkSpeedUp      = "高速移动",
+		gkFly          = "飞行",
+		gkInfJump      = "无限跳",
+		gkTop          = "传送到最高点",
+		gkRoom         = "显示房间号",
+		gkRoomFmt      = "当前房间 %s",
+		gkTpDoor       = "传送到最近的门",
+		gkNoDark       = "无黑暗",
+		-- 类型特色包（v3.0.2）
+		srvGoNow       = "传送到这",
+		gkTab_fps      = "射击",
+		gkTab_fight    = "格斗",
+		gkTab_sim      = "模拟器",
+		gkTab_obby     = "跑酷",
+		gkTab_horror   = "恐怖",
+		gkTab_tycoon   = "大亨",
+		gkTab_rp       = "社交",
+		gkTab_action   = "生存",
+		gkTab_td       = "塔防",
+		gkTab_misc     = "其他",
+		gkGroupCombat  = "战斗",
+		gkGroupFarm    = "自动刷",
+		gkGroupObby    = "跑酷",
+		gkGroupHorror  = "感知与躲避",
+		gkGroupRp      = "社交与传送",
+		gkAim          = "自瞄",
+		gkFire         = "自动开火",
+		gkHead         = "只瞄头",
+		gkTeam         = "队友分色",
+		gkHp           = "显示血量",
+		gkDist         = "显示距离",
+		gkBox          = "显示方框",
+		gkCross        = "屏幕准星",
+		gkFirst        = "第一人称",
+		gkWarn         = "背身预警",
+		gkRange        = "自瞄范围",
+		gkFov          = "自瞄视场角",
+		gkFollow       = "跟随速度",
+		gkSens         = "鼠标灵敏度",
+		gkClick        = "自动点击",
+		gkClaim        = "自动领取",
+		gkBuy          = "自动购买",
+		gkUpgrade      = "自动升级",
+		gkHatch        = "自动孵化",
+		gkEquip        = "自动装备",
+		gkSell         = "自动卖出",
+		gkSpin         = "自动抽奖",
+		gkCollect      = "自动收钱",
+		gkDaily        = "自动每日",
+		gkClickRate    = "点击间隔",
+		gkWave         = "自动开始波次",
+		gkAutoTower    = "自动放塔",
+		gkSellTower    = "自动卖塔",
+		gkAutoJump     = "自动跳跃",
+		gkLowGrav      = "低重力",
+		gkSkip         = "跳过当前关",
+		gkCp           = "记录检查点",
+		gkStage        = "显示高度",
+		gkUp           = "持续上升",
+		gkForward      = "自动前进",
+		gkBase         = "回出生点",
+		gkJumpPower    = "跳跃力度",
+		gkSetCp        = "记录检查点",
+		gkGotoCp       = "回到检查点",
+		gkCpSaved      = "检查点已记录",
+		gkSkipOk       = "已上升一关",
+		gkStageFmt     = "当前高度 %d",
+		gkEntEsp       = "实体透视",
+		gkEntWarn      = "实体预警",
+		gkAutoHide     = "自动躲藏",
+		gkAutoDoor     = "自动开门",
+		gkFear         = "恐惧/氧气归零",
+		gkNoScare      = "屏蔽跳吓",
+		gkItemEsp      = "物品透视",
+		gkDoorEsp      = "门透视",
+		gkHideEsp      = "藏身点透视",
+		gkRevive       = "自动复活",
+		gkEntRange     = "实体范围",
+		gkEntWarnFmt   = "%s 靠近了（%dm）",
+		gkPlrEsp       = "玩家透视",
+		gkPlrDist      = "玩家距离",
+		gkPlrBox       = "玩家方框",
+		gkTpSpawn2     = "回出生点",
+		gkSit          = "自动坐下",
+		gkTpNearest    = "传送到最近玩家",
+		gkTpAlly       = "传送到队友",
+		gkSave         = "记录位置",
+		gmGotoSaved    = "回到记录点",
+		gmTpFar        = "传送到最远玩家",
+		gmAutoClick    = "自动点击",
+		gmAutoClickD   = "每 0.12 秒点一次鼠标左键",
 		dsTabMisc      = "其他",
 		dsMiscTitle    = "其他",
 		dsMiscSub      = "记录点 / 视觉 / 重置",
@@ -740,6 +862,128 @@ local LOCALES = {
 		dsLobbyBack    = "Heading back to the lobby",
 		dsLobbyGo      = "Heading back to the lobby  ·  take the %s elevator there",
 		dsLobbyFail    = "Lobby remote not found, this build may have renamed it",
+		gmFullHealth   = "Full health",
+		gmFullHealthD  = "Keeps your health topped up (client-side)",
+		gmInvisible    = "Invisible",
+		gmInvisibleD   = "Makes your character transparent",
+		gmFreeze       = "Freeze self",
+		gmFreezeD      = "Pins you in place (untick to release)",
+		gmAutoJump     = "Auto jump",
+		gmAutoJumpD    = "Keeps jumping",
+		gmQuickRespawn = "Quick respawn",
+		gmQuickRespawnD= "Resets your character every 2s",
+		gmAutoSit      = "Auto sit",
+		gmAutoSitD     = "Sits on a nearby seat",
+		gmSpin         = "Spin",
+		gmSpinD        = "Spins your character in place",
+		gmLockCam      = "Lock mouse",
+		gmLockCamD     = "Locks the mouse to screen center (FPS feel)",
+		gmCross        = "Crosshair",
+		gmCrossD       = "Draws a cross at screen center",
+		gmSelfEsp      = "Self highlight",
+		gmSelfEspD     = "Green outline around yourself",
+		gmCrossSize    = "Crosshair size",
+		gkHitSound     = "Hit sound",
+		gkSens2        = "Sensitivity",
+		gkThird        = "Third person",
+		gkNoBob        = "No camera bob",
+		gkRebirth      = "Auto rebirth",
+		gkAutoSell     = "Auto sell all",
+		gkFish         = "Auto fish",
+		gkPlant        = "Auto plant",
+		gkQuest        = "Auto quest",
+		gkNoclip       = "Noclip",
+		gkSpeedUp      = "Fast move",
+		gkFly          = "Fly",
+		gkInfJump      = "Infinite jump",
+		gkTop          = "Teleport to top",
+		gkRoom         = "Show room number",
+		gkRoomFmt      = "Room %s",
+		gkTpDoor       = "Teleport to nearest door",
+		gkNoDark       = "No darkness",
+		-- genre packs (v3.0.2)
+		srvGoNow       = "Teleport here",
+		gkTab_fps      = "Shooter",
+		gkTab_fight    = "Fighting",
+		gkTab_sim      = "Simulator",
+		gkTab_obby     = "Obby",
+		gkTab_horror   = "Horror",
+		gkTab_tycoon   = "Tycoon",
+		gkTab_rp       = "Social",
+		gkTab_action   = "Survival",
+		gkTab_td       = "Tower D.",
+		gkTab_misc     = "Misc",
+		gkGroupCombat  = "Combat",
+		gkGroupFarm    = "Auto farm",
+		gkGroupObby    = "Obby",
+		gkGroupHorror  = "Senses & hiding",
+		gkGroupRp      = "Social & teleport",
+		gkAim          = "Aimbot",
+		gkFire         = "Auto fire",
+		gkHead         = "Head only",
+		gkTeam         = "Team colors",
+		gkHp           = "Show health",
+		gkDist         = "Show distance",
+		gkBox          = "Show box",
+		gkCross        = "Crosshair",
+		gkFirst        = "First person",
+		gkWarn         = "Behind warning",
+		gkRange        = "Aim range",
+		gkFov          = "Aim FOV",
+		gkFollow       = "Aim speed",
+		gkSens         = "Mouse sensitivity",
+		gkClick        = "Auto click",
+		gkClaim        = "Auto claim",
+		gkBuy          = "Auto buy",
+		gkUpgrade      = "Auto upgrade",
+		gkHatch        = "Auto hatch",
+		gkEquip        = "Auto equip",
+		gkSell         = "Auto sell",
+		gkSpin         = "Auto spin",
+		gkCollect      = "Auto collect",
+		gkDaily        = "Auto daily",
+		gkClickRate    = "Click interval",
+		gkWave         = "Auto start wave",
+		gkAutoTower    = "Auto place tower",
+		gkSellTower    = "Auto sell tower",
+		gkAutoJump     = "Auto jump",
+		gkLowGrav      = "Low gravity",
+		gkSkip         = "Skip stage",
+		gkCp           = "Save checkpoint",
+		gkStage        = "Show height",
+		gkUp           = "Hold to rise",
+		gkForward      = "Auto forward",
+		gkBase         = "Back to spawn",
+		gkJumpPower    = "Jump power",
+		gkSetCp        = "Save checkpoint",
+		gkGotoCp       = "Back to checkpoint",
+		gkCpSaved      = "Checkpoint saved",
+		gkSkipOk       = "Risen one stage",
+		gkStageFmt     = "Height %d",
+		gkEntEsp       = "Entity ESP",
+		gkEntWarn      = "Entity warning",
+		gkAutoHide     = "Auto hide",
+		gkAutoDoor     = "Auto open doors",
+		gkFear         = "Zero fear/oxygen",
+		gkNoScare      = "Block jumpscares",
+		gkItemEsp      = "Item ESP",
+		gkDoorEsp      = "Door ESP",
+		gkHideEsp      = "Hiding spot ESP",
+		gkRevive       = "Auto revive",
+		gkEntRange     = "Entity range",
+		gkEntWarnFmt   = "%s incoming (%dm)",
+		gkPlrEsp       = "Player ESP",
+		gkPlrDist      = "Player distance",
+		gkPlrBox       = "Player box",
+		gkTpSpawn2     = "Back to spawn",
+		gkSit          = "Auto sit",
+		gkTpNearest    = "Teleport to nearest",
+		gkTpAlly       = "Teleport to teammate",
+		gkSave         = "Save position",
+		gmGotoSaved    = "Back to waypoint",
+		gmTpFar        = "Teleport to farthest",
+		gmAutoClick    = "Auto click",
+		gmAutoClickD   = "Clicks the left mouse button every 0.12s",
 		dsTabMisc      = "More",
 		dsMiscTitle    = "More",
 		dsMiscSub      = "Waypoints / visuals / reset",
@@ -951,7 +1195,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v3.0.0",
+	Version = "v3.0.2",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -2570,135 +2814,136 @@ local function dsInPlace()
 end
 
 --========================== 游戏服务器注册表 ==========================
--- 122 个热门游戏，placeId 全部是从 GitHub 上的社区 hub 脚本里实抓的
--- （97 个由 ≥2 个独立来源交叉验证一致，来源见 .workbuddy-ai/dev/refs/_gh/games_src.md）。
---   k  = 内部 key（纯小写英文）
---   en = 英文名   zh = 中文名（社区常见叫法，可能为空）
---   p  = PlaceId  kw = 搜索关键词（中英混排，空格分隔）
--- ⚠️ 游戏名不进语言包：zh 只在中文模式下显示，所以"英文模式无汉字"的断言天然成立。
+-- 122 个热门游戏。placeId / universeId / 官方名 / 官方图标 全部经 Roblox 官方接口校验过
+-- （121/122 拿到官方名和图标；详见 .workbuddy-ai/dev/refs/_gh/games_verified.json）。
+--   k = 内部 key   en/zh = 英/中文名   p = PlaceId   u = UniverseId
+--   i = 官方图标 assetId（用 rbxassetid:// 引用，不占脚本体积；取不到就退回代码画的渐变块）
+--   g = 类型（fps/fight/sim/obby/horror/tycoon/rp/action/td/misc）→ 决定挂哪套"类型特色"
+--   kw = 搜索关键词（中英混排）
+-- ⚠️ 游戏名不进语言包：zh 只在中文模式显示，所以"英文模式无汉字"的断言天然成立。
 local GAMES = {
-	{ k="bloxfruits", en="Blox Fruits", zh="海贼王", p=2753915549, kw="blox fruits 海贼 one piece 恶魔果实 bf" },
-	{ k="brookhaven", en="Brookhaven RP", zh="布鲁克黑文", p=4924922222, kw="brookhaven 布鲁克黑文 rp 角色扮演" },
-	{ k="adoptme", en="Adopt Me!", zh="收养我", p=920587237, kw="adopt me 收养我 养宠物 adopt" },
-	{ k="mm2", en="Murder Mystery 2", zh="谋杀之谜2", p=142823291, kw="murder mystery 2 mm2 谋杀之谜 刀战" },
-	{ k="jailbreak", en="Jailbreak", zh="越狱", p=606849621, kw="jailbreak 越狱 抢银行 逃狱" },
-	{ k="beeswarm", en="Bee Swarm Simulator", zh="蜜蜂模拟器", p=1537690962, kw="bee swarm 蜜蜂模拟器 养蜂 bss" },
-	{ k="dahood", en="Da Hood", zh="街头帮派", p=2788229376, kw="da hood 街头 帮派 dahood" },
-	{ k="arsenal", en="Arsenal", zh="军火库", p=286090429, kw="arsenal 军火库 枪战 fps" },
-	{ k="towerofhell", en="Tower of Hell", zh="地狱塔", p=1962086868, kw="tower of hell 地狱塔 跳塔 toh" },
-	{ k="petsim99", en="Pet Simulator 99", zh="宠物模拟器99", p=8737899170, kw="pet simulator 99 宠物模拟器 养宠物 ps99" },
-	{ k="petsimx", en="Pet Simulator X", zh="宠物模拟器X", p=6284583030, kw="pet simulator x 宠物模拟器x 养宠物 psx" },
-	{ k="nds", en="Natural Disaster Survival", zh="自然灾害生存", p=189707, kw="natural disaster survival 自然灾害 灾难生存 nds" },
-	{ k="doors", en="DOORS", zh="门", p=6516141723, kw="doors 门 恐怖 躲怪" },
-	{ k="bladeball", en="Blade Ball", zh="刀球", p=13772394625, kw="blade ball 刀球 弹球对战 bb" },
-	{ k="piggy", en="Piggy", zh="猪猪", p=4623386862, kw="piggy 猪猪 小猪 恐怖" },
-	{ k="bedwars", en="BedWars", zh="起床战争", p=6872265039, kw="bedwars 起床战争 床战 bw" },
-	{ k="buildaboat", en="Build A Boat For Treasure", zh="造船寻宝", p=537413528, kw="build a boat 造船 寻宝 babft" },
-	{ k="plsdonate", en="PLS DONATE", zh="请捐赠", p=8737602449, kw="pls donate 捐赠 乞讨 募捐" },
-	{ k="ninjalegends", en="Ninja Legends", zh="忍者传奇", p=3956818381, kw="ninja legends 忍者传奇 忍者 刷怪" },
-	{ k="prisonlife", en="Prison Life", zh="监狱生活", p=155615604, kw="prison life 监狱生活 越狱 监狱" },
-	{ k="kinglegacy", en="King Legacy", zh="王者遗产", p=4520749081, kw="king legacy 海贼王 王者遗产 kl" },
-	{ k="tsb", en="The Strongest Battlegrounds", zh="最强战场", p=10449761463, kw="the strongest battlegrounds 最强战场 咒术回战 tsb" },
-	{ k="bloxburg", en="Welcome to Bloxburg", zh="欢迎来到布鲁克堡", p=185655149, kw="bloxburg 布鲁克堡 建房 模拟人生" },
-	{ k="lifetogether", en="LifeTogether RP", zh="同居生活", p=13967668166, kw="lifetogether 同居 rp 生活模拟" },
-	{ k="drivingempire", en="Driving Empire", zh="驾驶帝国", p=3351674303, kw="driving empire 驾驶帝国 赛车 开车" },
-	{ k="solsrng", en="Sol's RNG", zh="太阳抽卡", p=15532962292, kw="sol's rng sols rng 抽卡 运气 rng" },
-	{ k="dresstoimpress", en="Dress To Impress", zh="换装走秀", p=15101393044, kw="dress to impress 换装 走秀 时装" },
-	{ k="slapbattles", en="Slap Battles", zh="巴掌大战", p=6403373529, kw="slap battles 巴掌 打巴掌 sb" },
-	{ k="toilettd", en="Toilet Tower Defense", zh="马桶塔防", p=13775256536, kw="toilet tower defense 马桶塔防 ttd 塔防" },
-	{ k="fleethefacility", en="Flee the Facility", zh="逃离设施", p=893973440, kw="flee the facility 逃离设施 躲猫猫 ftf" },
-	{ k="workatpizza", en="Work at a Pizza Place", zh="披萨店打工", p=192800, kw="work at a pizza place 披萨店 打工 pizza" },
-	{ k="greenville", en="Greenville", zh="绿镇", p=891852901, kw="greenville 绿镇 开车 角色扮演" },
-	{ k="hideandseek", en="Hide and Seek Extreme", zh="捉迷藏", p=205224386, kw="hide and seek 捉迷藏 躲猫猫 hs" },
-	{ k="brokenbones", en="Broken Bones IV", zh="断骨4", p=2551991523, kw="broken bones 断骨 骨折 bb4" },
-	{ k="basketballlegends", en="Basketball Legends", zh="篮球传奇", p=14259168147, kw="basketball legends 篮球 打球 nba" },
-	{ k="wartycoon", en="War Tycoon", zh="战争大亨", p=4639625707, kw="war tycoon 战争大亨 军事 tycoon" },
-	{ k="musclelegends", en="Muscle Legends", zh="肌肉传奇", p=3623096087, kw="muscle legends 肌肉 健身 锻炼" },
-	{ k="meepcity", en="MeepCity", zh="米普城", p=370731277, kw="meepcity 米普城 钓鱼 社交" },
-	{ k="shindolife", en="Shindo Life", zh="新多人生", p=4616652839, kw="shindo life 火影 忍者 新多" },
-	{ k="funkyfriday", en="Funky Friday", zh="周五音游", p=6447798030, kw="funky friday 音游 节奏 fnf" },
-	{ k="evade", en="Evade", zh="逃离", p=9872472334, kw="evade 逃离 躲避 追逃" },
-	{ k="g3008", en="3008", zh="3008", p=2768379856, kw="3008 超市 恐怖 生存" },
-	{ k="erlc", en="Emergency Response: Liberty County", zh="紧急救援", p=2534724415, kw="emergency response 自由郡 警察 erlc" },
-	{ k="mvsd", en="Murderers VS Sheriffs Duels", zh="凶手对警长", p=12355337193, kw="murderers vs sheriffs 警长 凶手 枪战" },
-	{ k="flagwars", en="Flag Wars", zh="夺旗战争", p=3214114884, kw="flag wars 夺旗 枪战 fw" },
-	{ k="speedrun4", en="Speed Run 4", zh="极速奔跑4", p=183364845, kw="speed run 4 极速奔跑 跑酷 sr4" },
-	{ k="astd", en="All Star Tower Defense", zh="全明星塔防", p=4996049426, kw="all star tower defense 全明星塔防 塔防 astd" },
-	{ k="breakin2", en="Break In 2", zh="潜入2", p=13864661000, kw="break in 2 潜入 剧情 bi2" },
-	{ k="survivethekiller", en="Survive the Killer", zh="凶手求生", p=4580204640, kw="survive the killer 凶手 逃生 stk" },
-	{ k="breakin", en="Break In", zh="潜入", p=3851622790, kw="break in 潜入 剧情 故事" },
-	{ k="neighbors", en="Neighbors", zh="邻居", p=12699642568, kw="neighbors 邻居 语音 mic up" },
-	{ k="speeddraw", en="Speed Draw!", zh="极速画猜", p=7074772062, kw="speed draw 你画我猜 画画 draw" },
-	{ k="zombieattack", en="Zombie Attack", zh="僵尸来袭", p=1240123653, kw="zombie attack 僵尸 丧尸 生存" },
-	{ k="lumbertycoon2", en="Lumber Tycoon 2", zh="伐木大亨2", p=13822889, kw="lumber tycoon 2 伐木大亨 砍树 木材" },
-	{ k="luckyblocks", en="LUCKY BLOCKS Battlegrounds", zh="幸运方块战场", p=662417684, kw="lucky blocks 幸运方块 战场 lb" },
-	{ k="carcrushers2", en="Car Crushers 2", zh="汽车粉碎2", p=654732683, kw="car crushers 2 汽车粉碎 撞车 物理" },
-	{ k="marveldc", en="Marvel and DC Super Heroes", zh="漫威DC超级英雄", p=6132958612, kw="marvel and dc 漫威 超级英雄 dc" },
-	{ k="breakingpoint", en="Breaking Point", zh="临界点", p=648362523, kw="breaking point 临界点 枪战 心理" },
-	{ k="epicminigames", en="Epic Minigames", zh="史诗小游戏", p=277751860, kw="epic minigames 小游戏合集 迷你游戏 em" },
-	{ k="frontlines", en="FRONTLINES", zh="前线", p=5938036553, kw="frontlines 前线 射击 枪战" },
-	{ k="sharkbite2", en="SharkBite 2", zh="鲨鱼咬2", p=8908228901, kw="sharkbite 2 鲨鱼 生存 海" },
-	{ k="sharkbite", en="SharkBite Classic", zh="鲨鱼咬经典", p=734159876, kw="sharkbite 鲨鱼咬 鲨鱼 经典" },
-	{ k="bigpaintball2", en="BIG Paintball 2!", zh="彩弹大战2", p=9865958871, kw="big paintball 2 彩弹 枪战 bp2" },
-	{ k="peroxide", en="Peroxide", zh="死神", p=9096881148, kw="peroxide 死神 bleach bleach" },
-	{ k="stealabrainrot", en="Steal a Brainrot", zh="偷走脑腐", p=109983668079237, kw="steal a brainrot 脑腐 偷 brainrot" },
-	{ k="rivals", en="RIVALS", zh="对手", p=17625359962, kw="rivals 对手 枪战 竞技" },
-	{ k="gunfightarena", en="Gunfight Arena", zh="枪战竞技场", p=14518422161, kw="gunfight arena 枪战竞技场 fps 枪战" },
-	{ k="growagarden", en="Grow a Garden", zh="种花园", p=126884695634066, kw="grow a garden 种花园 种菜 gag" },
-	{ k="growagarden2", en="Grow a Garden 2", zh="种花园2", p=97598239454123, kw="grow a garden 2 种花园2 种菜 gag2" },
-	{ k="berryavenue", en="Berry Avenue RP", zh="莓果大道", p=8481844229, kw="berry avenue 莓果大道 rp 角色扮演" },
-	{ k="animefighters", en="Anime Fighters Simulator", zh="动漫斗士模拟器", p=6299805723, kw="anime fighters simulator 动漫斗士 火影 刷怪" },
-	{ k="rainbowfriends", en="Rainbow Friends", zh="彩虹朋友", p=7991339063, kw="rainbow friends 彩虹朋友 恐怖 躲怪" },
-	{ k="counterblox", en="Counter Blox", zh="反恐精英", p=301549746, kw="counter blox 反恐精英 cs 枪战" },
-	{ k="kat", en="KAT", zh="刀枪", p=621129760, kw="kat 刀枪 近战 knife" },
-	{ k="micup", en="Mic Up", zh="语音聊天", p=6884319169, kw="mic up 语音 聊天 开麦" },
-	{ k="vrhands", en="VR Hands", zh="VR双手", p=4832438542, kw="vr hands vr 双手 虚拟现实" },
-	{ k="fencing", en="Fencing", zh="击剑", p=12109643, kw="fencing 击剑 剑 对战" },
-	{ k="roghoul", en="Ro-Ghoul", zh="东京喰种", p=914010731, kw="ro-ghoul 东京喰种 喰种 食尸鬼" },
-	{ k="legendsofspeed", en="Legends Of Speed", zh="极速传奇", p=3101667897, kw="legends of speed 极速传奇 跑酷 竞速" },
-	{ k="chaos", en="CHAOS", zh="混乱", p=6441847031, kw="chaos 混乱 pvp 对战" },
-	{ k="baysidehigh", en="Bayside High School", zh="湾畔高中", p=12640491155, kw="bayside high school 高中 校园 rp" },
-	{ k="bigpaintball", en="BIG Paintball!", zh="彩弹大战", p=3527629287, kw="big paintball 彩弹 枪战 bp" },
-	{ k="roadtogrambys", en="Road to Grambys", zh="通往格兰比", p=5796917097, kw="road to grambys 格兰比 冒险 rpg" },
-	{ k="cursedsea", en="Cursed Sea", zh="诅咒之海", p=14426444782, kw="cursed sea 诅咒之海 海盗 航海" },
-	{ k="lifeinparadise", en="Life in Paradise", zh="天堂生活", p=1662219031, kw="life in paradise 天堂生活 rp 生活" },
-	{ k="adoptbaby", en="Adopt and Raise a Baby", zh="收养婴儿", p=383793228, kw="adopt and raise a baby 收养婴儿 带娃 养孩子" },
-	{ k="simonsays", en="Super Simon Says", zh="超级西蒙说", p=61846006, kw="super simon says 西蒙说 记忆 反应" },
-	{ k="lifesentence", en="Life Sentence", zh="终身监禁", p=13083893317, kw="life sentence 终身监禁 监狱 生存" },
-	{ k="colonysurvival", en="Colony Survival", zh="殖民地生存", p=14888386963, kw="colony survival 殖民地 生存 建设" },
-	{ k="redlightgreenlight", en="Red Light, Green Light", zh="红绿灯", p=7540891731, kw="red light green light 红绿灯 一二三木头人 鱿鱼游戏" },
-	{ k="guessthedrawing", en="Guess the Drawing!", zh="猜画", p=3281073759, kw="guess the drawing 猜画 你画我猜 画画" },
-	{ k="vrhangout", en="VR Hangout", zh="VR聚集地", p=8769714622, kw="vr hangout vr 聚集 社交" },
-	{ k="vrhandslegacy", en="VR Hands Legacy", zh="VR双手经典", p=16912831373, kw="vr hands legacy vr 双手 经典" },
-	{ k="liftingsim", en="Lifting Simulator", zh="举重模拟器", p=3652625463, kw="lifting simulator 举重 健身 力量" },
-	{ k="deathpenalty", en="Death Penalty", zh="死刑", p=15654981113, kw="death penalty 死刑 pvp 对战" },
-	{ k="gorillatag", en="Gorilla Tag Professional", zh="大猩猩标签", p=8690998110, kw="gorilla tag 大猩猩 vr 猩猩" },
-	{ k="catalogavatar", en="Catalog Avatar Creator", zh="虚拟形象编辑器", p=7041939546, kw="catalog avatar creator 捏脸 虚拟形象 换装" },
-	{ k="towerdefensesim", en="Tower Defense Simulator", zh="塔防模拟器", p=3260590327, kw="tower defense simulator 塔防模拟器 塔防 tds" },
-	{ k="deathball", en="Death Ball", zh="死亡球", p=15002061926, kw="death ball 死亡球 踢球 db" },
-	{ k="fruitbattlegrounds", en="Fruit Battlegrounds", zh="果实战场", p=9224601490, kw="fruit battlegrounds 果实战场 海贼 刷怪" },
-	{ k="livetopia", en="Livetopia", zh="生活小镇", p=6737970321, kw="livetopia 生活小镇 rp 社交" },
-	{ k="creaturesofsonaria", en="Creatures of Sonaria", zh="索纳里亚生物", p=5233782396, kw="creatures of sonaria 生物 怪兽 cos" },
-	{ k="dragonadventures", en="Dragon Adventures", zh="龙之冒险", p=3475397644, kw="dragon adventures 龙 养龙 冒险" },
-	{ k="metrolife", en="Metro Life", zh="都市生活", p=12985361032, kw="metro life 都市生活 城市 rp" },
-	{ k="gachaonline", en="Gacha Online", zh="扭蛋在线", p=5289509545, kw="gacha online 扭蛋 抽卡 gacha" },
-	{ k="armwrestle", en="Arm Wrestle Simulator", zh="掰手腕模拟器", p=13127800756, kw="arm wrestle simulator 掰手腕 力量 健身" },
-	{ k="escaperunninghead", en="Escape Running Head", zh="逃离大头", p=6205205961, kw="escape running head 大头 逃离 恐怖" },
-	{ k="colorordie", en="Color or Die", zh="不上色就死", p=12931609417, kw="color or die 上色 涂色 恐怖" },
-	{ k="cardealershiptycoon", en="Car Dealership Tycoon", zh="车行大亨", p=1554960397, kw="car dealership tycoon 车行 卖车 tycoon" },
-	{ k="vehiclelegends", en="Vehicle Legends", zh="载具传奇", p=4566572536, kw="vehicle legends 载具 赛车 车" },
-	{ k="elementalpowerstycoon", en="Elemental Powers Tycoon", zh="元素力量大亨", p=10253248401, kw="elemental powers tycoon 元素 大亨 魔法" },
-	{ k="restauranttycoon2", en="Restaurant Tycoon 2", zh="餐厅大亨2", p=3398014311, kw="restaurant tycoon 2 餐厅 经营 大亨" },
-	{ k="royalehigh", en="Royale High", zh="皇家高中", p=735030788, kw="royale high 皇家高中 换装 校园" },
-	{ k="megamansiontycoon", en="Mega Mansion Tycoon", zh="豪宅大亨", p=8328351891, kw="mega mansion tycoon 豪宅 大亨 建房" },
-	{ k="animedimensions", en="Anime Dimensions Simulator", zh="动漫次元模拟器", p=6938803436, kw="anime dimensions simulator 动漫次元 刷怪 ads" },
-	{ k="floorislava", en="The Floor Is LAVA!", zh="地板是岩浆", p=815405518, kw="the floor is lava 地板是岩浆 跑酷 岩浆" },
-	{ k="twilightdaycare", en="Twilight Daycare", zh="暮光托儿所", p=6507422231, kw="twilight daycare 托儿所 躲猫猫 恐怖" },
-	{ k="barrysprisonrun", en="Barry's Prison Run", zh="巴里越狱跑酷", p=8712817601, kw="barry's prison run 越狱跑酷 第一人称 obby" },
-	{ k="southwestflorida", en="Southwest Florida Beta", zh="西南佛罗里达", p=5104202731, kw="southwest florida 佛罗里达 rp 警察" },
-	{ k="southbronx", en="South Bronx: The Trenches", zh="南布朗克斯", p=10179538382, kw="south bronx 布朗克斯 街头 帮派" },
-	{ k="obbybike", en="Obby But You're On a Bike", zh="骑车跑酷", p=14184086618, kw="obby but you're on a bike 骑车 跑酷 obby" },
-	{ k="bluelockrivals", en="Blue Lock: Rivals", zh="蓝色监狱", p=18668065416, kw="blue lock rivals 蓝色监狱 足球 bluelock" },
+	{ k="bloxfruits", en="Blox Fruits", zh="海贼王", p=2753915549, u=994732206, i=994732206, g="sim", kw="blox fruits 海贼 one piece 恶魔果实 bf" },
+	{ k="brookhaven", en="Brookhaven RP", zh="布鲁克黑文", p=4924922222, u=1686885941, i=1686885941, g="rp", kw="brookhaven 布鲁克黑文 rp 角色扮演" },
+	{ k="adoptme", en="Adopt Me!", zh="收养我", p=920587237, u=383310974, i=383310974, g="rp", kw="adopt me 收养我 养宠物 adopt" },
+	{ k="mm2", en="Murder Mystery 2", zh="谋杀之谜2", p=142823291, u=66654135, i=66654135, g="action", kw="murder mystery 2 mm2 谋杀之谜 刀战" },
+	{ k="jailbreak", en="Jailbreak", zh="越狱", p=606849621, u=245662005, i=245662005, g="action", kw="jailbreak 越狱 抢银行 逃狱" },
+	{ k="beeswarm", en="Bee Swarm Simulator", zh="蜜蜂模拟器", p=1537690962, u=601130232, i=601130232, g="sim", kw="bee swarm 蜜蜂模拟器 养蜂 bss" },
+	{ k="dahood", en="Da Hood", zh="街头帮派", p=2788229376, u=1008451066, i=1008451066, g="action", kw="da hood 街头 帮派 dahood" },
+	{ k="arsenal", en="Arsenal", zh="军火库", p=286090429, u=111958650, i=111958650, g="fps", kw="arsenal 军火库 枪战 fps" },
+	{ k="towerofhell", en="Tower of Hell", zh="地狱塔", p=1962086868, u=703124385, i=703124385, g="obby", kw="tower of hell 地狱塔 跳塔 toh" },
+	{ k="petsim99", en="Pet Simulator 99", zh="宠物模拟器99", p=8737899170, u=3317771874, i=3317771874, g="sim", kw="pet simulator 99 宠物模拟器 养宠物 ps99" },
+	{ k="petsimx", en="Pet Simulator X", zh="宠物模拟器X", p=6284583030, u=2316994223, i=2316994223, g="sim", kw="pet simulator x 宠物模拟器x 养宠物 psx" },
+	{ k="nds", en="Natural Disaster Survival", zh="自然灾害生存", p=189707, u=65241, i=65241, g="action", kw="natural disaster survival 自然灾害 灾难生存 nds" },
+	{ k="doors", en="DOORS", zh="门", p=6516141723, u=2440500124, i=2440500124, g="horror", kw="doors 门 恐怖 躲怪" },
+	{ k="bladeball", en="Blade Ball", zh="刀球", p=13772394625, u=4777817887, i=4777817887, g="fight", kw="blade ball 刀球 弹球对战 bb" },
+	{ k="piggy", en="Piggy", zh="猪猪", p=4623386862, u=1516533665, i=1516533665, g="horror", kw="piggy 猪猪 小猪 恐怖" },
+	{ k="bedwars", en="BedWars", zh="起床战争", p=6872265039, u=2619619496, i=2619619496, g="fps", kw="bedwars 起床战争 床战 bw" },
+	{ k="buildaboat", en="Build A Boat For Treasure", zh="造船寻宝", p=537413528, u=210851291, i=210851291, g="action", kw="build a boat 造船 寻宝 babft" },
+	{ k="plsdonate", en="PLS DONATE", zh="请捐赠", p=8737602449, u=3317679266, i=3317679266, g="misc", kw="pls donate 捐赠 乞讨 募捐" },
+	{ k="ninjalegends", en="Ninja Legends", zh="忍者传奇", p=3956818381, u=1335695570, i=1335695570, g="sim", kw="ninja legends 忍者传奇 忍者 刷怪" },
+	{ k="prisonlife", en="Prison Life", zh="监狱生活", p=155615604, u=73885730, i=73885730, g="action", kw="prison life 监狱生活 越狱 监狱" },
+	{ k="kinglegacy", en="King Legacy", zh="王者遗产", p=4520749081, u=1451439645, i=1451439645, g="action", kw="king legacy 海贼王 王者遗产 kl" },
+	{ k="tsb", en="The Strongest Battlegrounds", zh="最强战场", p=10449761463, u=3808081382, i=3808081382, g="fight", kw="the strongest battlegrounds 最强战场 咒术回战 tsb" },
+	{ k="bloxburg", en="Welcome to Bloxburg", zh="欢迎来到布鲁克堡", p=185655149, u=88070565, i=88070565, g="rp", kw="bloxburg 布鲁克堡 建房 模拟人生" },
+	{ k="lifetogether", en="LifeTogether RP", zh="同居生活", p=13967668166, u=4839802560, i=4839802560, g="rp", kw="lifetogether 同居 rp 生活模拟" },
+	{ k="drivingempire", en="Driving Empire", zh="驾驶帝国", p=3351674303, u=1202096104, i=1202096104, g="rp", kw="driving empire 驾驶帝国 赛车 开车" },
+	{ k="solsrng", en="Sol's RNG", zh="太阳抽卡", p=15532962292, u=5361032378, i=5361032378, g="action", kw="sol's rng sols rng 抽卡 运气 rng" },
+	{ k="dresstoimpress", en="Dress To Impress", zh="换装走秀", p=15101393044, u=5203828273, i=5203828273, g="rp", kw="dress to impress 换装 走秀 时装" },
+	{ k="slapbattles", en="Slap Battles", zh="巴掌大战", p=6403373529, u=2380077519, i=2380077519, g="fight", kw="slap battles 巴掌 打巴掌 sb" },
+	{ k="toilettd", en="Toilet Tower Defense", zh="马桶塔防", p=13775256536, u=4778845442, i=4778845442, g="td", kw="toilet tower defense 马桶塔防 ttd 塔防" },
+	{ k="fleethefacility", en="Flee the Facility", zh="逃离设施", p=893973440, u=372226183, i=372226183, g="horror", kw="flee the facility 逃离设施 躲猫猫 ftf" },
+	{ k="workatpizza", en="Work at a Pizza Place", zh="披萨店打工", p=192800, u=47545, i=47545, g="action", kw="work at a pizza place 披萨店 打工 pizza" },
+	{ k="greenville", en="Greenville", zh="绿镇", p=891852901, u=371263894, i=371263894, g="rp", kw="greenville 绿镇 开车 角色扮演" },
+	{ k="hideandseek", en="Hide and Seek Extreme", zh="捉迷藏", p=205224386, u=93740418, i=93740418, g="action", kw="hide and seek 捉迷藏 躲猫猫 hs" },
+	{ k="brokenbones", en="Broken Bones IV", zh="断骨4", p=2551991523, u=911750776, i=911750776, g="action", kw="broken bones 断骨 骨折 bb4" },
+	{ k="basketballlegends", en="Basketball Legends", zh="篮球传奇", p=14259168147, u=4931927012, i=4931927012, g="action", kw="basketball legends 篮球 打球 nba" },
+	{ k="wartycoon", en="War Tycoon", zh="战争大亨", p=4639625707, u=1526814825, i=1526814825, g="tycoon", kw="war tycoon 战争大亨 军事 tycoon" },
+	{ k="musclelegends", en="Muscle Legends", zh="肌肉传奇", p=3623096087, u=1268927906, i=1268927906, g="sim", kw="muscle legends 肌肉 健身 锻炼" },
+	{ k="meepcity", en="MeepCity", zh="米普城", p=370731277, u=140239261, i=140239261, g="rp", kw="meepcity 米普城 钓鱼 社交" },
+	{ k="shindolife", en="Shindo Life", zh="新多人生", p=4616652839, u=1511883870, i=1511883870, g="rp", kw="shindo life 火影 忍者 新多" },
+	{ k="funkyfriday", en="Funky Friday", zh="周五音游", p=6447798030, u=2404080894, i=2404080894, g="misc", kw="funky friday 音游 节奏 fnf" },
+	{ k="evade", en="Evade", zh="逃离", p=9872472334, u=3647333358, i=3647333358, g="horror", kw="evade 逃离 躲避 追逃" },
+	{ k="g3008", en="3008", zh="3008", p=2768379856, u=1000233041, i=1000233041, g="action", kw="3008 超市 恐怖 生存" },
+	{ k="erlc", en="Emergency Response: Liberty County", zh="紧急救援", p=2534724415, u=903807016, i=903807016, g="action", kw="emergency response 自由郡 警察 erlc" },
+	{ k="mvsd", en="Murderers VS Sheriffs Duels", zh="凶手对警长", p=12355337193, u=4348829796, i=4348829796, g="fps", kw="murderers vs sheriffs 警长 凶手 枪战" },
+	{ k="flagwars", en="Flag Wars", zh="夺旗战争", p=3214114884, u=1160789089, i=1160789089, g="fight", kw="flag wars 夺旗 枪战 fw" },
+	{ k="speedrun4", en="Speed Run 4", zh="极速奔跑4", p=183364845, u=83858907, i=83858907, g="obby", kw="speed run 4 极速奔跑 跑酷 sr4" },
+	{ k="astd", en="All Star Tower Defense", zh="全明星塔防", p=4996049426, u=1720936166, i=1720936166, g="td", kw="all star tower defense 全明星塔防 塔防 astd" },
+	{ k="breakin2", en="Break In 2", zh="潜入2", p=13864661000, u=4807308814, i=4807308814, g="horror", kw="break in 2 潜入 剧情 bi2" },
+	{ k="survivethekiller", en="Survive the Killer", zh="凶手求生", p=4580204640, u=1489026993, i=1489026993, g="horror", kw="survive the killer 凶手 逃生 stk" },
+	{ k="breakin", en="Break In", zh="潜入", p=3851622790, u=1318971886, i=1318971886, g="horror", kw="break in 潜入 剧情 故事" },
+	{ k="neighbors", en="Neighbors", zh="邻居", p=12699642568, u=4452297356, i=4452297356, g="rp", kw="neighbors 邻居 语音 mic up" },
+	{ k="speeddraw", en="Speed Draw!", zh="极速画猜", p=7074772062, u=2729513759, i=2729513759, g="misc", kw="speed draw 你画我猜 画画 draw" },
+	{ k="zombieattack", en="Zombie Attack", zh="僵尸来袭", p=1240123653, u=504035427, i=504035427, g="action", kw="zombie attack 僵尸 丧尸 生存" },
+	{ k="lumbertycoon2", en="Lumber Tycoon 2", zh="伐木大亨2", p=13822889, u=2471084, i=2471084, g="tycoon", kw="lumber tycoon 2 伐木大亨 砍树 木材" },
+	{ k="luckyblocks", en="LUCKY BLOCKS Battlegrounds", zh="幸运方块战场", p=662417684, u=279565647, i=279565647, g="action", kw="lucky blocks 幸运方块 战场 lb" },
+	{ k="carcrushers2", en="Car Crushers 2", zh="汽车粉碎2", p=654732683, u=274816972, i=274816972, g="action", kw="car crushers 2 汽车粉碎 撞车 物理" },
+	{ k="marveldc", en="Marvel and DC Super Heroes", zh="漫威DC超级英雄", p=6132958612, u=2236455574, i=2236455574, g="action", kw="marvel and dc 漫威 超级英雄 dc" },
+	{ k="breakingpoint", en="Breaking Point", zh="临界点", p=648362523, u=271119130, i=271119130, g="action", kw="breaking point 临界点 枪战 心理" },
+	{ k="epicminigames", en="Epic Minigames", zh="史诗小游戏", p=277751860, u=110181652, i=110181652, g="action", kw="epic minigames 小游戏合集 迷你游戏 em" },
+	{ k="frontlines", en="FRONTLINES", zh="前线", p=5938036553, u=2132866904, i=2132866904, g="fps", kw="frontlines 前线 射击 枪战" },
+	{ k="sharkbite2", en="SharkBite 2", zh="鲨鱼咬2", p=8908228901, u=3365661357, i=3365661357, g="action", kw="sharkbite 2 鲨鱼 生存 海" },
+	{ k="sharkbite", en="SharkBite Classic", zh="鲨鱼咬经典", p=734159876, u=321279858, i=321279858, g="action", kw="sharkbite 鲨鱼咬 鲨鱼 经典" },
+	{ k="bigpaintball2", en="BIG Paintball 2!", zh="彩弹大战2", p=9865958871, u=3645347821, i=3645347821, g="fps", kw="big paintball 2 彩弹 枪战 bp2" },
+	{ k="peroxide", en="Peroxide", zh="死神", p=9096881148, u=3419284255, i=3419284255, g="fight", kw="peroxide 死神 bleach bleach" },
+	{ k="stealabrainrot", en="Steal a Brainrot", zh="偷走脑腐", p=109983668079237, u=7709344486, i=7709344486, g="sim", kw="steal a brainrot 脑腐 偷 brainrot" },
+	{ k="rivals", en="RIVALS", zh="对手", p=17625359962, u=6035872082, i=6035872082, g="fps", kw="rivals 对手 枪战 竞技" },
+	{ k="gunfightarena", en="Gunfight Arena", zh="枪战竞技场", p=14518422161, u=5012222382, i=5012222382, g="fps", kw="gunfight arena 枪战竞技场 fps 枪战" },
+	{ k="growagarden", en="Grow a Garden", zh="种花园", p=126884695634066, u=7436755782, i=7436755782, g="sim", kw="grow a garden 种花园 种菜 gag" },
+	{ k="growagarden2", en="Grow a Garden 2", zh="种花园2", p=97598239454123, u=10200395747, i=10200395747, g="sim", kw="grow a garden 2 种花园2 种菜 gag2" },
+	{ k="berryavenue", en="Berry Avenue RP", zh="莓果大道", p=8481844229, u=3240075297, i=3240075297, g="rp", kw="berry avenue 莓果大道 rp 角色扮演" },
+	{ k="animefighters", en="Anime Fighters Simulator", zh="动漫斗士模拟器", p=6299805723, u=2324662457, i=2324662457, g="fight", kw="anime fighters simulator 动漫斗士 火影 刷怪" },
+	{ k="rainbowfriends", en="Rainbow Friends", zh="彩虹朋友", p=7991339063, u=3085257211, i=3085257211, g="horror", kw="rainbow friends 彩虹朋友 恐怖 躲怪" },
+	{ k="counterblox", en="Counter Blox", zh="反恐精英", p=301549746, u=115797356, i=115797356, g="fps", kw="counter blox 反恐精英 cs 枪战" },
+	{ k="kat", en="KAT", zh="刀枪", p=621129760, u=254394801, i=254394801, g="fight", kw="kat 刀枪 近战 knife" },
+	{ k="micup", en="Mic Up", zh="语音聊天", p=6884319169, u=2626227051, i=2626227051, g="rp", kw="mic up 语音 聊天 开麦" },
+	{ k="vrhands", en="VR Hands", zh="VR双手", p=4832438542, u=1638323641, i=1638323641, g="rp", kw="vr hands vr 双手 虚拟现实" },
+	{ k="fencing", en="Fencing", zh="击剑", p=12109643, u=8226497, i=8226497, g="fight", kw="fencing 击剑 剑 对战" },
+	{ k="roghoul", en="Ro-Ghoul", zh="东京喰种", p=914010731, u=380704901, i=380704901, g="action", kw="ro-ghoul 东京喰种 喰种 食尸鬼" },
+	{ k="legendsofspeed", en="Legends Of Speed", zh="极速传奇", p=3101667897, u=1119466531, i=1119466531, g="sim", kw="legends of speed 极速传奇 跑酷 竞速" },
+	{ k="chaos", en="CHAOS", zh="混乱", p=6441847031, u=2400862604, i=2400862604, g="action", kw="chaos 混乱 pvp 对战" },
+	{ k="baysidehigh", en="Bayside High School", zh="湾畔高中", p=12640491155, u=4434528807, i=4434528807, g="rp", kw="bayside high school 高中 校园 rp" },
+	{ k="bigpaintball", en="BIG Paintball!", zh="彩弹大战", p=3527629287, u=1247975681, i=1247975681, g="fps", kw="big paintball 彩弹 枪战 bp" },
+	{ k="roadtogrambys", en="Road to Grambys", zh="通往格兰比", p=5796917097, u=nil, i=nil, g="action", kw="road to grambys 格兰比 冒险 rpg" },
+	{ k="cursedsea", en="Cursed Sea", zh="诅咒之海", p=14426444782, u=4984260245, i=4984260245, g="horror", kw="cursed sea 诅咒之海 海盗 航海" },
+	{ k="lifeinparadise", en="Life in Paradise", zh="天堂生活", p=1662219031, u=634725174, i=634725174, g="rp", kw="life in paradise 天堂生活 rp 生活" },
+	{ k="adoptbaby", en="Adopt and Raise a Baby", zh="收养婴儿", p=383793228, u=144207752, i=144207752, g="action", kw="adopt and raise a baby 收养婴儿 带娃 养孩子" },
+	{ k="simonsays", en="Super Simon Says", zh="超级西蒙说", p=61846006, u=22232358, i=22232358, g="action", kw="super simon says 西蒙说 记忆 反应" },
+	{ k="lifesentence", en="Life Sentence", zh="终身监禁", p=13083893317, u=4571439504, i=4571439504, g="action", kw="life sentence 终身监禁 监狱 生存" },
+	{ k="colonysurvival", en="Colony Survival", zh="殖民地生存", p=14888386963, u=5129563181, i=5129563181, g="tycoon", kw="colony survival 殖民地 生存 建设" },
+	{ k="redlightgreenlight", en="Red Light, Green Light", zh="红绿灯", p=7540891731, u=2931829660, i=2931829660, g="obby", kw="red light green light 红绿灯 一二三木头人 鱿鱼游戏" },
+	{ k="guessthedrawing", en="Guess the Drawing!", zh="猜画", p=3281073759, u=1182609799, i=1182609799, g="misc", kw="guess the drawing 猜画 你画我猜 画画" },
+	{ k="vrhangout", en="VR Hangout", zh="VR聚集地", p=8769714622, u=3326885692, i=3326885692, g="rp", kw="vr hangout vr 聚集 社交" },
+	{ k="vrhandslegacy", en="VR Hands Legacy", zh="VR双手经典", p=16912831373, u=5808321016, i=5808321016, g="rp", kw="vr hands legacy vr 双手 经典" },
+	{ k="liftingsim", en="Lifting Simulator", zh="举重模拟器", p=3652625463, u=1275875292, i=1275875292, g="sim", kw="lifting simulator 举重 健身 力量" },
+	{ k="deathpenalty", en="Death Penalty", zh="死刑", p=15654981113, u=5407131262, i=5407131262, g="action", kw="death penalty 死刑 pvp 对战" },
+	{ k="gorillatag", en="Gorilla Tag Professional", zh="大猩猩标签", p=8690998110, u=3303635666, i=3303635666, g="misc", kw="gorilla tag 大猩猩 vr 猩猩" },
+	{ k="catalogavatar", en="Catalog Avatar Creator", zh="虚拟形象编辑器", p=7041939546, u=2711375305, i=2711375305, g="rp", kw="catalog avatar creator 捏脸 虚拟形象 换装" },
+	{ k="towerdefensesim", en="Tower Defense Simulator", zh="塔防模拟器", p=3260590327, u=1176784616, i=1176784616, g="sim", kw="tower defense simulator 塔防模拟器 塔防 tds" },
+	{ k="deathball", en="Death Ball", zh="死亡球", p=15002061926, u=5166944221, i=5166944221, g="fight", kw="death ball 死亡球 踢球 db" },
+	{ k="fruitbattlegrounds", en="Fruit Battlegrounds", zh="果实战场", p=9224601490, u=3457700596, i=3457700596, g="fight", kw="fruit battlegrounds 果实战场 海贼 刷怪" },
+	{ k="livetopia", en="Livetopia", zh="生活小镇", p=6737970321, u=2549475383, i=2549475383, g="rp", kw="livetopia 生活小镇 rp 社交" },
+	{ k="creaturesofsonaria", en="Creatures of Sonaria", zh="索纳里亚生物", p=5233782396, u=1831550657, i=1831550657, g="rp", kw="creatures of sonaria 生物 怪兽 cos" },
+	{ k="dragonadventures", en="Dragon Adventures", zh="龙之冒险", p=3475397644, u=1235188606, i=1235188606, g="rp", kw="dragon adventures 龙 养龙 冒险" },
+	{ k="metrolife", en="Metro Life", zh="都市生活", p=12985361032, u=4540138978, i=4540138978, g="rp", kw="metro life 都市生活 城市 rp" },
+	{ k="gachaonline", en="Gacha Online", zh="扭蛋在线", p=5289509545, u=1852226622, i=1852226622, g="rp", kw="gacha online 扭蛋 抽卡 gacha" },
+	{ k="armwrestle", en="Arm Wrestle Simulator", zh="掰手腕模拟器", p=13127800756, u=4582358979, i=4582358979, g="sim", kw="arm wrestle simulator 掰手腕 力量 健身" },
+	{ k="escaperunninghead", en="Escape Running Head", zh="逃离大头", p=6205205961, u=2274830359, i=2274830359, g="obby", kw="escape running head 大头 逃离 恐怖" },
+	{ k="colorordie", en="Color or Die", zh="不上色就死", p=12931609417, u=4523856444, i=4523856444, g="horror", kw="color or die 上色 涂色 恐怖" },
+	{ k="cardealershiptycoon", en="Car Dealership Tycoon", zh="车行大亨", p=1554960397, u=605887098, i=605887098, g="tycoon", kw="car dealership tycoon 车行 卖车 tycoon" },
+	{ k="vehiclelegends", en="Vehicle Legends", zh="载具传奇", p=4566572536, u=1480782352, i=1480782352, g="tycoon", kw="vehicle legends 载具 赛车 车" },
+	{ k="elementalpowerstycoon", en="Elemental Powers Tycoon", zh="元素力量大亨", p=10253248401, u=3754482795, i=3754482795, g="sim", kw="elemental powers tycoon 元素 大亨 魔法" },
+	{ k="restauranttycoon2", en="Restaurant Tycoon 2", zh="餐厅大亨2", p=3398014311, u=1214576306, i=1214576306, g="tycoon", kw="restaurant tycoon 2 餐厅 经营 大亨" },
+	{ k="royalehigh", en="Royale High", zh="皇家高中", p=735030788, u=321778215, i=321778215, g="rp", kw="royale high 皇家高中 换装 校园" },
+	{ k="megamansiontycoon", en="Mega Mansion Tycoon", zh="豪宅大亨", p=8328351891, u=3191268194, i=3191268194, g="tycoon", kw="mega mansion tycoon 豪宅 大亨 建房" },
+	{ k="animedimensions", en="Anime Dimensions Simulator", zh="动漫次元模拟器", p=6938803436, u=2655311011, i=2655311011, g="sim", kw="anime dimensions simulator 动漫次元 刷怪 ads" },
+	{ k="floorislava", en="The Floor Is LAVA!", zh="地板是岩浆", p=815405518, u=341654025, i=341654025, g="obby", kw="the floor is lava 地板是岩浆 跑酷 岩浆" },
+	{ k="twilightdaycare", en="Twilight Daycare", zh="暮光托儿所", p=6507422231, u=2435789930, i=2435789930, g="rp", kw="twilight daycare 托儿所 躲猫猫 恐怖" },
+	{ k="barrysprisonrun", en="Barry's Prison Run", zh="巴里越狱跑酷", p=8712817601, u=3310460039, i=3310460039, g="horror", kw="barry's prison run 越狱跑酷 第一人称 obby" },
+	{ k="southwestflorida", en="Southwest Florida Beta", zh="西南佛罗里达", p=5104202731, u=1769712451, i=1769712451, g="rp", kw="southwest florida 佛罗里达 rp 警察" },
+	{ k="southbronx", en="South Bronx: The Trenches", zh="南布朗克斯", p=10179538382, u=3734304510, i=3734304510, g="rp", kw="south bronx 布朗克斯 街头 帮派" },
+	{ k="obbybike", en="Obby But You're On a Bike", zh="骑车跑酷", p=14184086618, u=4908792642, i=4908792642, g="obby", kw="obby but you're on a bike 骑车 跑酷 obby" },
+	{ k="bluelockrivals", en="Blue Lock: Rivals", zh="蓝色监狱", p=18668065416, u=6325068386, i=6325068386, g="action", kw="blue lock rivals 蓝色监狱 足球 bluelock" },
 }
 
 -- 按 key 找一台服务器
@@ -4004,7 +4249,7 @@ boot = function(lang)
 
 	local FLY_W, FLY_H   = 380, 356
 
-	local SRV_W, SRV_H   = 520, 360
+	local SRV_W, SRV_H   = 560, 440
 	local SRV_SIDE_W     = 118
 	local SRV_HEAD_H     = 42
 
@@ -4369,6 +4614,8 @@ boot = function(lang)
 	-- 通用游戏面板（122 台共用一套引擎，第一次点开才建）
 	local gameBuild = function() end
 	local gameBuilt = false
+	-- 通用功能组里要用到飞行模块（它在本函数后面才定义），先占位
+	local Fly
 	local openGameWindow = function() end
 	local GameCloseRequest = function() end
 	local gameCleanup = function() end
@@ -4626,8 +4873,1565 @@ boot = function(lang)
 		Parent = home,
 	})
 
+	--========================== 通用功能组（任何面板都能挂一套，30 项） ==========================
+	-- 自然灾害 / 声名狼藉 / 通用面板 / DOORS 都用它，避免同一套功能写三遍。
+	--   addPage(key)      -> 在目标面板里造一个 page
+	--   addNav(key, text, order) -> 在目标面板的导航里加一项（页签或左侧栏都行）
+	--   w                  = 内容区宽度（>=480 两列大卡；否则两列紧凑行、不显示说明）
+	--   orderBase          = 这一组的导航项从第几项开始排
+	-- 返回 { step = fn(now), cleanup = fn() }
+	local function buildUniv(addPage, addNav, w, orderBase, prefix)
+		-- ⚠️ prefix 不能省：宿主面板自己可能也有 "tp"/"gen" 页，
+		--    不带前缀会直接覆盖掉它（v3.0.2 踩过：自然灾害的传送页被顶掉了）
+		prefix = prefix or ""
+		local function PK(k) return prefix .. k end
+		local wide = w >= 480
+		local CW = math.floor((w - (wide and 12 or 8)) / 2)
+		local RH = wide and 58 or 50
+		local TITLE_SIZE = wide and 13 or 11
+
+		local U = {
+			Fly = false, Noclip = false, AntiPull = false, InfJump = false,
+			AntiAfk = false, Shield = false, AutoClick = false,
+			Speed = 16, Jump = 50, Gravity = 196.2,
+			Esp = false, EspName = true, EspDist = true, EspBox = false, EspRange = 600,
+			Bright = false, NoFog = false, Fov = 70, CamDist = 128, Clock = 14,
+			Follow = nil, TpTarget = nil, Saved = nil,
+			esps = {}, noclipped = {}, rows = {},
+			lastPos = nil, pullAt = 0, espAt = 0, plrAt = 0, clickAt = 0,
+			brightSaved = nil, fog0 = nil,
+		}
+
+		local function cardAt(page, i, name, title, desc, color, def, onChange)
+			local c = (i - 1) % 2
+			local r = math.floor((i - 1) / 2)
+			local box = new("Frame", {
+				Name = name .. "Card",
+				Size = UDim2.new(0, CW, 0, RH),
+				Position = UDim2.new(0, c * (CW + (wide and 12 or 8)), 0, r * (RH + 6)),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				Parent = page,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = box })
+			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = box })
+			local dot = new("Frame", {
+				Name = "Dot",
+				Size = UDim2.new(0, 6, 0, 6),
+				Position = UDim2.new(0, wide and 14 or 10, 0, 15),
+				BackgroundColor3 = color,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Parent = box,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+			new("TextLabel", {
+				Size = UDim2.new(1, -74, 0, 18),
+				Position = UDim2.new(0, wide and 26 or 20, 0, 8),
+				BackgroundTransparency = 1,
+				Text = title,
+				TextSize = TITLE_SIZE,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				Parent = box,
+			})
+			if wide and desc and desc ~= "" then
+				new("TextLabel", {
+					Size = UDim2.new(1, -30, 0, 26),
+					Position = UDim2.new(0, 26, 0, 27),
+					BackgroundTransparency = 1,
+					Text = desc,
+					TextSize = 10,
+					Font = FONT_N,
+					TextColor3 = C.Dim,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextYAlignment = Enum.TextYAlignment.Top,
+					TextWrapped = true,
+					Parent = box,
+				})
+			end
+			return box, createSwitch(box, {
+				Name = name,
+				Position = UDim2.new(1, wide and -52 or -46, 0, wide and 11 or 8),
+				Default = def,
+				OnChange = function(v)
+					tween(dot, EASE.soft, { BackgroundTransparency = v and 0 or 1 })
+					if onChange then onChange(v) end
+				end,
+			})
+		end
+
+		local function sliderAt(page, y, title, min, max, def, log, fmt, onChange)
+			new("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 16),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1,
+				Text = title, TextSize = 12, Font = FONT_N, TextColor3 = C.Sub,
+				TextXAlignment = Enum.TextXAlignment.Left, Parent = page,
+			})
+			local val = new("TextLabel", {
+				Size = UDim2.new(0, 66, 0, 16),
+				Position = UDim2.new(1, -66, 0, y),
+				BackgroundTransparency = 1,
+				Text = fmt(def), TextSize = 12, Font = FONT_M, TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Right, Parent = page,
+			})
+			createSlider(page, {
+				Position = UDim2.new(0, 0, 0, y + 18),
+				Min = min, Max = max, Default = def, Log = log,
+				OnChange = function(v) val.Text = fmt(v); if onChange then onChange(v) end end,
+			})
+		end
+
+		local function ruleAt(page, y)
+			new("Frame", {
+				Size = UDim2.new(1, 0, 0, 1),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundColor3 = C.Stroke,
+				BorderSizePixel = 0,
+				Parent = page,
+			})
+		end
+
+		-- ---------- 通用 ----------
+		local pGen = addPage(PK("gen"))
+		addNav(PK("gen"), L("gmTab_gen"), orderBase + 1)
+		local GEN = {
+			{ "Fly", "gmFly", "gmFlyD", C.Accent2, function(v) pcall(function() Fly:SetEnabled(v) end) end },
+			{ "Noclip", "gmNoclip", "gmNoclipD", C.Accent, function(v)
+				if not v then
+					for part in pairs(U.noclipped) do
+						pcall(function() part.CanCollide = true end)
+					end
+					U.noclipped = {}
+				end
+			end },
+			{ "AntiPull", "gmAntiPull", "gmAntiPullD", C.Green, function() U.lastPos = nil end },
+			{ "InfJump", "gmInfJump", "gmInfJumpD", C.Amber, nil },
+			{ "AntiAfk", "gmAntiAfk", "gmAntiAfkD", C.Sub, nil },
+			{ "Shield", "gmShield", "gmShieldD", C.Green, function(v) pcall(function() ShieldRequest(v) end) end },
+			{ "AutoClick", "gmAutoClick", "gmAutoClickD", C.Red, nil },
+			{ "AutoJump", "gmAutoJump", "gmAutoJumpD", C.Accent, nil },
+			{ "QuickRespawn", "gmQuickRespawn", "gmQuickRespawnD", C.Amber, nil },
+			{ "AutoSit", "gmAutoSit", "gmAutoSitD", C.Sub, nil },
+			{ "Spin", "gmSpin", "gmSpinD", C.Accent2, nil },
+			{ "LockCam", "gmLockCam", "gmLockCamD", C.Green, nil },
+			{ "FullHealth", "gmFullHealth", "gmFullHealthD", C.Green, nil },
+			{ "Invisible", "gmInvisible", "gmInvisibleD", C.Sub, nil },
+			{ "Freeze", "gmFreeze", "gmFreezeD", C.Accent, nil },
+		}
+		for i, it in ipairs(GEN) do
+			cardAt(pGen, i, it[1], L(it[2]), L(it[3]), it[4], false, function(v)
+				U[it[1]] = v
+				if it[5] then it[5](v) end
+			end)
+		end
+		local genRows = math.ceil(#GEN / 2)
+		ruleAt(pGen, genRows * (RH + 6) + 6)
+		local sy = genRows * (RH + 6) + 18
+		sliderAt(pGen, sy, L("gmSpeed"), 16, 500, 16, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) U.Speed = v; U.apply() end)
+		sliderAt(pGen, sy + 48, L("gmJump"), 50, 500, 50, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) U.Jump = v; U.apply() end)
+		sliderAt(pGen, sy + 96, L("gmGravity"), 0, 500, 196, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) U.Gravity = v; U.apply() end)
+		createButton(pGen, {
+			Name = "ResetChar",
+			Size = UDim2.new(0, CW, 0, 30),
+			Position = UDim2.new(0, 0, 0, sy + 146),
+			Text = L("gmReset"), TextSize = 12, Style = "solid",
+			OnClick = function()
+				pcall(function()
+					local hum = getHumanoid()
+					if hum then hum.Health = 0 end
+				end)
+				notify(L("gmResetDone"), C.Green)
+			end,
+		})
+
+		-- ---------- 视觉 ----------
+		local pVis = addPage(PK("vis"))
+		addNav(PK("vis"), L("gmTab_vis"), orderBase + 2)
+		local VIS = {
+			{ "Esp", "gmEsp", "gmEspD", C.Red },
+			{ "EspName", "gmEspName", "", C.Sub },
+			{ "EspDist", "gmEspDist", "", C.Sub },
+			{ "EspBox", "gmEspBox", "", C.Sub },
+			{ "Bright", "gmBright", "gmBrightD", C.Amber },
+			{ "NoFog", "gmNoFog", "gmNoFogD", C.Sub },
+			{ "Cross", "gmCross", "gmCrossD", C.White },
+			{ "SelfEsp", "gmSelfEsp", "gmSelfEspD", C.Green },
+		}
+		for i, it in ipairs(VIS) do
+			cardAt(pVis, i, it[1], L(it[2]), L(it[3]), it[4], it[1] == "EspName" or it[1] == "EspDist",
+				function(v) U[it[1]] = v end)
+		end
+		local visRows = math.ceil(#VIS / 2)
+		ruleAt(pVis, visRows * (RH + 6) + 6)
+		local vy = visRows * (RH + 6) + 18
+		sliderAt(pVis, vy, L("gmEspRange"), 100, 2000, 600, true, function(v)
+			return tostring(math.floor(v)) .. "m"
+		end, function(v) U.EspRange = v end)
+		sliderAt(pVis, vy + 48, L("gmFov"), 20, 120, 70, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v) U.Fov = v; U.apply() end)
+		sliderAt(pVis, vy + 96, L("gmCamDist"), 10, 1000, 128, true, function(v)
+			return tostring(math.floor(v))
+		end, function(v) U.CamDist = v; U.apply() end)
+		sliderAt(pVis, vy + 144, L("gmClock"), 0, 24, 14, false, function(v)
+			return string.format("%02d:00", math.floor(v))
+		end, function(v) U.Clock = v; U.apply() end)
+		sliderAt(pVis, vy + 192, L("gmCrossSize"), 4, 60, 14, false, function(v)
+			return tostring(math.floor(v))
+		end, function(v)
+			U.CrossSize = v
+			if U.cross then
+				U.cross.Size = UDim2.new(0, v, 0, 2)
+				U.crossV.Size = UDim2.new(0, 2, 0, v)
+			end
+		end)
+
+		-- ---------- 玩家 ----------
+		local pPlr = addPage(PK("plr"))
+		addNav(PK("plr"), L("gmTab_plr"), orderBase + 3)
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 16), BackgroundTransparency = 1,
+			Text = L("gmPlayers"), TextSize = 12, Font = FONT_N, TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left, Parent = pPlr,
+		})
+		local plrList = new("Frame", {
+			Name = "PlayerList",
+			Size = UDim2.new(1, 0, 1, -22),
+			Position = UDim2.new(0, 0, 0, 22),
+			BackgroundTransparency = 1,
+			Parent = pPlr,
+		})
+
+		local function refreshPlayers()
+			for _, r in pairs(U.rows) do pcall(function() r:Destroy() end) end
+			U.rows = {}
+			local list = {}
+			pcall(function()
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= LocalPlayer then list[#list + 1] = p end
+				end
+			end)
+			if #list == 0 then
+				U.rows[1] = new("TextLabel", {
+					Name = "Empty",
+					Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1,
+					Text = L("gmNoPlayers"), TextSize = 11, Font = FONT_N, TextColor3 = C.Dim,
+					TextXAlignment = Enum.TextXAlignment.Left, Parent = plrList,
+				})
+				return
+			end
+			for i, p in ipairs(list) do
+				if i > 6 then break end
+				local row = new("Frame", {
+					Name = "P_" .. tostring(p.Name),
+					Size = UDim2.new(1, 0, 0, 40),
+					Position = UDim2.new(0, 0, 0, (i - 1) * 44),
+					BackgroundColor3 = C.Card, BorderSizePixel = 0, Parent = plrList,
+				})
+				new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = row })
+				new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = row })
+				new("TextLabel", {
+					Size = UDim2.new(1, -200, 0, 16), Position = UDim2.new(0, 12, 0, 5),
+					BackgroundTransparency = 1, Text = p.Name, TextSize = 12, Font = FONT_B,
+					TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Left,
+					TextTruncate = Enum.TextTruncate.AtEnd, Parent = row,
+				})
+				local info = new("TextLabel", {
+					Name = "Info",
+					Size = UDim2.new(1, -200, 0, 12), Position = UDim2.new(0, 12, 0, 22),
+					BackgroundTransparency = 1, Text = "", TextSize = 9, Font = FONT_M,
+					TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
+				})
+				local function mini(nm, x, text, fn)
+					local b = new("TextButton", {
+						Name = nm, Size = UDim2.new(0, 52, 0, 24),
+						Position = UDim2.new(1, x, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
+						BackgroundColor3 = C.Card2, BorderSizePixel = 0, AutoButtonColor = false,
+						Text = text, TextSize = 10, Font = FONT_B, TextColor3 = C.Sub, Parent = row,
+					})
+					new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = b })
+					local st = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = b })
+					bindHover(b, { Bg = { C.Card2, C.Accent }, Stroke = st, StrokeOn = C.Accent,
+						Label = b, LabelOn = C.White })
+					b.MouseButton1Click:Connect(fn)
+					return b
+				end
+				mini("Tp", -176, L("gmTpTo"), function() U.TpTarget = p end)
+				mini("Follow", -120, L("gmFollow"), function()
+					U.Follow = (U.Follow == p) and nil or p
+					notify(U.Follow and string.format(L("gmFollowOn"), p.Name) or L("gmFollowOff"),
+						U.Follow and C.Green or C.Sub)
+				end)
+				mini("Copy", -64, L("gmCopyName"), function()
+					local ok = copyText(p.Name)
+					notify(ok and L("gmCopied") or string.format(L("gmCopyFail"), p.Name),
+						ok and C.Green or C.Amber)
+				end)
+				U.rows[#U.rows + 1] = row
+				U.rows["i" .. i] = info
+				U.rows["p" .. i] = p
+			end
+		end
+		U.refreshPlayers = refreshPlayers
+
+		-- ---------- 传送 ----------
+		local pTp = addPage(PK("tp"))
+		addNav(PK("tp"), L("gmTab_tp"), orderBase + 4)
+		cardAt(pTp, 1, "Saved", L("gmSavePos"), L("gmSavePosD"), C.Green, false, function(v)
+			if v then
+				local root = getRoot()
+				U.Saved = root and root.CFrame or nil
+				notify(U.Saved and L("gmSaved") or L("gmNoSaved"), U.Saved and C.Green or C.Amber)
+			end
+		end)
+		cardAt(pTp, 2, "SpawnTp", L("gmSpawn"), L("gmSpawnD"), C.Accent2, false, function(v)
+			if v then
+				local root = getRoot()
+				local sp
+				pcall(function()
+					local s = workspace:FindFirstChildOfClass("SpawnLocation")
+					if s then sp = s.Position end
+				end)
+				if root then
+					pcall(function()
+						root.CFrame = CFrame.new((sp or Vector3.new(0, 50, 0)) + Vector3.new(0, 5, 0))
+					end)
+					notify(L("gmTpDone"), C.Green)
+				end
+			end
+		end)
+		local bw = wide and CW or math.floor((w - 8) / 2)
+		createButton(pTp, {
+			Name = "GotoSaved", Size = UDim2.new(0, bw, 0, 32),
+			Position = UDim2.new(0, 0, 0, RH + 12),
+			Text = L("gmGotoSaved"), TextSize = 12, Style = "solid",
+			OnClick = function()
+				local root = getRoot()
+				if U.Saved and root then
+					pcall(function() root.CFrame = U.Saved end)
+					notify(L("gmTpDone"), C.Green)
+				else
+					notify(L("gmNoSaved"), C.Amber)
+				end
+			end,
+		})
+		createButton(pTp, {
+			Name = "TpMouse", Size = UDim2.new(0, bw, 0, 32),
+			Position = UDim2.new(0, bw + 8, 0, RH + 12),
+			Text = L("gmMouseTp"), TextSize = 12, Style = "ghost",
+			OnClick = function()
+				local ok, pos = pcall(function()
+					local m = LocalPlayer:GetMouse()
+					return m and m.Hit and m.Hit.Position
+				end)
+				local root = getRoot()
+				if ok and pos and root then
+					pcall(function() root.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0)) end)
+					notify(L("gmTpDone"), C.Green)
+				else
+					notify(L("gmNoMouse"), C.Amber)
+				end
+			end,
+		})
+		createButton(pTp, {
+			Name = "TpFar", Size = UDim2.new(0, bw, 0, 32),
+			Position = UDim2.new(0, 0, 0, RH + 52),
+			Text = L("gmTpFar"), TextSize = 12, Style = "ghost",
+			OnClick = function()
+				local root = getRoot()
+				local best, bd
+				pcall(function()
+					for _, p in ipairs(Players:GetPlayers()) do
+						local hrp = p ~= LocalPlayer and p.Character
+							and p.Character:FindFirstChild("HumanoidRootPart")
+						if hrp and root then
+							local d = (hrp.Position - root.Position).Magnitude
+							if not bd or d > bd then best, bd = hrp, d end
+						end
+					end
+				end)
+				if best and root then
+					pcall(function() root.CFrame = CFrame.new(best.Position + Vector3.new(0, 3, 0)) end)
+					notify(L("gmTpDone"), C.Green)
+				else
+					notify(L("gmNoPlayers"), C.Amber)
+				end
+			end,
+		})
+
+		-- ---------- 实现 ----------
+		U.apply = function()
+			local hum = getHumanoid()
+			if hum then
+				pcall(function() hum.WalkSpeed = U.Speed end)
+				pcall(function() hum.UseJumpPower = true; hum.JumpPower = U.Jump end)
+			end
+			pcall(function() workspace.Gravity = U.Gravity end)
+			local cam = workspace.CurrentCamera
+			if cam then
+				pcall(function() cam.FieldOfView = U.Fov end)
+				pcall(function()
+					if cam.CameraSubject == hum then
+						LocalPlayer.CameraMaxZoomDistance = U.CamDist
+						LocalPlayer.CameraMinZoomDistance = math.min(10, U.CamDist)
+					end
+				end)
+			end
+			pcall(function() game:GetService("Lighting").ClockTime = U.Clock end)
+		end
+
+		local BRIGHT_AMB = Color3.fromRGB(178, 178, 178)
+		local function lighting()
+			local ok, v = pcall(function() return game:GetService("Lighting") end)
+			return ok and v or nil
+		end
+		local function applyBright()
+			local lt = lighting()
+			if not lt then return end
+			if U.Bright then
+				if not U.brightSaved then
+					U.brightSaved = {}
+					pcall(function()
+						U.brightSaved.B = lt.Brightness
+						U.brightSaved.A = lt.Ambient
+						U.brightSaved.O = lt.OutdoorAmbient
+						U.brightSaved.S = lt.GlobalShadows
+					end)
+				end
+				if lt.Brightness ~= 2 or lt.GlobalShadows ~= false or lt.Ambient ~= BRIGHT_AMB then
+					pcall(function()
+						lt.Brightness = 2
+						lt.Ambient = BRIGHT_AMB
+						lt.OutdoorAmbient = BRIGHT_AMB
+						lt.GlobalShadows = false
+					end)
+				end
+			elseif U.brightSaved then
+				local sv = U.brightSaved
+				pcall(function()
+					lt.Brightness = sv.B
+					lt.Ambient = sv.A
+					lt.OutdoorAmbient = sv.O
+					lt.GlobalShadows = sv.S
+				end)
+				U.brightSaved = nil
+			end
+		end
+		local function applyFog()
+			local lt = lighting()
+			if not lt then return end
+			if U.NoFog then
+				if not U.fog0 then
+					pcall(function() U.fog0 = { e = lt.FogEnd, s = lt.FogStart } end)
+				end
+				if lt.FogEnd < 500000 then
+					pcall(function() lt.FogEnd = 1e6; lt.FogStart = 0 end)
+				end
+			elseif U.fog0 then
+				pcall(function() lt.FogEnd = U.fog0.e; lt.FogStart = U.fog0.s end)
+				U.fog0 = nil
+			end
+		end
+
+		local function espOff(part)
+			local e = U.esps[part]
+			if not e then return end
+			U.esps[part] = nil
+			if e.gui then pcall(function() e.gui:Destroy() end) end
+			if e.box then pcall(function() e.box:Destroy() end) end
+		end
+		local function espRefresh()
+			local seen = {}
+			local root = getRoot()
+			if not root then return end
+			pcall(function()
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= LocalPlayer and p.Character then
+						local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+							or p.Character:FindFirstChild("Head")
+						if hrp then
+							local d = (hrp.Position - root.Position).Magnitude
+							if d <= U.EspRange then
+								seen[hrp] = true
+								local e = U.esps[hrp]
+								local txt = ""
+								if U.EspName then txt = p.Name end
+								if U.EspDist then
+									txt = (txt ~= "" and (txt .. "  ") or "")
+										.. string.format("[%dm]", math.floor(d))
+								end
+								if txt == "" then txt = "●" end
+								if not e then
+									local gui = new("BillboardGui", {
+										Name = "O_X_U_ESP",
+										Size = UDim2.new(0, 160, 0, 16),
+										StudsOffset = Vector3.new(0, 3, 0),
+										AlwaysOnTop = true, Adornee = hrp, Parent = hrp,
+									})
+									local label = new("TextLabel", {
+										Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1,
+										Text = txt, TextSize = 12, Font = FONT_B,
+										TextColor3 = C.Red, TextStrokeTransparency = 0.3, Parent = gui,
+									})
+									U.esps[hrp] = { gui = gui, label = label }
+									e = U.esps[hrp]
+								elseif e.label.Text ~= txt then
+									e.label.Text = txt
+								end
+								if U.EspBox and not e.box then
+									e.box = new("BoxHandleAdornment", {
+										Name = "O_X_U_BOX", Adornee = hrp, AlwaysOnTop = true,
+										ZIndex = 5, Transparency = 0.55, Color3 = C.Red,
+										Size = Vector3.new(3, 5.5, 2.5), Parent = hrp,
+									})
+								elseif not U.EspBox and e.box then
+									pcall(function() e.box:Destroy() end)
+									e.box = nil
+								end
+							end
+						end
+					end
+				end
+			end)
+			for part in pairs(U.esps) do
+				if not seen[part] then espOff(part) end
+			end
+		end
+
+		U.step = function(now)
+			if U.Noclip then
+				local char = LocalPlayer.Character
+				if char then
+					local ok, list = pcall(function() return char:GetDescendants() end)
+					for _, d in ipairs(ok and list or {}) do
+						local isPart = false
+						pcall(function() isPart = d:IsA("BasePart") end)
+						if isPart and d.CanCollide then
+							pcall(function() d.CanCollide = false end)
+							U.noclipped[d] = true
+						end
+					end
+				end
+			end
+			if U.Bright then pcall(applyBright) end
+			if U.NoFog then pcall(applyFog) end
+
+			if U.Follow and U.Follow.Character then
+				local hrp = U.Follow.Character:FindFirstChild("HumanoidRootPart")
+				local root = getRoot()
+				if hrp and root then
+					pcall(function()
+						root.CFrame = CFrame.new(hrp.Position + hrp.CFrame.LookVector * -6
+							+ Vector3.new(0, 2, 0))
+					end)
+				end
+			end
+			if U.TpTarget and U.TpTarget.Character then
+				local hrp = U.TpTarget.Character:FindFirstChild("HumanoidRootPart")
+				local root = getRoot()
+				if hrp and root then
+					pcall(function() root.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 3, 0)) end)
+					notify(L("gmTpDone"), C.Green)
+				end
+				U.TpTarget = nil
+			end
+
+			if U.AntiPull then
+				local root = getRoot()
+				if root then
+					local p = root.Position
+					if U.lastPos then
+						if (p - U.lastPos).Magnitude > 120 and now - U.pullAt > 0.6 then
+							U.pullAt = now
+							pcall(function() root.CFrame = CFrame.new(U.lastPos) end)
+						else
+							U.lastPos = p
+						end
+					else
+						U.lastPos = p
+					end
+				end
+			end
+
+			if U.InfJump then
+				local hum = getHumanoid()
+				if hum then
+					local ok, st = pcall(function() return hum:GetState() end)
+					if not ok or (st ~= Enum.HumanoidStateType.Jumping
+						and st ~= Enum.HumanoidStateType.Freefall) then
+						pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
+					end
+				end
+			end
+			if U.AntiAfk then
+				pcall(function()
+					VirtualUser:CaptureController()
+					VirtualUser:ClickButton2(Vector2.new())
+				end)
+			end
+			if U.AutoJump and now - (U.jumpAt or 0) >= 0.2 then
+				U.jumpAt = now
+				local hum = getHumanoid()
+				if hum then
+					pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
+				end
+			end
+			if U.QuickRespawn and now - (U.respAt or 0) >= 2 then
+				U.respAt = now
+				pcall(function()
+					local hum = getHumanoid()
+					if hum and hum.Health > 0 then hum.Health = 0 end
+				end)
+			end
+			if U.AutoSit and now - (U.sitAt or 0) >= 1 then
+				U.sitAt = now
+				local char = LocalPlayer.Character
+				local hum = char and char:FindFirstChildOfClass("Humanoid")
+				if hum and not hum.Sit then
+					pcall(function()
+						for _, o in ipairs(workspace:GetDescendants()) do
+							if o:IsA("Seat") and o.Position then
+								local root = getRoot()
+								if root and (o.Position - root.Position).Magnitude < 12 then
+									hum.Sit = true
+									return
+								end
+							end
+						end
+					end)
+				end
+			end
+			if U.Spin then
+				local root = getRoot()
+				if root then
+					pcall(function()
+						root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(6), 0)
+					end)
+				end
+			end
+			if U.LockCam then
+				pcall(function() UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter end)
+			end
+			if U.SelfEsp then
+				local char = LocalPlayer.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				if hrp and not U.selfHl then
+					U.selfHl = new("Highlight", {
+						Name = "O_X_U_SELF", Adornee = char, FillColor = C.Green,
+						OutlineColor = C.Green, FillTransparency = 0.6, Parent = char,
+					})
+				end
+			elseif U.selfHl then
+				pcall(function() U.selfHl:Destroy() end)
+				U.selfHl = nil
+			end
+			if U.Cross and not U.cross then
+				local holder = new("ScreenGui", {
+					Name = "O_X_U_Cross", IgnoreGuiInset = true, ResetOnSpawn = false,
+					ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = getGuiParent(),
+				})
+				local h = new("Frame", {
+					Name = "H", Size = UDim2.new(0, U.CrossSize, 0, 2),
+					Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5),
+					BackgroundColor3 = C.White, BorderSizePixel = 0, Parent = holder,
+				})
+				local v = new("Frame", {
+					Name = "V", Size = UDim2.new(0, 2, 0, U.CrossSize),
+					Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5),
+					BackgroundColor3 = C.White, BorderSizePixel = 0, Parent = holder,
+				})
+				U.cross, U.crossV, U.crossGui = h, v, holder
+			elseif not U.Cross and U.cross then
+				pcall(function() U.crossGui:Destroy() end)
+				U.cross, U.crossV, U.crossGui = nil, nil, nil
+			end
+			if U.FullHealth then
+				local hum = getHumanoid()
+				if hum and hum.Health < hum.MaxHealth then
+					pcall(function() hum.Health = hum.MaxHealth end)
+				end
+			end
+			if U.Invisible then
+				local char = LocalPlayer.Character
+				if char and not U.invis then
+					U.invis = {}
+					pcall(function()
+						for _, d in ipairs(char:GetDescendants()) do
+							if d:IsA("BasePart") then
+								U.invis[d] = d.Transparency
+								d.Transparency = 1
+							elseif d:IsA("Decal") then
+								U.invis[d] = d.Transparency
+								d.Transparency = 1
+							end
+						end
+					end)
+				end
+			elseif U.invis then
+				pcall(function()
+					for d, t in pairs(U.invis) do d.Transparency = t end
+				end)
+				U.invis = nil
+			end
+			if U.Freeze then
+				local root = getRoot()
+				if root then
+					pcall(function()
+						U.freezeAt = root.CFrame
+						root.Anchored = true
+					end)
+				end
+			elseif U.frozen then
+				local root = getRoot()
+				if root then pcall(function() root.Anchored = false end) end
+			end
+			U.frozen = U.Freeze
+			if U.AutoClick and now - U.clickAt >= 0.12 then
+				U.clickAt = now
+				local m1 = execFn("mouse1click")
+				if m1 then pcall(m1) end
+			end
+
+			if U.Esp then
+				if now - U.espAt >= 0.35 then
+					U.espAt = now
+					pcall(espRefresh)
+				end
+			elseif next(U.esps) then
+				pcall(function()
+					for part in pairs(U.esps) do espOff(part) end
+				end)
+			end
+
+			if now - U.plrAt >= 1 and plrList and plrList.Visible ~= false then
+				U.plrAt = now
+				for i = 1, 6 do
+					local info, p = U.rows["i" .. i], U.rows["p" .. i]
+					if info and p then
+						local root = getRoot()
+						local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+						if hrp and root then
+							info.Text = string.format("%dm", math.floor((hrp.Position - root.Position).Magnitude))
+						end
+					end
+				end
+			end
+		end
+
+		U.cleanup = function()
+			U.Fly, U.Noclip, U.Esp, U.InfJump = false, false, false, false
+			U.AutoJump, U.QuickRespawn, U.AutoSit, U.Spin, U.LockCam = false, false, false, false, false
+			U.FullHealth, U.Invisible, U.Freeze = false, false, false
+			if U.invis then
+				for d, t in pairs(U.invis) do pcall(function() d.Transparency = t end) end
+				U.invis = nil
+			end
+			do
+				local root = getRoot()
+				if root then pcall(function() root.Anchored = false end) end
+			end
+			U.Cross, U.SelfEsp = false, false
+			if U.crossGui then pcall(function() U.crossGui:Destroy() end) U.crossGui = nil end
+			if U.selfHl then pcall(function() U.selfHl:Destroy() end) U.selfHl = nil end
+			pcall(function() UserInputService.MouseBehavior = Enum.MouseBehavior.Default end)
+			U.AntiAfk, U.Shield, U.AntiPull, U.AutoClick = false, false, false, false
+			U.Follow, U.TpTarget = nil, nil
+			pcall(function()
+				for part in pairs(U.esps) do espOff(part) end
+			end)
+			pcall(function()
+				for part in pairs(U.noclipped) do
+					pcall(function() part.CanCollide = true end)
+				end
+				U.noclipped = {}
+			end)
+			pcall(applyBright)
+			pcall(applyFog)
+			local hum = getHumanoid()
+			if hum then
+				pcall(function() hum.WalkSpeed = 16 end)
+				pcall(function() hum.UseJumpPower = true; hum.JumpPower = 50 end)
+			end
+			pcall(function() workspace.Gravity = 196.2 end)
+			local cam = workspace.CurrentCamera
+			if cam then pcall(function() cam.FieldOfView = 70 end) end
+		end
+
+		track(RunService.Heartbeat:Connect(function()
+			if SHUTDOWN then return end
+			pcall(U.step, os.clock())
+		end))
+		track(LocalPlayer.CharacterAdded:Connect(function()
+			task.wait(1)
+			if SHUTDOWN then return end
+			U.noclipped = {}
+			U.lastPos = nil
+			pcall(U.apply)
+		end))
+
+		return U
+	end
+
+	--========================== 类型特色包（每类 20 项，跟通用 30 项不重叠） ==========================
+	-- 122 台按类型挂不同的特色包：射击/格斗/模拟器/跑酷/恐怖/大亨/角色扮演/生存/塔防/其他。
+	-- 每一项都是真能跑的（自动点 GUI 按钮、锁人自瞄、躲藏、跳关…），不是换标签的同一套。
+	-- 返回 { step = fn(now), cleanup = fn() }
+	local function buildGenre(addPage, addNav, w, orderBase, genre, prefix)
+		prefix = prefix or ""
+		local wide = w >= 480
+		local CW = math.floor((w - (wide and 12 or 8)) / 2)
+		local RH = wide and 58 or 50
+
+		local K = {
+			Aim = false, Fire = false, Head = true, Team = true, Hp = true, Dist = true, Box = false,
+			Cross = false, First = false, BackWarn = false, HitSound = false,
+			Range = 300, Fov = 90, Follow = 1, Sens = 1, CrossSize = 12,
+			Click = false, ClickRate = 0.15, Claim = false, Buy = false, Upgrade = false,
+			Hatch = false, Equip = false, Sell = false, Spin = false, Feed = false, Collect = false,
+			Daily = false, Base = false,
+			AutoJump = false, LowGrav = false, SkipStage = false, Checkpoint = false,
+			ShowStage = false, Up = false, Forward = false, JumpPower = 50,
+			EntEsp = false, EntWarn = false, AutoHide = false, AutoDoor = false,
+			Fear = false, NoScare = false, ItemEsp = false, DoorEsp = false, HideEsp = false,
+			Wave = false, AutoTower = false, SellTower = false,
+			Sit = false, AutoRevive = false,
+			Range = 300, EntRange = 150,
+			entEsp = {}, lastClick = 0, lastJump = 0, lastScan = 0, cp = nil, warnAt = 0,
+			entList = {}, clickN = 0, locked = nil, lastFire = 0,
+		}
+
+		local function cardAt(page, i, name, title, color, def, onChange)
+			local c = (i - 1) % 2
+			local r = math.floor((i - 1) / 2)
+			local box = new("Frame", {
+				Name = name .. "Card",
+				Size = UDim2.new(0, CW, 0, RH),
+				Position = UDim2.new(0, c * (CW + (wide and 12 or 8)), 0, r * (RH + 6)),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				Parent = page,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = box })
+			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = box })
+			local dot = new("Frame", {
+				Name = "Dot", Size = UDim2.new(0, 6, 0, 6),
+				Position = UDim2.new(0, wide and 14 or 10, 0, 15),
+				BackgroundColor3 = color, BackgroundTransparency = 1,
+				BorderSizePixel = 0, Parent = box,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+			new("TextLabel", {
+				Size = UDim2.new(1, -74, 0, 18),
+				Position = UDim2.new(0, wide and 26 or 20, 0, 8),
+				BackgroundTransparency = 1, Text = title,
+				TextSize = wide and 13 or 11, Font = FONT_B, TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd, Parent = box,
+			})
+			return box, createSwitch(box, {
+				Name = name, Position = UDim2.new(1, wide and -52 or -46, 0, wide and 11 or 8),
+				Default = def,
+				OnChange = function(v)
+					tween(dot, EASE.soft, { BackgroundTransparency = v and 0 or 1 })
+					if onChange then onChange(v) end
+				end,
+			})
+		end
+
+		local function sliderAt(page, y, title, min, max, def, log, fmt, onChange)
+			new("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 16), Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1, Text = title, TextSize = 12, Font = FONT_N,
+				TextColor3 = C.Sub, TextXAlignment = Enum.TextXAlignment.Left, Parent = page,
+			})
+			local val = new("TextLabel", {
+				Size = UDim2.new(0, 66, 0, 16), Position = UDim2.new(1, -66, 0, y),
+				BackgroundTransparency = 1, Text = fmt(def), TextSize = 12, Font = FONT_M,
+				TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Right, Parent = page,
+			})
+			createSlider(page, {
+				Position = UDim2.new(0, 0, 0, y + 18), Min = min, Max = max, Default = def, Log = log,
+				OnChange = function(v) val.Text = fmt(v); if onChange then onChange(v) end end,
+			})
+		end
+
+		-- ---------------- 共享实现 ----------------
+		local function getPlr(char)
+			local ok, p = pcall(function() return Players:GetPlayerFromCharacter(char) end)
+			return ok and p or nil
+		end
+		local function nearest(filter)
+			local root = getRoot()
+			local best, bd
+			if not root then return nil end
+			pcall(function()
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= LocalPlayer and p.Character then
+						local mine = (p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team)
+						if (filter == "ally") == (mine == true) then
+							local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+							if hrp then
+								local d = (hrp.Position - root.Position).Magnitude
+								if not bd or d < bd then best, bd = hrp, d end
+							end
+						end
+					end
+				end
+			end)
+			return best
+		end
+		local function teamColor(p)
+			if p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team then return C.Green end
+			return C.Red
+		end
+		local function tpTo(hrp)
+			local root = getRoot()
+			if hrp and root then
+				pcall(function() root.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 3, 0)) end)
+				notify(L("gmTpDone"), C.Green)
+			else
+				notify(L("gmNoPlayers"), C.Amber)
+			end
+		end
+		-- 点 PlayerGui 里所有名字含关键词的按钮（模拟器 / 大亨 / 塔防的通用刷法）
+		local CLICK_KW = {
+			Claim = { "claim", "reward", "collect", "领取", "奖励" },
+			Buy = { "buy", "purchase", "购买" },
+			Upgrade = { "upgrade", "升级" },
+			Hatch = { "hatch", "egg", "孵化", "蛋" },
+			Equip = { "equip", "equipbest", "装备" },
+			Sell = { "sell", "卖出" },
+			Spin = { "spin", "roll", "wheel", "抽奖", "转盘" },
+			Feed = { "feed", "喂" },
+			Collect = { "collect", "cash", "money", "收钱", "收租" },
+			Daily = { "daily", "login", "每日" },
+		}
+		local function clickAll(kws)
+			local n = 0
+			pcall(function()
+				for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+					for _, d in ipairs(gui:GetDescendants()) do
+						local isBtn = false
+						pcall(function() isBtn = d:IsA("GuiButton") end)
+						if isBtn and d.Visible then
+							local nm = string.lower(tostring(d.Name))
+							for _, kw in ipairs(kws) do
+								if string.find(nm, kw, 1, true) then
+									pcall(function()
+										if d.Activate then d:Activate()
+										elseif d.MouseButton1Click then d.MouseButton1Click:Fire() end
+									end)
+									n = n + 1
+									break
+								end
+							end
+						end
+					end
+				end
+			end)
+			return n
+		end
+
+		-- ---------------- 每个类型的页签 + 功能 ----------------
+		local page = addPage(prefix .. "genre")
+		addNav(prefix .. "genre", L("gkTab_" .. genre), orderBase)
+		local y0 = 0
+		local function hdr(txt, y)
+			new("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1, Text = txt, TextSize = 10, Font = FONT_M,
+				TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, Parent = page,
+			})
+		end
+
+		local GENRE_DEF = {}
+		-- ① 射击 / 格斗 / 生存：战斗组
+		local combat = {
+			{ "Aim", "gkAim", C.Red }, { "Fire", "gkFire", C.Accent },
+			{ "Head", "gkHead", C.Amber }, { "Team", "gkTeam", C.Green },
+			{ "Hp", "gkHp", C.Red }, { "Dist", "gkDist", C.Sub },
+			{ "Box", "gkBox", C.Accent2 }, { "Cross", "gkCross", C.White },
+			{ "First", "gkFirst", C.Sub }, { "BackWarn", "gkWarn", C.Amber },
+			{ "Cross", "gkCross", C.White }, { "HitSound", "gkHitSound", C.Amber },
+			{ "Revive", "gkRevive", C.Green }, { "Sens", "gkSens2", C.Sub },
+			{ "ThirdPerson", "gkThird", C.Accent2 }, { "NoBob", "gkNoBob", C.Sub },
+		}
+		-- ② 模拟器 / 大亨 / 塔防：自动刷
+		local farm = {
+			{ "Click", "gkClick", C.Accent }, { "Claim", "gkClaim", C.Green },
+			{ "Buy", "gkBuy", C.Accent2 }, { "Upgrade", "gkUpgrade", C.Amber },
+			{ "Hatch", "gkHatch", C.Green }, { "Equip", "gkEquip", C.Sub },
+			{ "Sell", "gkSell", C.Red }, { "Spin", "gkSpin", C.Accent2 },
+			{ "Collect", "gkCollect", C.Green }, { "Daily", "gkDaily", C.Amber },
+			{ "Rebirth", "gkRebirth", C.Accent2 }, { "AutoSell", "gkAutoSell", C.Red },
+			{ "Fish", "gkFish", C.Green }, { "Plant", "gkPlant", C.Green },
+			{ "Quest", "gkQuest", C.Amber }, { "TpBase", "gkBase", C.Sub },
+		}
+		-- ③ 跑酷：移动组
+		local obby = {
+			{ "AutoJump", "gkAutoJump", C.Accent }, { "LowGrav", "gkLowGrav", C.Accent2 },
+			{ "SkipStage", "gkSkip", C.Green }, { "Checkpoint", "gkCp", C.Amber },
+			{ "ShowStage", "gkStage", C.Sub }, { "Up", "gkUp", C.Green },
+			{ "Forward", "gkForward", C.Accent }, { "Base", "gkBase", C.Sub },
+			{ "Noclip", "gkNoclip", C.Accent }, { "Speed", "gkSpeedUp", C.Green },
+			{ "Fly", "gkFly", C.Accent2 }, { "InfJump", "gkInfJump", C.Amber },
+			{ "TpTop", "gkTop", C.Green }, { "TpStart", "gkBase", C.Sub },
+		}
+		-- ④ 恐怖：感知组
+		local horror = {
+			{ "EntEsp", "gkEntEsp", C.Red }, { "EntWarn", "gkEntWarn", C.Amber },
+			{ "AutoHide", "gkAutoHide", C.Accent2 }, { "AutoDoor", "gkAutoDoor", C.Green },
+			{ "Fear", "gkFear", C.Sub }, { "NoScare", "gkNoScare", C.Green },
+			{ "ItemEsp", "gkItemEsp", C.White }, { "DoorEsp", "gkDoorEsp", C.Amber },
+			{ "HideEsp", "gkHideEsp", C.Accent2 }, { "AutoRevive", "gkRevive", C.Green },
+			{ "Room", "gkRoom", C.Sub }, { "TpTeam", "gkTpAlly", C.Green },
+			{ "TpDoor", "gkTpDoor", C.Amber }, { "NoDark", "gkNoDark", C.Amber },
+			{ "Speed", "gkSpeedUp", C.Green }, { "Noclip", "gkNoclip", C.Accent },
+		}
+		-- ⑤ 角色扮演：社交组
+		local rp = {
+			{ "Team", "gkPlrEsp", C.Green }, { "Hp", "gkPlrDist", C.Sub },
+			{ "Box", "gkPlrBox", C.Accent2 }, { "Base", "gkTpSpawn2", C.Green },
+			{ "Sit", "gkSit", C.Sub }, { "AutoRevive", "gkRevive", C.Green },
+			{ "Collect", "gkCollect", C.Amber }, { "Claim", "gkClaim", C.Green },
+			{ "TpNearest", "gkTpNearest", C.Accent2 }, { "TpAlly", "gkTpAlly", C.Green },
+			{ "Speed", "gkSpeedUp", C.Green }, { "Fly", "gkFly", C.Accent2 },
+			{ "Noclip", "gkNoclip", C.Accent }, { "InfJump", "gkInfJump", C.Amber },
+		}
+
+		local function addGroup(list, startY, titleKey)
+			hdr(L(titleKey), startY)
+			for i, it in ipairs(list) do
+				cardAt(page, i, "K" .. it[1], L(it[2]), it[3], K[it[1]] == true, function(v)
+					K[it[1]] = v
+				end)
+			end
+			return startY + 16 + math.ceil(#list / 2) * (RH + 6)
+		end
+
+		if genre == "fps" or genre == "fight" or genre == "action" or genre == "misc" then
+			y0 = addGroup(combat, 0, "gkGroupCombat")
+			sliderAt(page, y0 + 2, L("gkRange"), 20, 1000, 300, true, function(v)
+				return tostring(math.floor(v)) .. "m"
+			end, function(v) K.Range = v end)
+			sliderAt(page, y0 + 50, L("gkFov"), 10, 180, 90, false, function(v)
+				return tostring(math.floor(v))
+			end, function(v) K.Fov = v end)
+			sliderAt(page, y0 + 98, L("gkFollow"), 0.05, 1, 1, false, function(v)
+				return string.format("%.2f", v)
+			end, function(v) K.Follow = v end)
+			sliderAt(page, y0 + 146, L("gkSens"), 0.2, 5, 1, false, function(v)
+				return string.format("%.1fx", v)
+			end, function(v) K.Sens = v end)
+		elseif genre == "sim" or genre == "tycoon" or genre == "td" then
+			y0 = addGroup(farm, 0, "gkGroupFarm")
+			sliderAt(page, y0 + 2, L("gkClickRate"), 0.02, 1, 0.15, true, function(v)
+				return string.format("%.2fs", v)
+			end, function(v) K.ClickRate = v end)
+			if genre == "td" then
+				cardAt(page, 1, "KWave", L("gkWave"), C.Accent, false, function(v) K.Wave = v end)
+				cardAt(page, 2, "KAutoTower", L("gkAutoTower"), C.Green, false,
+					function(v) K.AutoTower = v end)
+				cardAt(page, 3, "KSellTower", L("gkSellTower"), C.Red, false,
+					function(v) K.SellTower = v end)
+			end
+		elseif genre == "obby" then
+			y0 = addGroup(obby, 0, "gkGroupObby")
+			sliderAt(page, y0 + 2, L("gkJumpPower"), 50, 500, 50, false, function(v)
+				return tostring(math.floor(v))
+			end, function(v) K.JumpPower = v end)
+			cardAt(page, 1, "KCheckpoint", L("gkSetCp"), C.Green, false, function(v)
+				if v then
+					local root = getRoot()
+					K.cp = root and root.CFrame or nil
+					notify(K.cp and L("gkCpSaved") or L("gmNoSaved"), K.cp and C.Green or C.Amber)
+				end
+			end)
+			createButton(page, {
+				Name = "KGotoCp", Size = UDim2.new(0, CW, 0, 30),
+				Position = UDim2.new(0, CW + 8, 0, y0 + 2 + math.floor(RH / 2)),
+				Text = L("gkGotoCp"), TextSize = 12, Style = "solid",
+				OnClick = function()
+					local root = getRoot()
+					if K.cp and root then
+						pcall(function() root.CFrame = K.cp end)
+						notify(L("gmTpDone"), C.Green)
+					else
+						notify(L("gmNoSaved"), C.Amber)
+					end
+				end,
+			})
+		elseif genre == "horror" then
+			y0 = addGroup(horror, 0, "gkGroupHorror")
+			sliderAt(page, y0 + 2, L("gkEntRange"), 20, 600, 150, true, function(v)
+				return tostring(math.floor(v)) .. "m"
+			end, function(v) K.EntRange = v end)
+		elseif genre == "rp" then
+			y0 = addGroup(rp, 0, "gkGroupRp")
+			createButton(page, {
+				Name = "KTpPlayer", Size = UDim2.new(0, CW, 0, 30),
+				Position = UDim2.new(0, 0, 0, y0 + 2),
+				Text = L("gkTpNearest"), TextSize = 12, Style = "solid",
+				OnClick = function() tpTo(nearest("any")) end,
+			})
+			createButton(page, {
+				Name = "KTpAlly", Size = UDim2.new(0, CW, 0, 30),
+				Position = UDim2.new(0, CW + 8, 0, y0 + 2),
+				Text = L("gkTpAlly"), TextSize = 12, Style = "ghost",
+				OnClick = function() tpTo(nearest("ally")) end,
+			})
+			cardAt(page, 1, "KSave", L("gkSave"), C.Green, false, function(v)
+				if v then
+					local root = getRoot()
+					K.cp = root and root.CFrame or nil
+					notify(K.cp and L("gmSaved") or L("gmNoSaved"), K.cp and C.Green or C.Amber)
+				end
+			end)
+			createButton(page, {
+				Name = "KGotoSave", Size = UDim2.new(0, CW, 0, 30),
+				Position = UDim2.new(0, CW + 8, 0, y0 + 2 + RH + 6),
+				Text = L("gmGotoSaved"), TextSize = 12, Style = "ghost",
+				OnClick = function()
+					local root = getRoot()
+					if K.cp and root then
+						pcall(function() root.CFrame = K.cp end)
+						notify(L("gmTpDone"), C.Green)
+					else
+						notify(L("gmNoSaved"), C.Amber)
+					end
+				end,
+			})
+		end
+
+		-- 敌人 / 实体透视（战斗 / 恐怖共用）
+		local ENT_KW = { "rush", "ambush", "screech", "eyes", "dupe", "figure", "seek", "hide",
+			"glitch", "void", "jack", "timothy", "shadow", "halt", "snare", "giggle", "window",
+			"piggy", "monster", "zombie", "ghost", "killer", "entity", "boss", "enemy", "npc" }
+		local espOff = function(part)
+			local e = K.entEsp[part]
+			if not e then return end
+			K.entEsp[part] = nil
+			if e.gui then pcall(function() e.gui:Destroy() end) end
+			if e.box then pcall(function() e.box:Destroy() end) end
+		end
+
+		local function entScan(now)
+			if now - K.lastScan < 0.4 then return end
+			K.lastScan = now
+			local seen = {}
+			local root = getRoot()
+			if not root then return end
+			local ents = {}
+			pcall(function()
+				-- 恐怖：workspace 下"像实体"的模型
+				for _, o in ipairs(workspace:GetChildren()) do
+					if o:IsA("Model") and o.PrimaryPart then
+						local nm = string.lower(tostring(o.Name))
+						for _, kw in ipairs(ENT_KW) do
+							if string.find(nm, kw, 1, true) then
+								ents[#ents + 1] = { obj = o.PrimaryPart, name = o.Name,
+									d = (o.PrimaryPart.Position - root.Position).Magnitude }
+								break
+							end
+						end
+					end
+				end
+			end)
+			if K.EntEsp then
+				for _, e in ipairs(ents) do
+					if e.d <= (K.EntRange or 150) then
+						seen[e.obj] = true
+						local t = string.format("%s  [%dm]", e.name, math.floor(e.d))
+						local rec = K.entEsp[e.obj]
+						if not rec then
+							local gui = new("BillboardGui", {
+								Name = "O_X_K_ESP", Size = UDim2.new(0, 160, 0, 16),
+								StudsOffset = Vector3.new(0, 4, 0), AlwaysOnTop = true,
+								Adornee = e.obj, Parent = e.obj,
+							})
+							new("TextLabel", {
+								Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1,
+								Text = t, TextSize = 12, Font = FONT_B, TextColor3 = C.Red,
+								TextStrokeTransparency = 0.3, Parent = gui,
+							})
+							K.entEsp[e.obj] = { gui = gui }
+						end
+					end
+				end
+				for part in pairs(K.entEsp) do
+					if not seen[part] then espOff(part) end
+				end
+			end
+			K.entList = ents
+		end
+
+		-- 自动躲藏（恐怖）：找带 Hide/Hiding 的 prompt 钻进去
+		local function autoHide()
+			local root = getRoot()
+			if not root then return end
+			local danger = nil
+			for _, e in ipairs(K.entList) do
+				if e.d <= (K.EntRange or 150) then danger = e break end
+			end
+			if not danger then return end
+			pcall(function()
+				for _, o in ipairs(workspace:GetDescendants()) do
+					local isPrompt = false
+					pcall(function() isPrompt = o:IsA("ProximityPrompt") end)
+					if isPrompt and o.Enabled ~= false then
+						local nm = string.lower(tostring(o.Name))
+						if string.find(nm, "hide", 1, true) or string.find(nm, "hiding", 1, true) then
+							local fn = execFn("fireproximityprompt")
+							if fn then pcall(fn, o) end
+							pcall(function() o:InputHoldBegin(); o:InputHoldEnd() end)
+							return
+						end
+					end
+				end
+			end)
+		end
+
+		K.step = function(now)
+			-- 自瞄（战斗组）
+			if K.Aim or K.Fire then
+				local cam = workspace.CurrentCamera
+				local root = getRoot()
+				if cam and root then
+					local best, bd, bang
+					pcall(function()
+						for _, p in ipairs(Players:GetPlayers()) do
+							if p ~= LocalPlayer and p.Character then
+								local mine = (p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team)
+								if not mine then
+									local m = p.Character
+									local aim = K.Head and m:FindFirstChild("Head")
+										or m:FindFirstChild("HumanoidRootPart")
+									if aim then
+										local d = (aim.Position - root.Position).Magnitude
+										local dir = (aim.Position - cam.CFrame.Position)
+										local ang = math.deg(math.acos(math.clamp(
+											cam.CFrame.LookVector:Dot(dir.Unit), -1, 1)))
+										if d <= K.Range and ang <= K.Fov * 0.5 then
+											if not bd or d < bd then best, bd, bang = aim, d, ang end
+										end
+									end
+								end
+							end
+						end
+					end)
+					if best then
+						local camPos = cam.CFrame.Position
+						pcall(function()
+							if K.Follow < 0.999 then
+								cam.CFrame = cam.CFrame:Lerp(CFrame.new(camPos, best.Position),
+									math.clamp(K.Follow, 0.05, 1))
+							else
+								cam.CFrame = CFrame.new(camPos, best.Position)
+							end
+						end)
+						K.locked = best.Position
+						if K.Fire and (bang or 0) <= 6 and now - (K.lastFire or 0) >= 0.08 then
+							K.lastFire = now
+							local m1 = execFn("mouse1click")
+							if m1 then pcall(m1) end
+							pcall(function()
+								local vim = game:GetService("VirtualInputManager")
+								vim:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+								vim:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+							end)
+						end
+					else
+						K.locked = nil
+					end
+				end
+			end
+
+			-- 战斗：准星 / 命中音 / 第三人称 / 无相机晃动
+			if K.Cross and not K.cross then
+				K.crossGui = new("ScreenGui", {
+					Name = "O_X_K_Cross", IgnoreGuiInset = true, ResetOnSpawn = false,
+					ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = getGuiParent(),
+				})
+				K.cross = new("Frame", {
+					Name = "H", Size = UDim2.new(0, 14, 0, 2), Position = UDim2.fromScale(0.5, 0.5),
+					AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = C.White,
+					BorderSizePixel = 0, Parent = K.crossGui,
+				})
+				K.crossV = new("Frame", {
+					Name = "V", Size = UDim2.new(0, 2, 0, 14), Position = UDim2.fromScale(0.5, 0.5),
+					AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = C.White,
+					BorderSizePixel = 0, Parent = K.crossGui,
+				})
+			elseif not K.Cross and K.cross then
+				pcall(function() K.crossGui:Destroy() end)
+				K.cross, K.crossV, K.crossGui = nil, nil, nil
+			end
+			if K.HitSound and now - (K.hitAt or 0) >= 0.4 then
+				K.hitAt = now
+				pcall(function()
+					for _, p in ipairs(Players:GetPlayers()) do
+						local h = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+						if h and p ~= LocalPlayer then
+							local mine = (p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team)
+							if not mine and h.Health > 0 and (h.Health / math.max(h.MaxHealth, 1)) < 0.999 then
+								playSfx("sfx_notify", 0.35)
+								break
+							end
+						end
+					end
+				end)
+			end
+			pcall(function()
+				LocalPlayer.CameraMode = K.ThirdPerson and Enum.CameraMode.Classic
+					or (K.First and Enum.CameraMode.LockFirstPerson or LocalPlayer.CameraMode)
+			end)
+			if K.NoBob then
+				pcall(function()
+					local cam = workspace.CurrentCamera
+					if cam then cam.CFrame = CFrame.new(cam.CFrame.Position, cam.CFrame.Position + cam.CFrame.LookVector) end
+				end)
+			end
+
+			-- 刷子：自动重生 / 自动卖 / 钓鱼 / 种植 / 任务
+			if K.Rebirth then clickAll({ "rebirth", "prestige", "重生", "转生" }) end
+			if K.AutoSell then clickAll({ "sell all", "sellall", "全部卖出" }) end
+			if K.Fish then clickAll({ "fish", "cast", "钓鱼" }) end
+			if K.Plant then clickAll({ "plant", "harvest", "plant all", "种植", "收获" }) end
+			if K.Quest then clickAll({ "quest", "mission", "任务" }) end
+
+			-- 跑酷：穿墙 / 加速 / 飞行 / 无限跳 / 传到最高点
+			if K.Noclip then
+				local char = LocalPlayer.Character
+				if char then
+					pcall(function()
+						for _, d in ipairs(char:GetDescendants()) do
+							if d:IsA("BasePart") then d.CanCollide = false end
+						end
+					end)
+				end
+			end
+			if K.Speed then
+				local hum = getHumanoid()
+				if hum then pcall(function() hum.WalkSpeed = 120 end) end
+			end
+			if K.Fly then
+				local root = getRoot()
+				local cam = workspace.CurrentCamera
+				if root and cam then
+					pcall(function()
+						root.CFrame = root.CFrame + cam.CFrame.LookVector * 1.6
+							+ Vector3.new(0, 0.2, 0)
+					end)
+				end
+			end
+			if K.InfJump then
+				local hum = getHumanoid()
+				if hum then pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end) end
+			end
+			if K.TpTop then
+				K.TpTop = false
+				local root = getRoot()
+				if root then
+					pcall(function() root.CFrame = root.CFrame + Vector3.new(0, 120, 0) end)
+					notify(L("gmTpDone"), C.Green)
+				end
+			end
+
+			-- 恐怖：房间号 / 传队友 / 传门 / 无黑暗
+			if K.Room and now - (K.roomAt or 0) >= 2 then
+				K.roomAt = now
+				local room = "?"
+				pcall(function()
+					local gd = game:GetService("ReplicatedStorage"):FindFirstChild("GameData")
+					local lr = gd and gd:FindFirstChild("LatestRoom")
+					if lr then room = tostring(lr.Value) end
+				end)
+				notify(string.format(L("gkRoomFmt"), room), C.Sub)
+			end
+			if K.NoDark then
+				pcall(function()
+					local lt = game:GetService("Lighting")
+					lt.Brightness = 2
+					lt.Ambient = Color3.fromRGB(178, 178, 178)
+					lt.OutdoorAmbient = Color3.fromRGB(178, 178, 178)
+					lt.FogEnd = 1e6
+				end)
+			end
+
+			-- 社交：传送
+			if K.TpNearest then
+				K.TpNearest = false
+				tpTo(nearest("any"))
+			end
+			if K.TpAlly then
+				K.TpAlly = false
+				tpTo(nearest("ally"))
+			end
+
+			-- 屏幕灵敏度 / 第一人称
+			if K.Sens then
+				pcall(function() UserInputService.MouseDeltaSensitivity = K.Sens end)
+			end
+			pcall(function()
+				LocalPlayer.CameraMode = K.First and Enum.CameraMode.LockFirstPerson
+					or Enum.CameraMode.Classic
+			end)
+
+			-- 自动点按钮（模拟器 / 大亨 / 塔防 / 角色扮演）
+			if now - K.lastClick >= K.ClickRate then
+				K.lastClick = now
+				for key, on in pairs({ Click = K.Click, Claim = K.Claim, Buy = K.Buy,
+					Upgrade = K.Upgrade, Hatch = K.Hatch, Equip = K.Equip, Sell = K.Sell,
+					Spin = K.Spin, Feed = K.Feed, Collect = K.Collect, Daily = K.Daily }) do
+					if on and CLICK_KW[key] then
+						K.clickN = K.clickN + clickAll(CLICK_KW[key])
+					end
+				end
+				if K.Wave then
+					clickAll({ "start", "ready", "begin", "wave", "开始" })
+				end
+				if K.AutoTower then
+					clickAll({ "place", "deploy", "summon", "tower", "放", "部署" })
+				end
+				if K.SellTower then
+					clickAll({ "sell", "remove", "卖" })
+				end
+			end
+
+			-- 跑酷
+			if K.AutoJump and now - K.lastJump >= 0.15 then
+				K.lastJump = now
+				local hum = getHumanoid()
+				if hum then
+					pcall(function()
+						hum.UseJumpPower = true
+						hum.JumpPower = K.JumpPower
+						hum:ChangeState(Enum.HumanoidStateType.Jumping)
+					end)
+				end
+			end
+			if K.LowGrav then
+				pcall(function() workspace.Gravity = math.min(workspace.Gravity, 40) end)
+			end
+			if K.Up then
+				local root = getRoot()
+				if root then
+					pcall(function()
+						root.CFrame = root.CFrame + Vector3.new(0, 1.2, 0)
+					end)
+				end
+			end
+			if K.Forward then
+				local root = getRoot()
+				local hum = getHumanoid()
+				if root and hum then
+					pcall(function() hum:MoveTo(root.Position + root.CFrame.LookVector * 12) end)
+				end
+			end
+			if K.SkipStage then
+				K.SkipStage = false
+				local root = getRoot()
+				if root then
+					pcall(function()
+						root.CFrame = root.CFrame + Vector3.new(0, 30, 0)
+					end)
+					notify(L("gkSkipOk"), C.Green)
+				end
+			end
+			if K.ShowStage and now - (K.stageAt or 0) >= 1 then
+				K.stageAt = now
+				local root = getRoot()
+				if root then
+					notify(string.format(L("gkStageFmt"), math.floor(root.Position.Y)), C.Sub)
+				end
+			end
+
+			-- 恐怖
+			entScan(now)
+			if K.EntWarn and now - K.warnAt >= 2 then
+				for _, e in ipairs(K.entList) do
+					if e.d <= (K.EntRange or 150) then
+						K.warnAt = now
+						notify(string.format(L("gkEntWarnFmt"), e.name, math.floor(e.d)), C.Red)
+						break
+					end
+				end
+			end
+			if K.AutoHide then pcall(autoHide) end
+			if K.Fear then
+				local char = LocalPlayer.Character
+				if char then
+					pcall(function()
+						for _, nm in ipairs({ "Fear", "Sanity", "Dread", "Oxygen" }) do
+							local v = char:FindFirstChild(nm)
+							if v and type(v.Value) == "number" then
+								v.Value = (nm == "Sanity" or nm == "Oxygen")
+									and math.max(v.Value, 100) or 0
+							end
+						end
+					end)
+				end
+			end
+			if K.NoScare then
+				pcall(function()
+					for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+						for _, d in ipairs(gui:GetDescendants()) do
+							local nm = string.lower(tostring(d.Name))
+							if string.find(nm, "jumpscare", 1, true)
+								or string.find(nm, "scare", 1, true) then
+								d.Visible = false
+							end
+						end
+					end
+				end)
+			end
+			if K.AutoRevive then
+				local char = LocalPlayer.Character
+				local hum = char and char:FindFirstChildOfClass("Humanoid")
+				if char and hum and hum.Health <= 0 then
+					pcall(function()
+						local rs = game:GetService("ReplicatedStorage")
+						local rf = rs:FindFirstChild("RemotesFolder")
+						local rev = rf and rf:FindFirstChild("Revive")
+						if rev then rev:FireServer() end
+					end)
+				end
+			end
+		end
+
+		K.cleanup = function()
+			K.Aim, K.Fire, K.EntEsp, K.AutoHide, K.AutoJump = false, false, false, false, false
+			K.Click, K.Claim, K.Buy, K.Upgrade, K.Hatch, K.Equip = false, false, false, false, false, false
+			K.Sell, K.Spin, K.Feed, K.Collect, K.Daily, K.Wave = false, false, false, false, false, false
+			K.AutoTower, K.SellTower, K.Fear, K.NoScare, K.AutoRevive = false, false, false, false, false
+			pcall(function()
+				for part in pairs(K.entEsp) do espOff(part) end
+			end)
+			pcall(function() UserInputService.MouseDeltaSensitivity = 1 end)
+			pcall(function() LocalPlayer.CameraMode = Enum.CameraMode.Classic end)
+		end
+
+		track(RunService.Heartbeat:Connect(function()
+			if SHUTDOWN then return end
+			pcall(K.step, os.clock())
+		end))
+		return K
+	end
+
 	-- 已执行过的服务器（大写键那张清单要用，所以放 do 块外面）
 	local ranServers = {}
+	-- 所有挂上去的"通用功能组 / 类型特色包"（卸载时统一 cleanup）
+	local UNIVS = {}
 
 	do
 		--========================== 服务器 ==========================
@@ -4797,6 +6601,7 @@ boot = function(lang)
 			})
 			new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = box })
 			local img = s.icon and getAsset(s.icon)
+		if not img and s.g and s.g.i then img = "rbxassetid://" .. tostring(s.g.i) end
 			if img then
 				new("ImageLabel", {
 					Size = UDim2.fromScale(1, 1),
@@ -6383,6 +8188,12 @@ boot = function(lang)
 		Parent = farmPage,
 	})
 
+	-- v3.0.2：自然灾害也挂上"通用 30 项 + 生存类型 20 项"
+	local srvUniv = buildUniv(srvAddPage, srvAddNav, SRV_W - SRV_SIDE_W - 18, 2, "u")
+	UNIVS[#UNIVS + 1] = srvUniv
+	local srvGenre = buildGenre(srvAddPage, srvAddNav, SRV_W - SRV_SIDE_W - 18, 6, "action", "g")
+	UNIVS[#UNIVS + 1] = srvGenre
+
 	srvShow("tp")
 
 	-- 服务器窗口的开场动画（共用 helper）
@@ -6645,7 +8456,7 @@ boot = function(lang)
 	--=====================================================================
 	--  三、飞行模块
 	--=====================================================================
-	local Fly = {
+	Fly = {
 		Enabled        = false,   -- 用户意图（复活后据此恢复）
 		Active         = false,   -- 运行态
 		BodyVelocity   = nil,
@@ -7297,7 +9108,7 @@ boot = function(lang)
 	-- ⚠️ 整块放在 pdBuild() 这个函数体里：boot 的 200 个局部变量名额已经很紧，
 	-- 独立函数才有自己的额度（改完必须跑 _check + _lint + _run）。
 	local function pdBuild()
-		local PD_W, PD_H = 520, 560
+		local PD_W, PD_H = 560, 560
 		local pd = {
 			-- 潜入
 			AutoDone = false, AllPrompts = false, Tp = true, LootEsp = false,
@@ -7925,6 +9736,12 @@ boot = function(lang)
 		end
 		local pdDiagStealth = pdDiagLabel(pdStealth, "HeistDiag")
 		local pdDiagAssault = pdDiagLabel(pdAssault, "HeistDiag")
+
+		-- v3.0.2：劫案也挂上"通用 30 项 + 射击类型 20 项"
+		local pdUniv = buildUniv(pdAddPage, pdAddNav, PD_W - SRV_SIDE_W - 18, 2, "u")
+		UNIVS[#UNIVS + 1] = pdUniv
+		local pdGenre = buildGenre(pdAddPage, pdAddNav, PD_W - SRV_SIDE_W - 18, 6, "fps", "g")
+		UNIVS[#UNIVS + 1] = pdGenre
 
 		pdShow("stealth")
 
@@ -10692,6 +12509,10 @@ boot = function(lang)
 			Parent = dsMapPage,
 		})
 
+		-- v3.0.2：DOORS 再挂一套"恐怖类型 20 项"（它自己那 40 项留着）
+		local dsGenre = buildGenre(dsAddPage, dsAddTab, DS_W - 20, 5, "horror", "g")
+		UNIVS[#UNIVS + 1] = dsGenre
+
 		-- 页签：顺序固定，跟上面 4 个页面一一对应
 		DS_TABS = {
 			{ key = "esp", text = L("dsTabEsp") },
@@ -11547,33 +13368,9 @@ boot = function(lang)
 	gameBuild = function()
 		if gameBuilt then return end
 		gameBuilt = true
-		local gameWin, gameState
-		local gameCur = nil                -- 当前显示的是哪台服务器
-		local GW, GH = 520, 470
-		local G = {
-			Fly = false, Noclip = false, AntiPull = false, InfJump = false,
-			AntiAfk = false, Shield = false,
-			Speed = 16, Jump = 50, Gravity = 196.2,
-			Esp = false, EspName = true, EspDist = true, EspBox = false, EspRange = 600,
-			Bright = false, NoFog = false, Fov = 70, CamDist = 128, Clock = 14,
-			Follow = nil, Saved = nil, SavedAt = 0,
-			esps = {}, noclipped = {}, conns = {},
-			lastPos = nil, pullAt = 0, espAt = 0, plrAt = 0,
-			brightSaved = nil, fov0 = nil, cam0 = nil, fog0 = nil,
-		}
-		gameState = G
+		local GW, GH = 560, 470
+		local gameCur = nil
 
-		-- 前向声明（界面在早、实现在晚）
-		local gApply = function() end
-		local gBright = function() end
-		local gNoFog = function() end
-		local gEspSweep = function() end
-		local gRefreshPlayers = function() end
-		local gNoclipRestore = function() end
-		local gDoReset = function() end
-		local gTpMouse = function() end
-
-		-- ---------------- 窗口骨架 ----------------
 		local win = new("Frame", {
 			Name = "GameWindow",
 			Size = UDim2.new(0, GW, 0, GH),
@@ -11597,24 +13394,17 @@ boot = function(lang)
 		})
 		new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = head })
 		new("Frame", {
-			Size = UDim2.new(1, 0, 0, 12),
-			Position = UDim2.new(0, 0, 1, -12),
-			BackgroundColor3 = C.Window,
-			BorderSizePixel = 0,
-			Parent = head,
+			Size = UDim2.new(1, 0, 0, 12), Position = UDim2.new(0, 0, 1, -12),
+			BackgroundColor3 = C.Window, BorderSizePixel = 0, Parent = head,
 		})
 		new("Frame", {
-			Size = UDim2.new(1, -24, 0, 1),
-			Position = UDim2.new(0, 12, 1, -1),
-			BackgroundColor3 = C.Stroke,
-			BorderSizePixel = 0,
-			Parent = head,
+			Size = UDim2.new(1, -24, 0, 1), Position = UDim2.new(0, 12, 1, -1),
+			BackgroundColor3 = C.Stroke, BorderSizePixel = 0, Parent = head,
 		})
 
-		-- 游戏图标：代码画的（渐变底 + 首字母），122 台不可能每台一张图
-		local gIcon = new("Frame", {
+		local iconBox = new("Frame", {
 			Name = "GameIcon",
-			Size = UDim2.new(0, 22, 0, 22),
+			Size = UDim2.new(0, 24, 0, 24),
 			Position = UDim2.new(0, 14, 0.5, 0),
 			AnchorPoint = Vector2.new(0, 0.5),
 			BackgroundColor3 = C.Card2,
@@ -11622,81 +13412,83 @@ boot = function(lang)
 			ClipsDescendants = true,
 			Parent = head,
 		})
-		new("UICorner", { CornerRadius = UDim.new(0, 7), Parent = gIcon })
-		new("UIGradient", {
-			Color = ColorSequence.new(C.Accent, C.Accent2),
-			Rotation = 45,
-			Parent = gIcon,
-		})
-		local gIconText = new("TextLabel", {
-			Name = "Initials",
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = iconBox })
+		new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Rotation = 45,
+			Parent = iconBox })
+		local iconImg = new("ImageLabel", {
+			Name = "Img",
 			Size = UDim2.fromScale(1, 1),
 			BackgroundTransparency = 1,
-			Text = "OX",
-			TextSize = 11,
-			Font = FONT_M,
-			TextColor3 = C.White,
-			Parent = gIcon,
+			Image = "",
+			ScaleType = Enum.ScaleType.Crop,
+			Visible = false,
+			Parent = iconBox,
+		})
+		local iconTxt = new("TextLabel", {
+			Name = "Initials",
+			Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1,
+			Text = "OX", TextSize = 11, Font = FONT_M, TextColor3 = C.White, Parent = iconBox,
 		})
 
 		local gTitle = new("TextLabel", {
 			Name = "Title",
 			Size = UDim2.new(0, 150, 1, 0),
-			Position = UDim2.new(0, 44, 0, 0),
-			BackgroundTransparency = 1,
-			Text = "",
-			TextSize = 14,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = head,
+			Position = UDim2.new(0, 46, 0, 0),
+			BackgroundTransparency = 1, Text = "", TextSize = 14, Font = FONT_B,
+			TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd, Parent = head,
 		})
+
+		-- 芯片：在不在这一台 + 不在就给一颗「传送」按钮
 		local gChip = new("Frame", {
 			Name = "Chip",
-			Size = UDim2.new(0, 128, 0, 22),
+			Size = UDim2.new(0, 110, 0, 22),
 			Position = UDim2.new(0, 200, 0.5, 0),
 			AnchorPoint = Vector2.new(0, 0.5),
-			BackgroundColor3 = C.Card,
-			BorderSizePixel = 0,
-			Parent = head,
+			BackgroundColor3 = C.Card, BorderSizePixel = 0, Parent = head,
 		})
 		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = gChip })
 		local gChipStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = gChip })
 		local gChipDot = new("Frame", {
-			Size = UDim2.new(0, 6, 0, 6),
-			Position = UDim2.new(0, 10, 0.5, 0),
-			AnchorPoint = Vector2.new(0, 0.5),
-			BackgroundColor3 = C.Dim,
-			BorderSizePixel = 0,
-			Parent = gChip,
+			Name = "Dot", Size = UDim2.new(0, 6, 0, 6),
+			Position = UDim2.new(0, 10, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Dim, BorderSizePixel = 0, Parent = gChip,
 		})
 		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = gChipDot })
 		local gChipText = new("TextLabel", {
 			Name = "ChipText",
-			Size = UDim2.new(1, -22, 1, 0),
-			Position = UDim2.new(0, 22, 0, 0),
-			BackgroundTransparency = 1,
-			Text = "",
-			TextSize = 11,
-			Font = FONT_M,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = gChip,
+			Size = UDim2.new(1, -22, 1, 0), Position = UDim2.new(0, 22, 0, 0),
+			BackgroundTransparency = 1, Text = "", TextSize = 10, Font = FONT_M,
+			TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, Parent = gChip,
 		})
 
-		local gMin = new("TextButton", {
-			Name = "Minimize",
-			Size = UDim2.new(0, 26, 0, 26),
-			Position = UDim2.new(1, -70, 0.5, 0),
+		local gGo = new("TextButton", {
+			Name = "GoServer",
+			Size = UDim2.new(0, 76, 0, 24),
+			Position = UDim2.new(0, 316, 0.5, 0),
 			AnchorPoint = Vector2.new(0, 0.5),
-			BackgroundColor3 = C.Card,
-			BorderSizePixel = 0,
-			AutoButtonColor = false,
-			Text = "－",
-			TextSize = 14,
-			Font = FONT_B,
-			TextColor3 = C.Sub,
-			Parent = head,
+			BackgroundColor3 = C.Accent, BorderSizePixel = 0, AutoButtonColor = false,
+			Text = L("srvGoNow"), TextSize = 11, Font = FONT_B, TextColor3 = C.White,
+			Visible = false, Parent = head,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = gGo })
+		local gGoStroke = new("UIStroke", { Color = C.Accent2, Thickness = 1, Parent = gGo })
+		bindHover(gGo, { Bg = { C.Accent, C.Accent2 }, Stroke = gGoStroke, StrokeOn = C.White,
+			Label = gGo, LabelOn = C.White })
+		bindPress(gGo, C.White)
+		gGo.MouseButton1Click:Connect(function()
+			if gameCur then
+				ranServers[gameCur.k] = { name = (LANG == "zh" and gameCur.zh ~= "" and gameCur.zh)
+					or gameCur.en, p = gameCur.p, at = os.time() }
+				joinPlace(gameCur.p, (LANG == "zh" and gameCur.zh ~= "" and gameCur.zh) or gameCur.en)
+			end
+		end)
+
+		local gMin = new("TextButton", {
+			Name = "Minimize", Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -70, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card, BorderSizePixel = 0, AutoButtonColor = false,
+			Text = "－", TextSize = 14, Font = FONT_B, TextColor3 = C.Sub, Parent = head,
 		})
 		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = gMin })
 		local gMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = gMin })
@@ -11704,18 +13496,10 @@ boot = function(lang)
 			Label = gMin, LabelOn = C.Text })
 
 		local gClose = new("TextButton", {
-			Name = "Close",
-			Size = UDim2.new(0, 26, 0, 26),
-			Position = UDim2.new(1, -38, 0.5, 0),
-			AnchorPoint = Vector2.new(0, 0.5),
-			BackgroundColor3 = C.Card,
-			BorderSizePixel = 0,
-			AutoButtonColor = false,
-			Text = "✕",
-			TextSize = 13,
-			Font = FONT_B,
-			TextColor3 = C.Sub,
-			Parent = head,
+			Name = "Close", Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -38, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card, BorderSizePixel = 0, AutoButtonColor = false,
+			Text = "✕", TextSize = 13, Font = FONT_B, TextColor3 = C.Sub, Parent = head,
 		})
 		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = gClose })
 		local gCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = gClose })
@@ -11724,24 +13508,18 @@ boot = function(lang)
 
 		makeDraggable(win, head, function() return winScale.Scale end)
 
-		-- 顶部页签
 		local tabBar = new("Frame", {
 			Name = "TabBar",
 			Size = UDim2.new(1, -20, 0, 34),
 			Position = UDim2.new(0, 10, 0, SRV_HEAD_H + 2),
-			BackgroundColor3 = C.Side,
-			BorderSizePixel = 0,
-			Parent = win,
+			BackgroundColor3 = C.Side, BorderSizePixel = 0, Parent = win,
 		})
 		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = tabBar })
 		local tabInd = new("Frame", {
 			Name = "TabIndicator",
 			Size = UDim2.new(0, 0, 0, 2),
 			Position = UDim2.new(0, 0, 1, -2),
-			BackgroundColor3 = C.Accent,
-			BorderSizePixel = 0,
-			ZIndex = 2,
-			Parent = tabBar,
+			BackgroundColor3 = C.Accent, BorderSizePixel = 0, ZIndex = 2, Parent = tabBar,
 		})
 		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = tabInd })
 
@@ -11749,19 +13527,12 @@ boot = function(lang)
 			Name = "Content",
 			Size = UDim2.new(1, -20, 1, -(SRV_HEAD_H + 2) - 34 - 16),
 			Position = UDim2.new(0, 10, 0, SRV_HEAD_H + 2 + 34 + 6),
-			BackgroundTransparency = 1,
-			Parent = win,
+			BackgroundTransparency = 1, Parent = win,
 		})
 
-		local pages, tabs = {}, {}
-		local TABS = {
-			{ key = "gen", n = 5 },
-			{ key = "vis", n = 5 },
-			{ key = "plr", n = 5 },
-			{ key = "tp", n = 4 },
-		}
-
+		local pages, tabs, tabOrder = {}, {}, {}
 		local function addPage(key)
+			if pages[key] then pcall(function() pages[key]:Destroy() end) end
 			local p = new("Frame", {
 				Name = "GamePage_" .. key,
 				Size = UDim2.fromScale(1, 1),
@@ -11772,7 +13543,6 @@ boot = function(lang)
 			pages[key] = p
 			return p
 		end
-
 		local function show(key)
 			for k, p in pairs(pages) do p.Visible = (k == key) end
 			for k, t in pairs(tabs) do
@@ -11786,768 +13556,63 @@ boot = function(lang)
 					Position = UDim2.new(0, it.x, 1, -2) })
 			end
 			if pages[key] then staggerIn(pages[key]:GetChildren(), 8, 0.03, 0.3) end
-			if key == "plr" then gRefreshPlayers() end
 		end
-
-		for i, t in ipairs(TABS) do
-			local w = math.floor((GW - 32) / #TABS)
-			local x = 6 + (i - 1) * w
+		local function addTab(key, text, order)
+			if tabs[key] then
+				tabs[key].label.Text = text
+				return tabs[key].btn
+			end
+			local n = 5
+			local w = math.floor((GW - 32) / n)
+			local x = 6 + (order - 1) * w
 			local btn = new("TextButton", {
-				Name = "Game_" .. t.key,
+				Name = "Game_" .. key,
 				Size = UDim2.new(0, w - 4, 1, 0),
 				Position = UDim2.new(0, x, 0, 0),
-				BackgroundColor3 = C.Side,
-				BorderSizePixel = 0,
-				AutoButtonColor = false,
-				Text = "",
-				Parent = tabBar,
+				BackgroundColor3 = C.Side, BorderSizePixel = 0, AutoButtonColor = false,
+				Text = "", Parent = tabBar,
 			})
 			new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = btn })
 			local label = new("TextLabel", {
-				Size = UDim2.fromScale(1, 1),
-				BackgroundTransparency = 1,
-				Text = L("gmTab_" .. t.key),
-				TextSize = 12,
-				Font = FONT_B,
-				TextColor3 = C.Sub,
-				Parent = btn,
+				Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = text,
+				TextSize = 12, Font = FONT_B, TextColor3 = C.Sub,
+				TextTruncate = Enum.TextTruncate.AtEnd, Parent = btn,
 			})
-			btn.MouseButton1Click:Connect(function() show(t.key) end)
+			btn.MouseButton1Click:Connect(function() show(key) end)
 			btn.MouseEnter:Connect(function()
-				if not pages[t.key] or not pages[t.key].Visible then
+				if not pages[key] or not pages[key].Visible then
 					tween(label, EASE.soft, { TextColor3 = C.Text })
 				end
 			end)
-			tabs[t.key] = { btn = btn, label = label, x = x, w = w - 4 }
-		end
-
-		-- ---------------- 组件 ----------------
-		local function card(parent, x, y, w, h, name, title, desc, color, default, onChange)
-			local c = new("Frame", {
-				Name = name .. "Card",
-				Size = UDim2.new(0, w, 0, h),
-				Position = UDim2.new(0, x, 0, y),
-				BackgroundColor3 = C.Card,
-				BorderSizePixel = 0,
-				Parent = parent,
-			})
-			new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = c })
-			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = c })
-			local dot = new("Frame", {
-				Name = "Dot",
-				Size = UDim2.new(0, 6, 0, 6),
-				Position = UDim2.new(0, 14, 0, 15),
-				BackgroundColor3 = color,
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Parent = c,
-			})
-			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
-			new("TextLabel", {
-				Size = UDim2.new(1, -74, 0, 18),
-				Position = UDim2.new(0, 26, 0, 8),
-				BackgroundTransparency = 1,
-				Text = title,
-				TextSize = 13,
-				Font = FONT_B,
-				TextColor3 = C.Text,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Parent = c,
-			})
-			if desc and desc ~= "" then
-				new("TextLabel", {
-					Size = UDim2.new(1, -30, 0, h - 28),
-					Position = UDim2.new(0, 26, 0, 26),
-					BackgroundTransparency = 1,
-					Text = desc,
-					TextSize = 10,
-					Font = FONT_N,
-					TextColor3 = C.Dim,
-					TextXAlignment = Enum.TextXAlignment.Left,
-					TextYAlignment = Enum.TextYAlignment.Top,
-					TextWrapped = true,
-					Parent = c,
-				})
-			end
-			return c, createSwitch(c, {
-				Name = name,
-				Position = UDim2.new(1, -52, 0, 11),
-				Default = default,
-				OnChange = function(v)
-					tween(dot, EASE.soft, { BackgroundTransparency = v and 0 or 1 })
-					if onChange then onChange(v) end
-				end,
-			})
-		end
-
-		local function slider(parent, y, title, min, max, default, log, fmt, onChange)
-			new("TextLabel", {
-				Size = UDim2.new(1, -70, 0, 16),
-				Position = UDim2.new(0, 0, 0, y),
-				BackgroundTransparency = 1,
-				Text = title,
-				TextSize = 12,
-				Font = FONT_N,
-				TextColor3 = C.Sub,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Parent = parent,
-			})
-			local val = new("TextLabel", {
-				Size = UDim2.new(0, 66, 0, 16),
-				Position = UDim2.new(1, -66, 0, y),
-				BackgroundTransparency = 1,
-				Text = fmt(default),
-				TextSize = 12,
-				Font = FONT_M,
-				TextColor3 = C.Text,
-				TextXAlignment = Enum.TextXAlignment.Right,
-				Parent = parent,
-			})
-			createSlider(parent, {
-				Position = UDim2.new(0, 0, 0, y + 18),
-				Min = min, Max = max, Default = default, Log = log,
-				OnChange = function(v)
-					val.Text = fmt(v)
-					if onChange then onChange(v) end
-				end,
-			})
-		end
-
-		local function rule(parent, y)
-			new("Frame", {
-				Size = UDim2.new(1, 0, 0, 1),
-				Position = UDim2.new(0, 0, 0, y),
-				BackgroundColor3 = C.Stroke,
-				BorderSizePixel = 0,
-				Parent = parent,
-			})
-		end
-
-		-- ---------------- 页 1：通用 ----------------
-		local pGen = addPage("gen")
-		card(pGen, 0, 0, 236, 58, "Fly", L("gmFly"), L("gmFlyD"), C.Accent2, false, function(v)
-			G.Fly = v
-			if v then Fly:SetEnabled(true) else Fly:SetEnabled(false) end
-		end)
-		card(pGen, 244, 0, 236, 58, "Noclip", L("gmNoclip"), L("gmNoclipD"), C.Accent, false,
-			function(v)
-				G.Noclip = v
-				if not v then gNoclipRestore() end
-			end)
-		card(pGen, 0, 64, 236, 58, "AntiPull", L("gmAntiPull"), L("gmAntiPullD"), C.Green, false,
-			function(v)
-				G.AntiPull = v
-				G.lastPos = nil
-				notify(string.format(v and L("gmOnFmt") or L("gmOffFmt"), L("gmAntiPull")),
-					v and C.Green or C.Sub)
-			end)
-		card(pGen, 244, 64, 236, 58, "InfJump", L("gmInfJump"), L("gmInfJumpD"), C.Amber, false,
-			function(v) G.InfJump = v end)
-		card(pGen, 0, 128, 236, 58, "AntiAfk", L("gmAntiAfk"), L("gmAntiAfkD"), C.Sub, false,
-			function(v)
-				G.AntiAfk = v
-				notify(string.format(v and L("gmOnFmt") or L("gmOffFmt"), L("gmAntiAfk")),
-					v and C.Green or C.Sub)
-			end)
-		card(pGen, 244, 128, 236, 58, "Shield", L("gmShield"), L("gmShieldD"), C.Green, false,
-			function(v)
-				G.Shield = v
-				pcall(function() ShieldRequest(v) end)
-			end)
-
-		rule(pGen, 196)
-		slider(pGen, 208, L("gmSpeed"), 16, 500, 16, false, function(v)
-			return tostring(math.floor(v))
-		end, function(v) G.Speed = v; gApply() end)
-		slider(pGen, 256, L("gmJump"), 50, 500, 50, false, function(v)
-			return tostring(math.floor(v))
-		end, function(v) G.Jump = v; gApply() end)
-		slider(pGen, 304, L("gmGravity"), 0, 500, 196, false, function(v)
-			return tostring(math.floor(v))
-		end, function(v) G.Gravity = v; gApply() end)
-
-		createButton(pGen, {
-			Name = "ResetChar",
-			Size = UDim2.new(0, 148, 0, 30),
-			Position = UDim2.new(0, 0, 0, 348),
-			Text = L("gmReset"),
-			TextSize = 12,
-			Style = "solid",
-			OnClick = function() gDoReset() end,
-		})
-
-		-- ---------------- 页 2：视觉 ----------------
-		local pVis = addPage("vis")
-		card(pVis, 0, 0, 236, 58, "Esp", L("gmEsp"), L("gmEspD"), C.Red, false, function(v)
-			G.Esp = v
-			if not v then pcall(gEspSweep) end
-		end)
-		card(pVis, 244, 0, 236, 58, "EspName", L("gmEspName"), "", C.Sub, true,
-			function(v) G.EspName = v end)
-		card(pVis, 0, 64, 236, 58, "EspDist", L("gmEspDist"), "", C.Sub, true,
-			function(v) G.EspDist = v end)
-		card(pVis, 244, 64, 236, 58, "EspBox", L("gmEspBox"), "", C.Sub, false,
-			function(v) G.EspBox = v end)
-		card(pVis, 0, 128, 236, 58, "Bright", L("gmBright"), L("gmBrightD"), C.Amber, false,
-			function(v)
-				G.Bright = v
-				gBright()
-				notify(string.format(v and L("gmOnFmt") or L("gmOffFmt"), L("gmBright")),
-					v and C.Green or C.Sub)
-			end)
-		card(pVis, 244, 128, 236, 58, "NoFog", L("gmNoFog"), L("gmNoFogD"), C.Sub, false,
-			function(v)
-				G.NoFog = v
-				gNoFog()
-				notify(string.format(v and L("gmOnFmt") or L("gmOffFmt"), L("gmNoFog")),
-					v and C.Green or C.Sub)
-			end)
-
-		rule(pVis, 196)
-		slider(pVis, 208, L("gmEspRange"), 100, 2000, 600, true, function(v)
-			return tostring(math.floor(v)) .. "m"
-		end, function(v) G.EspRange = v end)
-		slider(pVis, 256, L("gmFov"), 20, 120, 70, false, function(v)
-			return tostring(math.floor(v))
-		end, function(v) G.Fov = v; gApply() end)
-		slider(pVis, 304, L("gmCamDist"), 10, 1000, 128, true, function(v)
-			return tostring(math.floor(v))
-		end, function(v) G.CamDist = v; gApply() end)
-		slider(pVis, 352, L("gmClock"), 0, 24, 14, false, function(v)
-			return string.format("%02d:00", math.floor(v))
-		end, function(v) G.Clock = v; gApply() end)
-
-		-- ---------------- 页 3：玩家 ----------------
-		local pPlr = addPage("plr")
-		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 16),
-			BackgroundTransparency = 1,
-			Text = L("gmPlayers"),
-			TextSize = 12,
-			Font = FONT_N,
-			TextColor3 = C.Sub,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = pPlr,
-		})
-		local plrList = new("Frame", {
-			Name = "PlayerList",
-			Size = UDim2.new(1, 0, 1, -22),
-			Position = UDim2.new(0, 0, 0, 22),
-			BackgroundTransparency = 1,
-			Parent = pPlr,
-		})
-
-		local plrRows = {}
-		local function plrRow(i, plr)
-			local y = (i - 1) * 46
-			local row = new("Frame", {
-				Name = "P_" .. tostring(plr.Name),
-				Size = UDim2.new(1, 0, 0, 42),
-				Position = UDim2.new(0, 0, 0, y),
-				BackgroundColor3 = C.Card,
-				BorderSizePixel = 0,
-				Parent = plrList,
-			})
-			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = row })
-			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = row })
-			new("TextLabel", {
-				Size = UDim2.new(1, -260, 0, 18),
-				Position = UDim2.new(0, 14, 0, 6),
-				BackgroundTransparency = 1,
-				Text = plr.Name,
-				TextSize = 13,
-				Font = FONT_B,
-				TextColor3 = C.Text,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Parent = row,
-			})
-			local info = new("TextLabel", {
-				Name = "Info",
-				Size = UDim2.new(1, -260, 0, 14),
-				Position = UDim2.new(0, 14, 0, 24),
-				BackgroundTransparency = 1,
-				Text = "",
-				TextSize = 10,
-				Font = FONT_M,
-				TextColor3 = C.Dim,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Parent = row,
-			})
-			local function mini(name, x, text, fn)
-				local b = new("TextButton", {
-					Name = name,
-					Size = UDim2.new(0, 56, 0, 24),
-					Position = UDim2.new(1, x, 0.5, 0),
-					AnchorPoint = Vector2.new(0, 0.5),
-					BackgroundColor3 = C.Card2,
-					BorderSizePixel = 0,
-					AutoButtonColor = false,
-					Text = text,
-					TextSize = 11,
-					Font = FONT_B,
-					TextColor3 = C.Sub,
-					Parent = row,
-				})
-				new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = b })
-				local st = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = b })
-				bindHover(b, { Bg = { C.Card2, C.Accent }, Stroke = st, StrokeOn = C.Accent,
-					Label = b, LabelOn = C.White })
-				bindPress(b, C.Accent)
-				b.MouseButton1Click:Connect(fn)
-				return b
-			end
-			mini("Tp", -188, L("gmTpTo"), function() G.TpTarget = plr end)
-			mini("Follow", -126, L("gmFollow"), function()
-				G.Follow = (G.Follow == plr) and nil or plr
-				notify(G.Follow and string.format(L("gmFollowOn"), plr.Name) or L("gmFollowOff"),
-					G.Follow and C.Green or C.Sub)
-			end)
-			mini("Copy", -64, L("gmCopyName"), function()
-				local ok = copyText(plr.Name)
-				notify(ok and L("gmCopied") or string.format(L("gmCopyFail"), plr.Name),
-					ok and C.Green or C.Amber)
-			end)
-			return row, info
-		end
-
-		gRefreshPlayers = function()
-			for _, r in pairs(plrRows) do
-				pcall(function() r.row:Destroy() end)
-			end
-			plrRows = {}
-			local list = {}
-			pcall(function()
-				for _, p in ipairs(Players:GetPlayers()) do
-					if p ~= LocalPlayer then list[#list + 1] = p end
+			btn.MouseLeave:Connect(function()
+				if not pages[key] or not pages[key].Visible then
+					tween(label, EASE.soft, { TextColor3 = C.Sub })
 				end
 			end)
-			if #list == 0 then
-				local empty = new("TextLabel", {
-					Name = "Empty",
-					Size = UDim2.new(1, 0, 0, 20),
-					BackgroundTransparency = 1,
-					Text = L("gmNoPlayers"),
-					TextSize = 11,
-					Font = FONT_N,
-					TextColor3 = C.Dim,
-					TextXAlignment = Enum.TextXAlignment.Left,
-					Parent = plrList,
-				})
-				plrRows[1] = { row = empty }
-				return
-			end
-			for i, p in ipairs(list) do
-				if i > 6 then break end
-				local row, info = plrRow(i, p)
-				plrRows[i] = { row = row, info = info, plr = p }
-			end
+			tabs[key] = { btn = btn, label = label, x = x, w = w - 4 }
+			tabOrder[#tabOrder + 1] = key
+			return btn
 		end
 
-		-- ---------------- 页 4：传送 ----------------
-		local pTp = addPage("tp")
-		card(pTp, 0, 0, 236, 58, "Saved", L("gmSavePos"), L("gmSavePosD"), C.Green, false,
-			function(v)
-				if v then
-					local root = getRoot()
-					G.Saved = root and root.CFrame or nil
-					G.SavedAt = os.clock()
-					notify(G.Saved and L("gmSaved") or L("gmNoSaved"), G.Saved and C.Green or C.Amber)
-				end
-			end)
-		card(pTp, 244, 0, 236, 58, "SpawnTp", L("gmSpawn"), L("gmSpawnD"), C.Accent2, false,
-			function(v)
-				if v then
-					G.TpSpawn = true
-					local root = getRoot()
-					local sp = nil
-					pcall(function()
-						local sps = workspace:FindFirstChildOfClass("SpawnLocation")
-						if sps then sp = sps.Position end
-					end)
-					if root then
-						local target = sp or Vector3.new(0, 50, 0)
-						pcall(function() root.CFrame = CFrame.new(target + Vector3.new(0, 5, 0)) end)
-						notify(L("gmTpDone"), C.Green)
-					end
-				end
-				G.TpSpawn = false
-			end)
-		createButton(pTp, {
-			Name = "TpMouse",
-			Size = UDim2.new(0, 236, 0, 34),
-			Position = UDim2.new(0, 0, 0, 70),
-			Text = L("gmMouseTp"),
-			TextSize = 13,
-			Style = "solid",
-			OnClick = function() gTpMouse() end,
-		})
-		new("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 30),
-			Position = UDim2.new(0, 0, 0, 112),
-			BackgroundTransparency = 1,
-			Text = L("gmTpHint"),
-			TextSize = 10,
-			Font = FONT_N,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextYAlignment = Enum.TextYAlignment.Top,
-			TextWrapped = true,
-			Parent = pTp,
-		})
-
-		show("gen")
-
-		-- ---------------- 功能实现 ----------------
-		gApply = function()
-			local hum = getHumanoid()
-			if hum then
-				pcall(function() hum.WalkSpeed = G.Speed end)
-				pcall(function() hum.UseJumpPower = true; hum.JumpPower = G.Jump end)
-			end
-			pcall(function() workspace.Gravity = G.Gravity end)
-			local cam = workspace.CurrentCamera
-			if cam then
-				pcall(function() cam.FieldOfView = G.Fov end)
-				pcall(function()
-					if cam.CameraSubject == getHumanoid() then
-						LocalPlayer.CameraMaxZoomDistance = G.CamDist
-						LocalPlayer.CameraMinZoomDistance = math.min(10, G.CamDist)
-					end
-				end)
-			end
-			pcall(function()
-				game:GetService("Lighting").ClockTime = G.Clock
-			end)
+		local univ = buildUniv(addPage, addTab, GW - 40, 0, "")
+		UNIVS[#UNIVS + 1] = univ
+		local gpack = nil
+		local genreKey = nil
+		local function setGenre(g)
+			if genreKey == g.g and gpack then return end
+			if gpack then pcall(gpack.cleanup) end
+			genreKey = g.g
+			gpack = buildGenre(addPage, addTab, GW - 40, 4, g.g, "")
+			UNIVS[#UNIVS + 1] = gpack
 		end
-
-		gNoclipRestore = function()
-			for part in pairs(G.noclipped) do
-				pcall(function() part.CanCollide = true end)
-				G.noclipped[part] = nil
-			end
-		end
-
-		local function gNoclip()
-			local char = LocalPlayer.Character
-			if not char then return end
-			local ok, list = pcall(function() return char:GetDescendants() end)
-			for _, d in ipairs(ok and list or {}) do
-				local isPart = false
-				pcall(function() isPart = d:IsA("BasePart") end)
-				if isPart and d.CanCollide then
-					pcall(function() d.CanCollide = false end)
-					G.noclipped[d] = true
-				end
-			end
-		end
-
-		local function gLighting()
-			local ok, v = pcall(function() return game:GetService("Lighting") end)
-			return ok and v or nil
-		end
-
-		local BRIGHT_AMB = Color3.fromRGB(178, 178, 178)
-		gBright = function()
-			local lt = gLighting()
-			if not lt then return end
-			if G.Bright then
-				if not G.brightSaved then
-					G.brightSaved = {}
-					pcall(function()
-						G.brightSaved.B = lt.Brightness
-						G.brightSaved.A = lt.Ambient
-						G.brightSaved.O = lt.OutdoorAmbient
-						G.brightSaved.S = lt.GlobalShadows
-					end)
-				end
-				if lt.Brightness ~= 2 or lt.GlobalShadows ~= false or lt.Ambient ~= BRIGHT_AMB then
-					pcall(function()
-						lt.Brightness = 2
-						lt.Ambient = BRIGHT_AMB
-						lt.OutdoorAmbient = BRIGHT_AMB
-						lt.GlobalShadows = false
-					end)
-				end
-			elseif G.brightSaved then
-				local s = G.brightSaved
-				pcall(function()
-					lt.Brightness = s.B
-					lt.Ambient = s.A
-					lt.OutdoorAmbient = s.O
-					lt.GlobalShadows = s.S
-				end)
-				G.brightSaved = nil
-			end
-		end
-
-		gNoFog = function()
-			local lt = gLighting()
-			if not lt then return end
-			if G.NoFog then
-				if not G.fog0 then
-					pcall(function() G.fog0 = { e = lt.FogEnd, s = lt.FogStart } end)
-				end
-				pcall(function() lt.FogEnd = 1e6; lt.FogStart = 0 end)
-			elseif G.fog0 then
-				pcall(function() lt.FogEnd = G.fog0.e; lt.FogStart = G.fog0.s end)
-				G.fog0 = nil
-			end
-		end
-
-		gDoReset = function()
-			pcall(function() LocalPlayer.Character:BreakJoints() end)
-			pcall(function()
-				local hum = getHumanoid()
-				if hum then hum.Health = 0 end
-			end)
-			notify(L("gmResetDone"), C.Green)
-		end
-
-		local function gMousePos()
-			local ok, pos = pcall(function()
-				local m = LocalPlayer:GetMouse()
-				if m and m.Hit then return m.Hit.Position end
-				return nil
-			end)
-			if ok and pos then return pos end
-			local cam = workspace.CurrentCamera
-			if not cam then return nil end
-			local ok2, p2 = pcall(function()
-				local loc = UserInputService:GetMouseLocation()
-				local ray = cam:ViewportPointToRay(loc.X, loc.Y)
-				local rp = RaycastParams.new()
-				rp.FilterType = Enum.RaycastFilterType.Exclude
-				rp.FilterDescendantsInstances = { LocalPlayer.Character }
-				local hit = workspace:Raycast(ray.Origin, ray.Direction * 3000, rp)
-				return hit and hit.Position or nil
-			end)
-			return ok2 and p2 or nil
-		end
-
-		gTpMouse = function()
-			local pos = gMousePos()
-			local root = getRoot()
-			if not (pos and root) then
-				notify(L("gmNoMouse"), C.Amber)
-				return
-			end
-			pcall(function() root.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0)) end)
-			notify(L("gmTpDone"), C.Green)
-		end
-
-		-- 玩家透视
-		local function espOff(part)
-			local e = G.esps[part]
-			if not e then return end
-			G.esps[part] = nil
-			if e.gui then pcall(function() e.gui:Destroy() end) end
-			if e.box then pcall(function() e.box:Destroy() end) end
-		end
-
-		gEspSweep = function()
-			for part in pairs(G.esps) do espOff(part) end
-		end
-
-		local function espSet(part, text, showBox)
-			local e = G.esps[part]
-			if not e then
-				local gui = new("BillboardGui", {
-					Name = "O_X_G_ESP",
-					Size = UDim2.new(0, 160, 0, 16),
-					StudsOffset = Vector3.new(0, 3, 0),
-					AlwaysOnTop = true,
-					Adornee = part,
-					Parent = part,
-				})
-				local label = new("TextLabel", {
-					Size = UDim2.fromScale(1, 1),
-					BackgroundTransparency = 1,
-					Text = text,
-					TextSize = 12,
-					Font = FONT_B,
-					TextColor3 = C.Red,
-					TextStrokeTransparency = 0.3,
-					Parent = gui,
-				})
-				G.esps[part] = { gui = gui, label = label }
-				e = G.esps[part]
-			end
-			if e.label.Text ~= text then e.label.Text = text end
-			if showBox and not e.box then
-				e.box = new("BoxHandleAdornment", {
-					Name = "O_X_G_BOX",
-					Adornee = part,
-					AlwaysOnTop = true,
-					ZIndex = 5,
-					Transparency = 0.55,
-					Color3 = C.Red,
-					Size = Vector3.new(3, 5.5, 2.5),
-					Parent = part,
-				})
-			elseif not showBox and e.box then
-				pcall(function() e.box:Destroy() end)
-				e.box = nil
-			end
-		end
-
-		local function espRefresh()
-			local seen = {}
-			local root = getRoot()
-			if not root then return end
-			pcall(function()
-				for _, p in ipairs(Players:GetPlayers()) do
-					if p ~= LocalPlayer and p.Character then
-						local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-							or p.Character:FindFirstChild("Head")
-						if hrp then
-							local d = (hrp.Position - root.Position).Magnitude
-							if d <= G.EspRange then
-								seen[hrp] = true
-								local txt = ""
-								if G.EspName then txt = p.Name end
-								if G.EspDist then
-									txt = (txt ~= "" and (txt .. "  ") or "") .. string.format("[%dm]", math.floor(d))
-								end
-								espSet(hrp, txt ~= "" and txt or "●", G.EspBox)
-							end
-						end
-					end
-				end
-			end)
-			for part in pairs(G.esps) do
-				if not seen[part] then espOff(part) end
-			end
-		end
-
-		-- 主循环
-		local function step(now)
-			if G.Noclip then pcall(gNoclip) end
-			if G.Bright then pcall(gBright) end
-
-			-- 跟随
-			if G.Follow and G.Follow.Character then
-				local hrp = G.Follow.Character:FindFirstChild("HumanoidRootPart")
-				local root = getRoot()
-				if hrp and root then
-					local back = hrp.CFrame.LookVector * -6 + Vector3.new(0, 2, 0)
-					pcall(function() root.CFrame = CFrame.new(hrp.Position + back) end)
-				end
-			end
-
-			-- 传送目标
-			if G.TpTarget and G.TpTarget.Character then
-				local hrp = G.TpTarget.Character:FindFirstChild("HumanoidRootPart")
-				local root = getRoot()
-				if hrp and root then
-					pcall(function() root.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 3, 0)) end)
-					notify(L("gmTpDone"), C.Green)
-				end
-				G.TpTarget = nil
-			end
-
-			-- 防拉回：位置一帧跳超过 120 studs 就当游戏把你传走了，拉回原位
-			if G.AntiPull then
-				local root = getRoot()
-				if root then
-					local p = root.Position
-					if G.lastPos then
-						local jump = (p - G.lastPos).Magnitude
-						if jump > 120 and now - G.pullAt > 0.6 then
-							G.pullAt = now
-							pcall(function() root.CFrame = CFrame.new(G.lastPos) end)
-						else
-							G.lastPos = p
-						end
-					else
-						G.lastPos = p
-					end
-				end
-			end
-
-			-- 无限跳
-			if G.InfJump then
-				local hum = getHumanoid()
-				if hum then
-					local ok, st = pcall(function() return hum:GetState() end)
-					if not ok or (st ~= Enum.HumanoidStateType.Jumping
-						and st ~= Enum.HumanoidStateType.Freefall) then
-						pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
-					end
-				end
-			end
-
-			-- 防挂机
-			if G.AntiAfk then
-				pcall(function()
-					VirtualUser:CaptureController()
-					VirtualUser:ClickButton2(Vector2.new())
-				end)
-			end
-
-			-- 透视
-			if G.Esp then
-				if now - G.espAt >= 0.35 then
-					G.espAt = now
-					pcall(espRefresh)
-				end
-			elseif next(G.esps) then
-				pcall(gEspSweep)
-			end
-
-			-- 玩家列表刷新
-			if win.Visible and pages.plr and pages.plr.Visible and now - G.plrAt >= 1 then
-				G.plrAt = now
-				for _, r in pairs(plrRows) do
-					if r.plr and r.info then
-						local root = getRoot()
-						local hrp = r.plr.Character and r.plr.Character:FindFirstChild("HumanoidRootPart")
-						if hrp and root then
-							r.info.Text = string.format("%dm  ·  %s", math.floor((hrp.Position - root.Position).Magnitude),
-								tostring(r.plr.Team and r.plr.Team.Name or "-"))
-						end
-					end
-				end
-			end
-
-			-- 顶部胶囊
-			local ok, pid = pcall(function() return game.PlaceId end)
-			if ok and gameCur and pid == gameCur.p then
-				gChipDot.BackgroundColor3 = C.Green
-				gChipStroke.Color = C.Green
-				gChipText.Text = L("gmInGame")
-				gChipText.TextColor3 = C.Text
-			else
-				gChipDot.BackgroundColor3 = C.Dim
-				gChipStroke.Color = C.Stroke
-				gChipText.Text = L("gmNotInGame")
-				gChipText.TextColor3 = C.Dim
-			end
-		end
-
-		track(RunService.Heartbeat:Connect(function()
-			if SHUTDOWN or not gameBuilt then return end
-			pcall(step, os.clock())
-		end))
-
-		track(LocalPlayer.CharacterAdded:Connect(function()
-			task.wait(1)
-			if SHUTDOWN then return end
-			G.noclipped = {}
-			G.lastPos = nil
-			pcall(gApply)
-		end))
 
 		-- 收起 / 关闭
 		local reopen = new("TextButton", {
 			Name = "GameReopen",
 			Size = UDim2.new(0, 116, 0, 32),
 			Position = UDim2.new(0, 20, 0, 312),
-			BackgroundColor3 = C.Window,
-			BorderSizePixel = 0,
-			AutoButtonColor = false,
-			Text = "",
-			Visible = false,
-			Parent = guiMain,
+			BackgroundColor3 = C.Window, BorderSizePixel = 0, AutoButtonColor = false,
+			Text = "", Visible = false, Parent = guiMain,
 		})
 		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = reopen })
 		local reopenStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = reopen })
@@ -12556,32 +13621,20 @@ boot = function(lang)
 			Scale = reopenScale, ScaleOn = 1.06 })
 		do
 			local box = new("Frame", {
-				Size = UDim2.new(0, 20, 0, 20),
-				Position = UDim2.new(0, 7, 0.5, 0),
-				AnchorPoint = Vector2.new(0, 0.5),
-				BackgroundColor3 = C.Card2,
-				BorderSizePixel = 0,
-				ClipsDescendants = true,
-				Parent = reopen,
+				Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(0, 7, 0.5, 0),
+				AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = C.Card2,
+				BorderSizePixel = 0, ClipsDescendants = true, Parent = reopen,
 			})
 			new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = box })
 			new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Rotation = 45,
 				Parent = box })
 		end
 		local reopenLabel = new("TextLabel", {
-			Name = "Label",
-			Size = UDim2.new(1, -34, 1, 0),
-			Position = UDim2.new(0, 32, 0, 0),
-			BackgroundTransparency = 1,
-			Text = "",
-			TextSize = 12,
-			Font = FONT_B,
-			TextColor3 = C.Text,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = reopen,
+			Name = "Label", Size = UDim2.new(1, -34, 1, 0), Position = UDim2.new(0, 32, 0, 0),
+			BackgroundTransparency = 1, Text = "", TextSize = 12, Font = FONT_B,
+			TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Left, Parent = reopen,
 		})
 		local reopenDragged = makeDraggable(reopen, reopen, nil, { threshold = 6, clamp = true })
-
 		local splash = makeWindowSplash(win, "GameSplash", L("gmTitle"), nil, R.win)
 
 		local function hide()
@@ -12591,13 +13644,21 @@ boot = function(lang)
 			tween(reopenScale, EASE.pop, { Scale = computeScale(GW, GH) })
 		end
 
-		-- 对外：打开某一台（懒建 + 换目标）
 		openGameWindow = function(g)
 			gameCur = g
 			local name = (LANG == "zh" and g.zh ~= "" and g.zh) or g.en
 			gTitle.Text = name
 			reopenLabel.Text = name
-			gIconText.Text = string.upper(string.sub(g.en, 1, 2))
+			if g.i then
+				iconImg.Image = "rbxassetid://" .. tostring(g.i)
+				iconImg.Visible = true
+				iconTxt.Visible = false
+			else
+				iconImg.Visible = false
+				iconTxt.Visible = true
+				iconTxt.Text = string.upper(string.sub(g.en or "OX", 1, 2))
+			end
+			setGenre(g)
 			show("gen")
 			reopen.Visible = false
 			win.Visible = true
@@ -12605,34 +13666,16 @@ boot = function(lang)
 			tween(winScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 				{ Scale = computeScale(GW, GH) })
 			splash()
-			task.spawn(function()
-				task.wait(0.05)
-				pcall(gApply)
-				pcall(gRefreshPlayers)
-			end)
+			pcall(univ.apply)
+			pcall(univ.refreshPlayers)
 		end
 
 		GameCloseRequest = function()
 			win.Visible = false
 			reopen.Visible = false
 		end
-
 		gameCleanup = function()
-			G.Fly, G.Noclip, G.Esp = false, false, false
-			G.InfJump, G.AntiAfk, G.Shield, G.AntiPull = false, false, false, false
-			G.Follow, G.TpTarget = nil, nil
-			pcall(gEspSweep)
-			pcall(gNoclipRestore)
-			pcall(gBright)
-			pcall(gNoFog)
-			local hum = getHumanoid()
-			if hum then
-				pcall(function() hum.WalkSpeed = 16 end)
-				pcall(function() hum.UseJumpPower = true; hum.JumpPower = 50 end)
-			end
-			pcall(function() workspace.Gravity = 196.2 end)
-			local cam = workspace.CurrentCamera
-			if cam then pcall(function() cam.FieldOfView = 70 end) end
+			for _, u in ipairs(UNIVS) do pcall(u.cleanup) end
 			win.Visible = false
 			reopen.Visible = false
 		end
@@ -12645,6 +13688,29 @@ boot = function(lang)
 			if reopenDragged() then return end
 			if gameCur then openGameWindow(gameCur) end
 		end)
+
+		-- 芯片 + 传送按钮：每秒看一下在不在这一台里
+		local chipAt = 0
+		track(RunService.Heartbeat:Connect(function()
+			if SHUTDOWN or not gameCur then return end
+			local now = os.clock()
+			if now - chipAt < 1 then return end
+			chipAt = now
+			local ok = gameMatch(gameCur)
+			if ok then
+				gChipDot.BackgroundColor3 = C.Green
+				gChipStroke.Color = C.Green
+				gChipText.Text = L("gmInGame")
+				gChipText.TextColor3 = C.Text
+				gGo.Visible = false
+			else
+				gChipDot.BackgroundColor3 = C.Amber
+				gChipStroke.Color = C.Amber
+				gChipText.Text = L("gmNotInGame")
+				gChipText.TextColor3 = C.Amber
+				gGo.Visible = true
+			end
+		end))
 		track(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 			task.wait(0.2)
 			if SHUTDOWN or not win.Visible then return end
