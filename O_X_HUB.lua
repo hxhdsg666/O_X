@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.9.5
+--  Version : 1.9.7
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -552,7 +552,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.9.5",
+	Version = "v1.9.7",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -6346,7 +6346,7 @@ boot = function(lang)
 			locked = nil, hit = nil, frozen = false, silentOrig = {},
 			silent = false, silentN = 0, gunN = 0, camOk = false, aimAt = 0,
 			promptN = 0, lootN = 0, enemyN = 0, diagAt = 0, err = nil, errAt = 0,
-			dcache = nil, dcAt = 0, killMiss = {}, voidSet = {}, voidPos = nil, voidN = 0, voidAt = 0, pinAt = 0, voidWarn = false,
+			dcache = nil, dcAt = 0, killMiss = {}, voidSet = {}, voidPos = nil, voidN = 0, voidAt = 0, pinAt = 0, voidWarn = false, _ncHooked = false,
 		}
 		local pdAutoDoneLoop            -- 先声明：潜入页的开关要用它
 		local pdEspSweep                -- 透视收尾（多处要用）
@@ -7784,13 +7784,14 @@ boot = function(lang)
 						local d = (pos - origin).Magnitude
 						local dir = d > 0.01 and (pos - origin).Unit or look
 						local ang = math.deg(math.acos(math.clamp(look:Dot(dir), -1, 1)))
-						-- 上一版 FOV 是硬门：目标不在锥里就压根不锁 → 实机"自瞄没反应"。
-						-- 现在锥内优先、锥外也只受自瞄范围限制慢慢转过去。
-						if d <= pd.Range and pdVisible(cam, t.model) then
+						-- v1.9.7：不再用 pdVisible 做硬门（手机端相机贴墙时 raycast 必败）。
+						-- 可见性只做加分项：看得见优先，看不见也照样锁（静默自瞄改子弹方向绕墙打）。
+						if d <= pd.Range then
 							local score = ang
 							if pd.Priority == "near" then score = d
 							elseif pd.Priority == "low" then score = t.hum.Health end
 							if ang > math.max(pd.Fov * 0.5, 8) then score = score + 100000 end
+							if not pdVisible(cam, t.model) then score = score + 5000 end
 							if not bscore or score < bscore then best, bscore = t, score end
 						end
 					end
@@ -7886,18 +7887,43 @@ boot = function(lang)
 			return out
 		end
 
+		-- v1.9.7：暴力搜全部 upvalue（不再硬编码 28），加 getgc 兜底
 		local function pdProjectileTable(shoot)
 			local g = ex("getupvalue")
 			if not g or type(shoot) ~= "function" then return nil end
 			local function ok(t)
 				return type(t) == "table" and type(rawget(t, "new")) == "function"
 			end
+			-- 先试 28（参考脚本的标准位置）
 			local o, t = pcall(g, shoot, 28)
 			if o and ok(t) then return t end
-			local o2, inner = pcall(g, shoot, 2)
-			if o2 and type(inner) == "function" then
-				local o3, t2 = pcall(g, inner, 28)
-				if o3 and ok(t2) then return t2 end
+			-- 暴力搜全部 upvalue（最多 80 个）
+			for i = 1, 80 do
+				local ov, v = pcall(g, shoot, i)
+				if ov and ok(v) then return v end
+				if ov and type(v) == "function" then
+					for j = 1, 80 do
+						local ov2, v2 = pcall(g, v, j)
+						if ov2 and ok(v2) then return v2 end
+						if not ov2 then break end
+					end
+				end
+				if not ov then break end
+			end
+			-- getgc 兜底：搜所有 table 找带 .new 函数且名字像 Projectile/Bullet 的
+			local gc = ex("getgc")
+			if gc then
+				local ok2, list = pcall(gc)
+				if ok2 then
+					for _, v in ipairs(list or {}) do
+						if ok(v) then
+							local n = rawget(v, "__type") or rawget(v, "name") or ""
+							if type(n) == "string" and (n:find("roject") or n:find("ullet") or n:find("hot")) then
+								return v
+							end
+						end
+					end
+				end
 			end
 			return nil
 		end
@@ -7936,7 +7962,37 @@ boot = function(lang)
 			end
 			pd.silentN = patched
 			pd.silent = patched > 0
-			return pd.silent
+
+			-- v1.9.7：__namecall 兜底（Rivals 做法）—— 拦 Bullet:FireServer 改方向。
+			-- 执行器不支持 hookmetamethod 就跳过，静默自瞄只靠 projectileTable 包装。
+			if not pd._ncHooked then
+				local hmm = ex("hookmetamethod")
+				if hmm then
+					pcall(function()
+						local oldNC
+						oldNC = hmm(game, "__namecall", function(self, ...)
+							local method = getnamecallmethod()
+							local args = {...}
+							if method == "FireServer" and tostring(self) == "Bullet"
+								and pd.locked and pd.silent then
+								pcall(function()
+									if type(args[1]) == "table" and typeof(args[1].StartPosition) == "Vector3" then
+										local d = pd.locked - args[1].StartPosition
+										if d.Magnitude > 0.001 then
+											args[1].TargetPosition = pd.locked
+											args[1].Direction = d.Unit
+										end
+									end
+								end)
+							end
+							return oldNC(self, unpack(args))
+						end)
+						pd._ncHooked = true
+					end)
+				end
+			end
+
+			return pd.silent or pd._ncHooked == true
 		end
 
 		-- ---------------- 潜入：全图自动完成 ----------------
@@ -8122,7 +8178,7 @@ boot = function(lang)
 				local box = pdNearbySpot(s.pos, 30, false)
 				if box then
 					pdStatus.Text = string.format(L("pdOpening"), tostring((box.part and box.part.Name) or "?"))
-					pdRunSpot(box, false)
+					pdRunSpot(box, true)                        -- allowEquip=true：开箱也能放撬棍/电锯/卡
 					pdScan()
 					s = pdPickSpot() or s
 				end
@@ -8249,7 +8305,8 @@ boot = function(lang)
 				return
 			end
 			pd.locked = pos                                       -- 静默自瞄改子弹方向用的就是它
-			if not pdTouching() then pdApplyAim(cam, pos) end
+			-- v1.9.7：手机端不再检查 pdTouching —— 用户主动开了自瞄就是要锁。
+			pdApplyAim(cam, pos)
 			if pd.Fire and os.clock() - (pd.lastFire or 0) >= 0.08 then
 				pd.lastFire = os.clock()
 				pdFire()
@@ -8261,7 +8318,7 @@ boot = function(lang)
 			pd.aimBound = true
 			local okBind = pcall(function()
 				RunService:BindToRenderStep("OX_pdAim",
-					Enum.RenderPriority.Camera.Value + 1, pdAimFn)
+					Enum.RenderPriority.Camera.Value + 5, pdAimFn)  -- v1.9.7：+5 盖过游戏自带相机脚本
 			end)
 			if okBind then
 				pd.aimBound = "bind"
