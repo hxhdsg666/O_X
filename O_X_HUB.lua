@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行
---  Version : 1.8.0
+--  Version : 1.9.0
 --  Date    : 2026-10-01
 --
 --  用法（执行器里粘贴执行）：
@@ -10,7 +10,8 @@
 --    · 注入后第一屏是语言选择（英文 / 中文），选完才进加载动画
 --    · 界面文案跟随所选语言；只有 "O_X HUB" 这个名字两种语言都不翻译
 --    · 主窗口做成软件样式：右上角 － 最小化成图标 / ✕ 结束整个脚本
---    · 左侧是功能列表：主页 / 通用（速度·跳跃·重力）/ 飞行 / 设置
+--    · 左侧是功能列表：主页 / 服务器 / 通用（速度·跳跃·重力）/ 飞行 / 设置
+--    · 服务器：自然灾害模拟器（传送 / 农场）+ 劫案（主游戏无脚本，进地图才解锁潜入 / 强攻）
 --    · 设置页：联系作者（点一下复制邮箱）+ 语言切换（切换后脚本重启）
 --    · 主窗口、飞行窗口、悬浮图标都可以拖动移动
 --    · 飞行是独立窗口：－ 收成胶囊，✕ 只结束飞行
@@ -60,6 +61,7 @@ local LOCALES = {
 		srvOpen      = "打开",
 		srvMore      = "更多服务器还在做",
 		srvNds       = "自然灾害模拟器",
+		srvHeist     = "劫案",
 
 		denyTitle    = "未在对应服务器内",
 		denyBody     = "这个脚本只能在「%s」里用，你现在不在这个服务器。",
@@ -96,6 +98,53 @@ local LOCALES = {
 		farmOn       = "自动获胜已开启  ·  已经回到出生点",
 		farmOff      = "自动获胜已关闭",
 		farmHint     = "开启期间角色会被按在出生点。游戏开局把你传去场地，也会被立刻拉回来。",
+
+		-- 劫案面板（place 21532277 = 主游戏，universe 16680835 = 整款游戏）
+		pdMainTag      = "主游戏",
+		pdMapTag       = "地图：%s",
+		pdDetecting    = "识别地图中...",
+		pdUpdate       = "正在更新",
+		pdNoScript     = "主游戏暂无脚本",
+		pdUpdateHint   = "主游戏是大厅，脚本要进劫案地图才生效。进地图后再打开这个面板。",
+		pdUpdateOn     = "正在更新  ·  主游戏暂无脚本",
+
+		pdTabStealth   = "潜入",
+		pdTabAssault   = "强攻",
+
+		pdStealthTitle = "潜入",
+		pdStealthSub   = "自动处理目标，尽量别闹出动静",
+		pdAutoAct      = "自动交互",
+		pdAutoActD     = "自动触发附近的按钮 / 保险箱 / 目标点",
+		pdActRange     = "交互范围",
+		pdObjEsp       = "目标高亮",
+		pdObjEspD      = "给附近能交互的东西描边，隔墙也能看见",
+		pdObjRange     = "高亮范围",
+		pdActOn        = "自动交互已开启  ·  范围 %s",
+		pdActOff       = "自动交互已关闭",
+		pdObjEspOn     = "目标高亮已开启",
+		pdObjEspOff    = "目标高亮已关闭",
+
+		pdAssaultTitle = "强攻",
+		pdAssaultSub   = "自瞄 NPC，不瞄队友和己方 NPC",
+		pdAim          = "NPC 自瞄",
+		pdAimD         = "把准星锁到视野里的敌人身上",
+		pdFire         = "自动开火",
+		pdFireD        = "锁定目标后自动扣扳机",
+		pdAlly         = "忽略队友 / 己方 NPC",
+		pdAllyD        = "名字里带 ally / friend / crew / hostage 这类词的不瞄",
+		pdWalls        = "隔墙也瞄",
+		pdWallsD       = "关掉只瞄看得见的",
+		pdNpcEsp       = "NPC 透视",
+		pdNpcEspD      = "只给敌人描边",
+		pdPriority     = "优先目标",
+		pdPriCross     = "准星最近",
+		pdPriNear      = "距离最近",
+		pdPriLow       = "血量最低",
+		pdFov          = "视场角",
+		pdAimRange     = "自瞄范围",
+		pdAimOn        = "NPC 自瞄已开启  ·  优先 %s",
+		pdAimOff       = "NPC 自瞄已关闭",
+		pdNoNpc        = "附近没有能锁定的 NPC",
 
 
 
@@ -200,6 +249,7 @@ local LOCALES = {
 		srvOpen      = "Open",
 		srvMore      = "More servers are on the way",
 		srvNds       = "Natural Disaster Survival",
+		srvHeist     = "Heist",
 
 		denyTitle    = "Wrong game",
 		denyBody     = "This script only works in %s. You are not in that game right now.",
@@ -235,6 +285,53 @@ local LOCALES = {
 		farmOn       = "Auto win on  ·  back at spawn",
 		farmOff      = "Auto win off",
 		farmHint     = "While on, you are pinned to spawn. If the round sends you to the field, you get pulled right back.",
+
+		-- Heist panel (place 21532277 = main game, universe 16680835)
+		pdMainTag      = "Main game",
+		pdMapTag       = "Map: %s",
+		pdDetecting    = "Detecting map...",
+		pdUpdate       = "Updating",
+		pdNoScript     = "No script for the main game yet",
+		pdUpdateHint   = "The main game is the lobby. Join a heist map first, then open this panel again.",
+		pdUpdateOn     = "Updating  ·  no script for the main game yet",
+
+		pdTabStealth   = "Stealth",
+		pdTabAssault   = "Assault",
+
+		pdStealthTitle = "Stealth",
+		pdStealthSub   = "Runs the objectives for you, quietly",
+		pdAutoAct      = "Auto interact",
+		pdAutoActD     = "Triggers nearby buttons, safes and objectives",
+		pdActRange     = "Interact range",
+		pdObjEsp       = "Objective highlight",
+		pdObjEspD      = "Outlines nearby interactables through walls",
+		pdObjRange     = "Highlight range",
+		pdActOn        = "Auto interact on  ·  range %s",
+		pdActOff       = "Auto interact off",
+		pdObjEspOn     = "Objective highlight on",
+		pdObjEspOff    = "Objective highlight off",
+
+		pdAssaultTitle = "Assault",
+		pdAssaultSub   = "Aims at NPCs only, never teammates or friendly NPCs",
+		pdAim          = "NPC aimbot",
+		pdAimD         = "Locks the crosshair onto enemies in view",
+		pdFire         = "Auto fire",
+		pdFireD        = "Pulls the trigger while locked",
+		pdAlly         = "Ignore teammates and friendly NPCs",
+		pdAllyD        = "Anything named ally / friend / crew / hostage is skipped",
+		pdWalls        = "Aim through walls",
+		pdWallsD       = "Off = visible targets only",
+		pdNpcEsp       = "NPC highlight",
+		pdNpcEspD      = "Outlines enemies only",
+		pdPriority     = "Priority",
+		pdPriCross     = "Closest to crosshair",
+		pdPriNear      = "Closest",
+		pdPriLow       = "Lowest health",
+		pdFov          = "Field of view",
+		pdAimRange     = "Aim range",
+		pdAimOn        = "NPC aimbot on  ·  priority %s",
+		pdAimOff       = "NPC aimbot off",
+		pdNoNpc        = "No NPC to lock onto nearby",
 
 
 
@@ -333,7 +430,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v1.8.4",
+	Version = "v1.9.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -857,6 +954,47 @@ Ca7rT/YdWDagQFyDnSjAsykCsAOb+g7QTShkAIQbMBArgWVDSB/ivyuu78EzyYCQPNxhgLoeGO0DJGBD
 2AkAtA1BB+gBh3r65lLYABicManVi4yfpbAB1+Epm5oOiBoAo2M+m3qbUNSAzf6kVa9GH14uBQ3oxc+aNWuUgKABzcRhtxtu
 gFZL0ICb5HE/zjIwoGgCNukDjxvOPtw4jH7syOeGD8A8jH780Os1z14wRBLQu2Yc++3Bk0SPfe54cwr9TeHR795Jv34OwJER
 eqWH30lTut4ZxxA3dtc3gyoAhGGz6zUPKd7s7TY3uVL/A8QWDZe3UlBSAAAAAElFTkSuQmCC
+]==],
+	srv_heist = [==[
+	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
 ]==],
 	sfx_close = [==[
 SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgzLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAASW5mbwAA
@@ -1443,7 +1581,7 @@ local ASSET_TRIED, ASSET_CACHE = {}, {}
 
 -- 各资源的文件扩展名（getcustomasset 靠它判断类型）
 local ASSET_EXT = { icon = "jpg", flag_us = "png", flag_cn = "png",
-	sfx_notify = "mp3", sfx_close = "mp3", sfx_deny = "mp3", srv_nds = "png" }
+	sfx_notify = "mp3", sfx_close = "mp3", sfx_deny = "mp3", srv_nds = "png", srv_heist = "png" }
 
 local function getAsset(key)
 	if ASSET_TRIED[key] then return ASSET_CACHE[key] end
@@ -1811,6 +1949,31 @@ local function inPlace(id)
 	local ok, pid = pcall(function() return game.PlaceId end)
 	if ok and type(pid) == "number" then return pid == id, pid end
 	return false, nil
+end
+
+--========================== 服务器：劫案 ==========================
+-- place 21532277 = 主游戏（大厅，没脚本）；universe 16680835 = 整款游戏。
+-- Roblox 里同一个 universe 的所有 place 共用 game.GameId，所以劫案地图
+-- （珠宝店之类）也算"在这款游戏里"，能过关；主游戏在里面单独判。
+local PD = {
+	Place  = 21532277,
+	Game   = 16680835,
+	Maps   = {},   -- 可选：拿不到地图名时按 placeId 手动补，比如 [21532278] = "珠宝店"
+	AllyKw = { "ally", "friend", "crew", "friendly", "teammate", "hostage", "civilian" },
+}
+
+-- 在不在「劫案」里（主游戏或任意地图） -> (是否匹配, 当前 placeId)
+local function pdInGame()
+	local ok, pid, gid = pcall(function() return game.PlaceId, game.GameId end)
+	if not ok then return false, nil end
+	if pid == PD.Place or gid == PD.Game or PD.Maps[pid] then return true, pid end
+	return false, pid
+end
+
+-- 主游戏 = 从 Roblox 正常点进来的那个 place；其它 place 都当成劫案地图
+local function pdIsMain()
+	local ok, pid = pcall(function() return game.PlaceId end)
+	return (not ok) or pid == PD.Place
 end
 
 --========================== 角色工具 ==========================
@@ -3459,6 +3622,10 @@ boot = function(lang)
 	local SrvTeleportRequest = function() end
 	local SrvAutoWinRequest = function() end
 	local SrvCloseRequest = function() end
+	-- 劫案面板：窗口开关 + 关脚本时的清理（真正实现都在下面那个 do 块里）
+	local openPdWindow = function() end
+	local PdCloseRequest = function() end
+	local pdCleanup = function() end
 	local FlyToggleRequest = function() end
 	-- 伤害保护总开关（速度回零模块在下面才定义，这里先占位，免得闭包绑到全局）
 	local ShieldRequest = function() end
@@ -3742,7 +3909,7 @@ boot = function(lang)
 		Parent = serversPage,
 	})
 
-	local function addServerCard(order, name, placeId, assetKey)
+	local function addServerCard(order, name, placeId, assetKey, gate, openFn)
 		local y = (order - 1) * 78
 		local card = new("TextButton", {
 			Name = "SrvCard_" .. tostring(placeId),
@@ -3838,9 +4005,11 @@ boot = function(lang)
 			tween(pillText, EASE.soft, { TextColor3 = C.Sub })
 		end)
 		bindPress(card, C.Accent)
+		-- 默认是"必须在同一个 place"；劫案那款游戏跨 place，传自己的判定进来
+		local open = openFn or function() openSrvWindow() end
 		card.MouseButton1Click:Connect(function()
 			-- 不在对应的服务器里就不给用：响一声 + 弹拦截窗
-			local okPlace, pid = inPlace(placeId)
+			local okPlace, pid = (gate or inPlace)(placeId)
 			if not okPlace then
 				playSfx("sfx_deny", CONFIG.SoundDeny)
 				showDenyModal(
@@ -3852,16 +4021,17 @@ boot = function(lang)
 				)
 				return
 			end
-			openSrvWindow()
+			open()
 		end)
 		return card
 	end
 
 	addServerCard(1, L("srvNds"), 189707, "srv_nds")
+	addServerCard(2, L("srvHeist"), PD.Place, "srv_heist", pdInGame, function() openPdWindow() end)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0, 0, 0, 86),
+		Position = UDim2.new(0, 0, 0, 156),
 		BackgroundTransparency = 1,
 		Text = L("srvMore"),
 		TextSize = 11,
@@ -6028,6 +6198,906 @@ boot = function(lang)
 		closeSrvWindow()
 	end
 
+	--========================== 服务器脚本：劫案 ==========================
+	-- place 21532277 = 主游戏（大厅）：面板只说「正在更新 / 主游戏暂无脚本」。
+	-- 进任意劫案地图（同 universe 的其它 place）才解锁 潜入 / 强攻。
+	-- ⚠️ 整块放在 pdBuild() 这个函数体里：boot 的 200 个局部变量名额已经很紧，
+	-- 独立函数才有自己的额度（改完必须跑 _check + _lint + _run）。
+	local function pdBuild()
+		local PD_W, PD_H = 520, 480
+		local pd = {
+			AutoAct = false, ActRange = 15,
+			ObjEsp  = false, ObjRange = 80,
+			Aim     = false, Fire = false, Priority = "cross",
+			Fov     = 90, Range = 300, Walls = false, Ally = true, NpcEsp = false,
+			Npcs = {}, Marks = {}, scanAt = 0, names = {},
+		}
+
+		-- ---------------- 窗口骨架（跟服务器窗口同款：拖动 / － 胶囊 / ✕ 关窗） ----------------
+		local pdWin = new("Frame", {
+			Name = "HeistWindow",
+			Size = UDim2.new(0, PD_W, 0, PD_H),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Visible = false,
+			Parent = guiMain,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = pdWin })
+		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = pdWin })
+		local pdScale = new("UIScale", { Scale = 1, Parent = pdWin })
+
+		local pdHeader = new("Frame", {
+			Name = "Header",
+			Size = UDim2.new(1, 0, 0, SRV_HEAD_H),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Parent = pdWin,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = pdHeader })
+		new("Frame", {
+			Size = UDim2.new(1, 0, 0, 12),
+			Position = UDim2.new(0, 0, 1, -12),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			Parent = pdHeader,
+		})
+		new("Frame", {
+			Size = UDim2.new(1, -24, 0, 1),
+			Position = UDim2.new(0, 12, 1, -1),
+			BackgroundColor3 = C.Stroke,
+			BorderSizePixel = 0,
+			Parent = pdHeader,
+		})
+
+		local pdIcon = new("Frame", {
+			Size = UDim2.new(0, 22, 0, 22),
+			Position = UDim2.new(0, 14, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card2,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			Parent = pdHeader,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 7), Parent = pdIcon })
+		do
+			local a = getAsset("srv_heist")
+			if a then
+				new("ImageLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Image = a,
+					ScaleType = Enum.ScaleType.Crop,
+					Parent = pdIcon,
+				})
+			end
+		end
+		new("UIStroke", { Color = C.Stroke2, Thickness = 1, Transparency = 0.5, Parent = pdIcon })
+
+		new("TextLabel", {
+			Size = UDim2.new(0, 150, 1, 0),
+			Position = UDim2.new(0, 44, 0, 0),
+			BackgroundTransparency = 1,
+			Text = L("srvHeist"),
+			TextSize = 14,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = pdHeader,
+		})
+
+		-- 右上角：主游戏 / 地图：珠宝店 / 识别地图中...
+		local pdTag = new("TextLabel", {
+			Name = "HeistTag",
+			Size = UDim2.new(0, 170, 1, 0),
+			Position = UDim2.new(1, -256, 0, 0),
+			BackgroundTransparency = 1,
+			Text = L("pdDetecting"),
+			TextSize = 11,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Right,
+			Parent = pdHeader,
+		})
+
+		local pdMinBtn = new("TextButton", {
+			Name = "Minimize",
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -70, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "－",
+			TextSize = 14,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			Parent = pdHeader,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = pdMinBtn })
+		local pdMinStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = pdMinBtn })
+		bindHover(pdMinBtn, {
+			Bg = { C.Card, C.Card2 }, Stroke = pdMinStroke, StrokeOn = C.Stroke2,
+			Label = pdMinBtn, LabelOn = C.Text,
+		})
+
+		local pdCloseBtn = new("TextButton", {
+			Name = "Close",
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -38, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "✕",
+			TextSize = 13,
+			Font = FONT_B,
+			TextColor3 = C.Sub,
+			Parent = pdHeader,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = pdCloseBtn })
+		local pdCloseStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = pdCloseBtn })
+		bindHover(pdCloseBtn, {
+			Bg = { C.Card, C.Red }, Stroke = pdCloseStroke, StrokeOn = C.Red,
+			Label = pdCloseBtn, LabelOn = C.White,
+		})
+
+		makeDraggable(pdWin, pdHeader, function() return pdScale.Scale end)
+
+		-- ---------- 主体：左边分区 / 右边内容 ----------
+		local pdBody = new("Frame", {
+			Size = UDim2.new(1, -20, 1, -SRV_HEAD_H - 12),
+			Position = UDim2.new(0, 10, 0, SRV_HEAD_H + 6),
+			BackgroundTransparency = 1,
+			Parent = pdWin,
+		})
+
+		local pdSide = new("Frame", {
+			Name = "Sidebar",
+			Size = UDim2.new(0, SRV_SIDE_W, 1, 0),
+			BackgroundColor3 = C.Side,
+			BorderSizePixel = 0,
+			Parent = pdBody,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = pdSide })
+
+		local pdIndicator = new("Frame", {
+			Name = "HeistIndicator",
+			Size = UDim2.new(0, 3, 0, 18),
+			Position = UDim2.new(0, 0, 0, 15),
+			BackgroundColor3 = C.Accent,
+			BorderSizePixel = 0,
+			ZIndex = 2,
+			Parent = pdSide,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = pdIndicator })
+
+		local pdContent = new("Frame", {
+			Name = "Content",
+			Size = UDim2.new(1, -(SRV_SIDE_W + 18), 1, 0),
+			Position = UDim2.new(0, SRV_SIDE_W + 14, 0, 0),
+			BackgroundTransparency = 1,
+			Parent = pdBody,
+		})
+
+		local pdPages, pdNav = {}, {}
+
+		local function pdAddPage(key)
+			local page = new("Frame", {
+				Name = "HeistPage_" .. key,
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Visible = false,
+				Parent = pdContent,
+			})
+			pdPages[key] = page
+			return page
+		end
+
+		local function pdShow(key)
+			for k, page in pairs(pdPages) do
+				page.Visible = (k == key)
+			end
+			for k, item in pairs(pdNav) do
+				local active = (k == key)
+				tween(item.label, EASE.soft, { TextColor3 = active and C.Text or C.Sub })
+				tween(item.btn, EASE.soft, { BackgroundColor3 = active and C.Card or C.Side })
+			end
+			local item = pdNav[key]
+			if item then
+				tween(pdIndicator, EASE.pop, { Position = UDim2.new(0, 0, 0, item.y + 5) })
+			end
+			local target = pdPages[key]
+			if target then
+				staggerIn(target:GetChildren(), 8, 0.03, 0.3)
+			end
+		end
+
+		local function pdAddNav(key, text, order)
+			local y = 10 + (order - 1) * 32
+			local btn = new("TextButton", {
+				Name = "Heist_" .. key,
+				Size = UDim2.new(1, -16, 0, 28),
+				Position = UDim2.new(0, 8, 0, y),
+				BackgroundColor3 = C.Side,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = "",
+				Parent = pdSide,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = btn })
+			local label = new("TextLabel", {
+				Size = UDim2.new(1, -24, 1, 0),
+				Position = UDim2.new(0, 16, 0, 0),
+				BackgroundTransparency = 1,
+				Text = text,
+				TextSize = 13,
+				Font = FONT_N,
+				TextColor3 = C.Sub,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = btn,
+			})
+			btn.MouseButton1Click:Connect(function() pdShow(key) end)
+			btn.MouseEnter:Connect(function()
+				if not pdPages[key] or not pdPages[key].Visible then
+					tween(btn, EASE.soft, { BackgroundColor3 = C.Card })
+				end
+				tween(label, EASE.soft, { TextColor3 = C.Text })
+			end)
+			btn.MouseLeave:Connect(function()
+				if not pdPages[key] or not pdPages[key].Visible then
+					tween(btn, EASE.soft, { BackgroundColor3 = C.Side })
+				end
+				tween(label, EASE.soft, {
+					TextColor3 = (pdPages[key] and pdPages[key].Visible) and C.Text or C.Sub,
+				})
+			end)
+			pdNav[key] = { btn = btn, label = label, y = y }
+			return btn
+		end
+
+		-- 一行开关：名字 + 说明 + 开关；key 只用来命名，方便测试和排查
+		local function pdRow(page, y, key, name, hint, def, onChange)
+			local card = new("Frame", {
+				Size = UDim2.new(1, 0, 0, 36),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				Parent = page,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = card })
+			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = card })
+			new("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 15),
+				Position = UDim2.new(0, 13, 0, 3),
+				BackgroundTransparency = 1,
+				Text = name,
+				TextSize = 13,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = card,
+			})
+			new("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 13),
+				Position = UDim2.new(0, 13, 0, 19),
+				BackgroundTransparency = 1,
+				Text = hint,
+				TextSize = 10,
+				Font = FONT_N,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = card,
+			})
+			createSwitch(page, {
+				Name = "HeistSw_" .. key,
+				Position = UDim2.new(1, -54, 0, y + 7),
+				Default = def and true or false,
+				OnChange = onChange,
+			})
+			return card
+		end
+
+		-- 一行滑块：名字 + 数值 + 滑轨
+		local function pdSlider(page, y, name, min, max, def, onChange)
+			local val = new("TextLabel", {
+				Size = UDim2.new(0, 80, 0, 14),
+				Position = UDim2.new(1, -80, 0, y),
+				BackgroundTransparency = 1,
+				Text = tostring(def),
+				TextSize = 11,
+				Font = FONT_M,
+				TextColor3 = C.Sub,
+				TextXAlignment = Enum.TextXAlignment.Right,
+				Parent = page,
+			})
+			new("TextLabel", {
+				Size = UDim2.new(1, -90, 0, 14),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1,
+				Text = name,
+				TextSize = 12,
+				Font = FONT_N,
+				TextColor3 = C.Sub,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = page,
+			})
+			createSlider(page, {
+				Position = UDim2.new(0, 0, 0, y + 16),
+				Min = min, Max = max, Default = def,
+				OnChange = function(v)
+					local n = math.floor(v + 0.5)
+					val.Text = tostring(n)
+					if onChange then onChange(n) end
+				end,
+			})
+		end
+
+		-- ---------- 页：主游戏（没脚本） ----------
+		local pdUpdatePage = pdAddPage("update")
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 26),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, 0, 0.5, -44),
+			BackgroundTransparency = 1,
+			Text = L("pdUpdate"),
+			TextSize = 20,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			Parent = pdUpdatePage,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, 0, 0.5, -12),
+			BackgroundTransparency = 1,
+			Text = L("pdNoScript"),
+			TextSize = 14,
+			Font = FONT_N,
+			TextColor3 = C.Sub,
+			Parent = pdUpdatePage,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -70, 0, 44),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, 0, 0.5, 26),
+			BackgroundTransparency = 1,
+			Text = L("pdUpdateHint"),
+			TextSize = 11,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextWrapped = true,
+			Parent = pdUpdatePage,
+		})
+
+		-- ---------- 页：潜入 ----------
+		local pdStealth = pdAddPage("stealth")
+		pdAddNav("stealth", L("pdTabStealth"), 1)
+
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			Position = UDim2.new(0, 0, 0, 2),
+			BackgroundTransparency = 1,
+			Text = L("pdStealthTitle"),
+			TextSize = 16,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = pdStealth,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 24),
+			BackgroundTransparency = 1,
+			Text = L("pdStealthSub"),
+			TextSize = 11,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = pdStealth,
+		})
+
+		pdRow(pdStealth, 44, "AutoAct", L("pdAutoAct"), L("pdAutoActD"), false, function(v)
+			pd.AutoAct = v
+			notify(v and string.format(L("pdActOn"), tostring(pd.ActRange)) or L("pdActOff"),
+				v and C.Green or C.Red)
+		end)
+		pdSlider(pdStealth, 92, L("pdActRange"), 5, 60, pd.ActRange, function(v) pd.ActRange = v end)
+
+		pdRow(pdStealth, 148, "ObjEsp", L("pdObjEsp"), L("pdObjEspD"), false, function(v)
+			pd.ObjEsp = v
+			notify(v and L("pdObjEspOn") or L("pdObjEspOff"), v and C.Green or C.Red)
+		end)
+		pdSlider(pdStealth, 196, L("pdObjRange"), 20, 300, pd.ObjRange, function(v) pd.ObjRange = v end)
+
+		-- ---------- 页：强攻 ----------
+		local pdAssault = pdAddPage("assault")
+		pdAddNav("assault", L("pdTabAssault"), 2)
+
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 20),
+			Position = UDim2.new(0, 0, 0, 2),
+			BackgroundTransparency = 1,
+			Text = L("pdAssaultTitle"),
+			TextSize = 16,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = pdAssault,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 24),
+			BackgroundTransparency = 1,
+			Text = L("pdAssaultSub"),
+			TextSize = 11,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = pdAssault,
+		})
+
+		-- 优先目标的词条名（提示条里也要用）
+		local PRI_KEY = { cross = "pdPriCross", near = "pdPriNear", low = "pdPriLow" }
+
+		pdRow(pdAssault, 44, "Aim", L("pdAim"), L("pdAimD"), false, function(v)
+			pd.Aim = v
+			notify(v and string.format(L("pdAimOn"), L(PRI_KEY[pd.Priority])) or L("pdAimOff"),
+				v and C.Green or C.Red)
+			if v and #pd.Npcs == 0 then notify(L("pdNoNpc"), C.Amber) end
+		end)
+		pdRow(pdAssault, 84, "Fire", L("pdFire"), L("pdFireD"), false, function(v) pd.Fire = v end)
+		pdRow(pdAssault, 124, "Ally", L("pdAlly"), L("pdAllyD"), true, function(v) pd.Ally = v end)
+		pdRow(pdAssault, 164, "Walls", L("pdWalls"), L("pdWallsD"), false, function(v) pd.Walls = v end)
+		pdRow(pdAssault, 204, "NpcEsp", L("pdNpcEsp"), L("pdNpcEspD"), false, function(v) pd.NpcEsp = v end)
+
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, 250),
+			BackgroundTransparency = 1,
+			Text = L("pdPriority"),
+			TextSize = 12,
+			Font = FONT_N,
+			TextColor3 = C.Sub,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = pdAssault,
+		})
+
+		local priRows = {}
+		local function pdPriApply(key)
+			pd.Priority = key
+			for k, row in pairs(priRows) do
+				local on = (k == key)
+				tween(row.btn, EASE.soft, { BackgroundColor3 = on and C.Card2 or C.Card })
+				tween(row.stroke, EASE.soft, {
+					Color = on and C.Accent or C.Stroke,
+					Thickness = on and 2 or 1,
+				})
+				tween(row.label, EASE.soft, { TextColor3 = on and C.Text or C.Sub })
+			end
+		end
+
+		for i, key in ipairs({ "cross", "near", "low" }) do
+			local btn = new("TextButton", {
+				Name = "HeistPri_" .. key,
+				Size = UDim2.new(0, 108, 0, 26),
+				Position = UDim2.new(0, (i - 1) * 116, 0, 268),
+				BackgroundColor3 = C.Card,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = "",
+				Parent = pdAssault,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = btn })
+			local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = btn })
+			local label = new("TextLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Text = L(PRI_KEY[key]),
+				TextSize = 12,
+				Font = FONT_B,
+				TextColor3 = C.Sub,
+				Parent = btn,
+			})
+			btn.MouseButton1Click:Connect(function() pdPriApply(key) end)
+			priRows[key] = { btn = btn, stroke = stroke, label = label }
+		end
+		pdPriApply("cross")
+
+		pdSlider(pdAssault, 304, L("pdFov"), 10, 360, pd.Fov, function(v) pd.Fov = v end)
+		pdSlider(pdAssault, 352, L("pdAimRange"), 20, 1000, pd.Range, function(v) pd.Range = v end)
+
+		pdShow("stealth")
+
+		-- ---------------- 主游戏 / 地图 两种形态 ----------------
+		local function pdMode(main)
+			pdSide.Visible = not main
+			if main then
+				pdContent.Size = UDim2.new(1, 0, 1, 0)
+				pdContent.Position = UDim2.new(0, 0, 0, 0)
+			else
+				pdContent.Size = UDim2.new(1, -(SRV_SIDE_W + 18), 1, 0)
+				pdContent.Position = UDim2.new(0, SRV_SIDE_W + 14, 0, 0)
+			end
+			for _, key in ipairs({ "stealth", "assault" }) do
+				local item = pdNav[key]
+				if item then item.btn.Visible = not main end
+			end
+			pdIndicator.Visible = not main
+			pdShow(main and "update" or "stealth")
+		end
+
+		-- 地图名：先问 Roblox 要这个 place 的名字，拿不到再查手动表，最后退成 #id
+		-- （GetProductInfo 在部分执行器/副作用环境下不可用，所以必须能降级）
+		local function pdMapName(pid)
+			if pd.names[pid] then return pd.names[pid] end
+			local name
+			local ok, info = pcall(function()
+				return game:GetService("MarketplaceService"):GetProductInfo(pid)
+			end)
+			if ok and type(info) == "table" and type(info.Name) == "string" and info.Name ~= "" then
+				name = info.Name
+			end
+			name = name or PD.Maps[pid] or ("#" .. tostring(pid))
+			pd.names[pid] = name
+			return name
+		end
+
+		local function pdDetect()
+			if pdIsMain() then
+				pdTag.Text = L("pdMainTag")
+				pdMode(true)
+				return
+			end
+			pdTag.Text = L("pdDetecting")
+			pdMode(false)
+			local ok, pid = pdInGame()
+			pid = pid or (pcall(function() return game.PlaceId end) and game.PlaceId) or 0
+			task.spawn(function()
+				local name = pdMapName(pid)
+				if SHUTDOWN then return end
+				pdTag.Text = string.format(L("pdMapTag"), name)
+			end)
+		end
+
+		-- ---------------- 扫描：交互物 / NPC ----------------
+		-- ponytail: 每 0.4 秒全树扫一次，够用但地图超大时会吃帧；
+		-- 真要优化就换 CollectionService 标签，或者把间隔拉长。
+		local prompts, clicks = {}, {}
+
+		local function pdIsAlly(model)
+			if Players:GetPlayerFromCharacter(model) then return true end
+			if not pd.Ally then return false end
+			local node, depth = model, 0
+			while node and node ~= workspace and depth < 4 do
+				local n = string.lower(tostring(node.Name))
+				for _, kw in ipairs(PD.AllyKw) do
+					if string.find(n, kw, 1, true) then return true end
+				end
+				node, depth = node.Parent, depth + 1
+			end
+			return false
+		end
+
+		local function pdScan()
+			local ps, cs, npcs = {}, {}, {}
+			for _, d in ipairs(workspace:GetDescendants()) do
+				if d:IsA("ProximityPrompt") then
+					if d.Enabled then ps[#ps + 1] = d end
+				elseif d:IsA("ClickDetector") then
+					cs[#cs + 1] = d
+				elseif d:IsA("Humanoid") then
+					local model = d.Parent
+					if model and d.Health > 0 and not pdIsAlly(model) then
+						npcs[#npcs + 1] = { model = model, hum = d }
+					end
+				end
+			end
+			prompts, clicks, pd.Npcs = ps, cs, npcs
+		end
+
+		local function pdPos(inst)
+			for _ = 1, 3 do
+				if not inst then return nil end
+				if inst:IsA("BasePart") then return inst.Position end
+				if inst:IsA("Attachment") then return inst.WorldPosition end
+				if inst:IsA("Model") then
+					local p = inst.PrimaryPart or inst:FindFirstChildOfClass("Part")
+					return p and p.Position or nil
+				end
+				inst = inst.Parent
+			end
+			return nil
+		end
+
+		local function pdDist(inst)
+			local pos = pdPos(inst)
+			local root = getRoot()
+			if not pos or not root then return nil end
+			return (pos - root.Position).Magnitude
+		end
+
+		-- ---------------- 高亮（目标 / NPC 共用一套） ----------------
+		local function pdMark(inst, on, c1, c2)
+			local hl = pd.Marks[inst]
+			if not on then
+				if hl then
+					pd.Marks[inst] = nil
+					pcall(function() hl:Destroy() end)
+				end
+				return
+			end
+			if hl then
+				if hl.Parent then return end
+				pd.Marks[inst] = nil
+			end
+			local n = 0
+			for _ in pairs(pd.Marks) do n = n + 1 end
+			if n >= 30 then return end      -- ponytail: Highlight 太多引擎会自己丢，卡 30 个
+			pd.Marks[inst] = new("Highlight", {
+				Name = "O_X_HL",
+				FillColor = c1 or C.Accent,
+				OutlineColor = c2 or C.Accent2,
+				FillTransparency = 0.62,
+				OutlineTransparency = 0,
+				DepthMode = Enum.HighlightDepthMode.AlwaysOn,
+				Parent = inst,
+			})
+		end
+
+		local function pdRefreshMarks()
+			local seen = {}
+			if pd.NpcEsp then
+				for _, t in ipairs(pd.Npcs) do
+					seen[t.model] = true
+					pdMark(t.model, true, C.Accent, C.Accent2)
+				end
+			end
+			if pd.ObjEsp then
+				for _, p in ipairs(prompts) do
+					local d = pdDist(p)
+					if d and d <= pd.ObjRange then
+						local target = p.Parent or p
+						seen[target] = true
+						pdMark(target, true, C.Green, C.Amber)
+					end
+				end
+			end
+			for inst in pairs(pd.Marks) do
+				if not seen[inst] then pdMark(inst, false) end
+			end
+		end
+
+		-- ---------------- 自动交互 ----------------
+		local promptAt = setmetatable({}, { __mode = "k" })
+
+		local function pdAutoAct()
+			local now = os.clock()
+			local firePrompt = execFn("fireproximityprompt")
+			local n = 0
+			for _, p in ipairs(prompts) do
+				local d = pdDist(p)
+				if d and d <= pd.ActRange and (promptAt[p] or -1) + 0.8 <= now then
+					promptAt[p] = now
+					local ok = firePrompt and pcall(firePrompt, p)
+					if not ok then
+						-- 官方路子：HoldDuration 为 0 时立刻触发
+						pcall(function()
+							p:InputHoldBegin()
+							p:InputHoldEnd()
+						end)
+					end
+					n = n + 1
+					if n >= 6 then break end     -- 一帧最多碰 6 个，别把远程调用打爆
+				end
+			end
+			local fireClick = execFn("fireclickdetector")
+			if fireClick then
+				for _, c in ipairs(clicks) do
+					local d = pdDist(c)
+					if d and d <= pd.ActRange and (promptAt[c] or -1) + 0.8 <= now then
+						promptAt[c] = now
+						pcall(fireClick, c)
+					end
+				end
+			end
+		end
+
+		-- ---------------- 自瞄 ----------------
+		local function pdAimPos(model)
+			local head = model:FindFirstChild("Head")
+			if head and head.Position then return head.Position end
+			local root = model:FindFirstChild("HumanoidRootPart")
+			if root and root.Position then return root.Position end
+			local hum = model:FindFirstChildOfClass("Humanoid")
+			if hum and hum.RootPart then return hum.RootPart.Position end
+			return nil
+		end
+
+		local function pdVisible(origin, pos, model)
+			local params = RaycastParams.new()
+			params.FilterType = Enum.RaycastFilterType.Exclude
+			params.FilterDescendantsInstances = { LocalPlayer.Character, model }
+			return workspace:Raycast(origin, pos - origin, params) == nil
+		end
+
+		local function pdPick(cam)
+			local origin = cam.CFrame.Position
+			local look = cam.CFrame.LookVector
+			local half = math.rad(pd.Fov) * 0.5
+			local best, bestScore
+			for _, t in ipairs(pd.Npcs) do
+				local pos = pdAimPos(t.model)
+				if pos then
+					local delta = pos - origin
+					local dist = delta.Magnitude
+					if dist > 0.5 and dist <= pd.Range then
+						local ang = math.acos(math.clamp(delta.Unit:Dot(look), -1, 1))
+						if ang <= half and (pd.Walls or pdVisible(origin, pos, t.model)) then
+							local score
+							if pd.Priority == "near" then
+								score = dist
+							elseif pd.Priority == "low" then
+								score = t.hum.Health
+							else
+								score = ang
+							end
+							if not bestScore or score < bestScore then
+								best, bestScore = t, score
+							end
+						end
+					end
+				end
+			end
+			return best, origin
+		end
+
+		-- 开火：执行器 API -> 官方 Tool:Activate -> VirtualUser，能扣扳机就行
+		local function pdFire()
+			local m1 = execFn("mouse1click")
+			if m1 and pcall(m1) then return end
+			local char = LocalPlayer.Character
+			local tool = char and char:FindFirstChildOfClass("Tool")
+			if tool and pcall(function() tool:Activate() end) then return end
+			local ok, vu = pcall(function() return game:GetService("VirtualUser") end)
+			if ok and vu then
+				pcall(function() vu:Button1Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame) end)
+			end
+		end
+
+		track(RunService.Heartbeat:Connect(function()
+			if SHUTDOWN then return end
+			if not (pd.AutoAct or pd.ObjEsp or pd.NpcEsp or pd.Aim or pd.Fire) then return end
+			local now = os.clock()
+			if now - pd.scanAt < 0.4 then return end
+			pd.scanAt = now
+			pdScan()
+			pdRefreshMarks()
+			if pd.AutoAct then pdAutoAct() end
+		end))
+
+		track(RunService.RenderStepped:Connect(function()
+			if SHUTDOWN or not (pd.Aim or pd.Fire) then return end
+			local cam = workspace.CurrentCamera
+			if not cam then return end
+			local target, origin = pdPick(cam)
+			if not target then return end
+			local pos = pdAimPos(target.model)
+			if not pos then return end
+			pcall(function() cam.CFrame = CFrame.new(origin, pos) end)
+			if pd.Fire then pdFire() end
+		end))
+
+		-- ---------------- 打开 / 收起 / 关闭 ----------------
+		local pdPlaySplash = makeWindowSplash(pdWin, "HeistSplash", L("srvHeist"), "srv_heist", R.win)
+
+		local pdReopen = new("TextButton", {
+			Name = "HeistReopen",
+			Size = UDim2.new(0, 116, 0, 32),
+			Position = UDim2.new(0, 20, 0, 232),
+			BackgroundColor3 = C.Window,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			Visible = false,
+			Parent = guiMain,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = pdReopen })
+		local pdReopenStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = pdReopen })
+		local pdReopenScale = new("UIScale", { Scale = 1, Parent = pdReopen })
+		bindHover(pdReopen, {
+			Stroke = pdReopenStroke, StrokeOn = C.Stroke2,
+			Scale = pdReopenScale, ScaleOn = 1.06,
+		})
+
+		local pdReopenIcon = new("Frame", {
+			Size = UDim2.new(0, 20, 0, 20),
+			Position = UDim2.new(0, 7, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card2,
+			BorderSizePixel = 0,
+			ClipsDescendants = true,
+			Parent = pdReopen,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 6), Parent = pdReopenIcon })
+		do
+			local a = getAsset("srv_heist")
+			if a then
+				new("ImageLabel", {
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					Image = a,
+					ScaleType = Enum.ScaleType.Crop,
+					Parent = pdReopenIcon,
+				})
+			end
+		end
+		new("TextLabel", {
+			Size = UDim2.new(1, -34, 1, 0),
+			Position = UDim2.new(0, 32, 0, 0),
+			BackgroundTransparency = 1,
+			Text = L("srvHeist"),
+			TextSize = 12,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = pdReopen,
+		})
+
+		local pdReopenDragged = makeDraggable(pdReopen, pdReopen, nil, { threshold = 6, clamp = true })
+
+		local function pdHide()
+			pdWin.Visible = false
+			pdReopen.Visible = true
+			pdReopenScale.Scale = 0.4
+			tween(pdReopenScale, EASE.pop, { Scale = computeScale(PD_W, PD_H) })
+		end
+
+		openPdWindow = function()
+			if pdWin.Visible then return end
+			pdReopen.Visible = false
+			pdWin.Visible = true
+			pdScale.Scale = math.clamp(computeScale(PD_W, PD_H) * 0.9, 0.5, 1)
+			tween(pdScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+				{ Scale = computeScale(PD_W, PD_H) })
+			pdDetect()
+			pdPlaySplash()
+			if pdIsMain() then notify(L("pdUpdateOn"), C.Amber) end
+		end
+
+		-- ✕ 只关窗口：潜入 / 强攻的状态留着（跟农场一个道理，关了面板照样在跑）
+		PdCloseRequest = function()
+			pdWin.Visible = false
+			pdReopen.Visible = false
+		end
+
+		-- 结束整个脚本时：停掉所有开关，把留在 workspace 里的高亮收干净
+		pdCleanup = function()
+			pd.AutoAct, pd.ObjEsp, pd.NpcEsp, pd.Aim, pd.Fire = false, false, false, false, false
+			for inst in pairs(pd.Marks) do pdMark(inst, false) end
+			pdWin.Visible = false
+			pdReopen.Visible = false
+		end
+
+		pdScale.Scale = computeScale(PD_W, PD_H)
+		pdReopenScale.Scale = pdScale.Scale
+
+		pdMinBtn.MouseButton1Click:Connect(function() pdHide() end)
+		pdCloseBtn.MouseButton1Click:Connect(function() PdCloseRequest() end)
+		pdReopen.MouseButton1Click:Connect(function()
+			if pdReopenDragged() then return end
+			openPdWindow()
+		end)
+
+		track(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+			task.wait(0.2)
+			if SHUTDOWN or not pdWin.Visible then return end
+			pdScale.Scale = computeScale(PD_W, PD_H)
+		end))
+	end
+	pdBuild()
+
 	-- 快捷键
 	track(UserInputService.InputBegan:Connect(function(input, processed)
 		if SHUTDOWN or processed then return end
@@ -6194,6 +7264,7 @@ boot = function(lang)
 
 		-- 自动获胜还在跑的话先断掉，不然关掉之后它还会一直把你往出生点拉
 		pcall(function() SrvAutoWinRequest(false) end)
+		pcall(pdCleanup)
 		pcall(closeDenyModal)
 
 		-- 1. 停飞行。走缓降流程，别让玩家直接摔死
