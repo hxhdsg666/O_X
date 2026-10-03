@@ -310,6 +310,35 @@ local LOCALES = {
 		gmAutoSitD     = "附近有座位就坐上去",
 		gmSpin         = "自转",
 		gmSpinD        = "角色原地转圈",
+		gmSpinSpeed    = "自转速度",
+		gmSpinOff      = "自转已关闭",
+		navAim         = "自瞄",
+		aimTitle       = "自瞄",
+		aimSub         = "按住鼠标右键锁定最近的目标",
+		aimIdle        = "待命",
+		aimLocked      = "锁定中",
+		aimTarget      = "当前目标",
+		aimNone        = "无",
+		aimSecLock     = "锁定",
+		aimSecCheck    = "检查",
+		aimSecShow     = "显示",
+		aimSecTrigger  = "扳机机器人",
+		aimPart        = "锁定部位",
+		aimPartHead    = "头部",
+		aimPartBody    = "身体",
+		aimRadius      = "视场半径",
+		aimSmooth      = "平滑（0 = 瞬锁）",
+		aimTeam        = "团队检查",
+		aimAlive       = "存活检查",
+		aimWall        = "穿墙检查",
+		aimToggle      = "按一下切换",
+		aimFov         = "视场圈",
+		aimTracer      = "连线",
+		aimTrig        = "自动开火",
+		aimTrigDelay   = "开火延迟",
+		aimHint        = "键位：按住鼠标右键自瞄；开启「按一下切换」后点一下即锁。",
+		aimOn          = "自瞄已开启",
+		aimOff         = "自瞄已关闭",
 		gmLockCam      = "锁定鼠标",
 		gmLockCamD     = "鼠标锁在屏幕中心（FPS 手感）",
 		gmCross        = "屏幕准星",
@@ -882,6 +911,35 @@ local LOCALES = {
 		gmAutoSitD     = "Sits on a nearby seat",
 		gmSpin         = "Spin",
 		gmSpinD        = "Spins your character in place",
+		gmSpinSpeed    = "Spin speed",
+		gmSpinOff      = "Spin off",
+		navAim         = "Aimbot",
+		aimTitle       = "Aimbot",
+		aimSub         = "Hold right mouse to lock onto the closest target",
+		aimIdle        = "Idle",
+		aimLocked      = "Locked",
+		aimTarget      = "Target",
+		aimNone        = "None",
+		aimSecLock     = "Lock",
+		aimSecCheck    = "Checks",
+		aimSecShow     = "Display",
+		aimSecTrigger  = "Triggerbot",
+		aimPart        = "Lock part",
+		aimPartHead    = "Head",
+		aimPartBody    = "Body",
+		aimRadius      = "FOV radius",
+		aimSmooth      = "Smoothing (0 = instant)",
+		aimTeam        = "Team check",
+		aimAlive       = "Alive check",
+		aimWall        = "Wall check",
+		aimToggle      = "Toggle mode",
+		aimFov         = "FOV circle",
+		aimTracer      = "Tracer",
+		aimTrig        = "Auto fire",
+		aimTrigDelay   = "Fire delay",
+		aimHint        = "Key: hold right mouse to lock; click once when Toggle mode is on.",
+		aimOn          = "Aimbot on",
+		aimOff         = "Aimbot off",
 		gmLockCam      = "Lock mouse",
 		gmLockCamD     = "Locks the mouse to screen center (FPS feel)",
 		gmCross        = "Crosshair",
@@ -12190,6 +12248,463 @@ local function addResizeHandle(frame, opts)
 	return grip
 end
 
+-- 让角色原地自转：只改朝向，不动位置。
+-- 刻意不写 CFrame * CFrame.Angles —— 直接用 CFrame.new(pos, 看的方向)，
+-- 任何环境都能跑，也不依赖执行器的 CFrame 实现。
+local function spinRoot(root, degrees)
+	local l = root.CFrame.LookVector
+	local a = math.rad(degrees)
+	local nx = l.X * math.cos(a) + l.Z * math.sin(a)
+	local nz = -l.X * math.sin(a) + l.Z * math.cos(a)
+	local p = root.CFrame.Position
+	root.CFrame = CFrame.new(p, p + Vector3.new(nx, l.Y, nz))
+end
+
+--=====================================================================
+--  O_X 自瞄
+--  思路来自 Exunys Universal Aimbot（CC0）；这里按 O_X 的设计系统重写：
+--   · 视场圈 / 连线用纯 GUI 画（不依赖 Drawing，任何执行器都能跑）
+--   · 锁镜头用 BindToRenderStep，优先级压过游戏相机（跟劫案自瞄同一招）
+--   · 挂在主窗口左侧导航的「自瞄」页
+--=====================================================================
+local createAimbotModule
+do
+	local cfg = {
+		Enabled = false, Radius = 180, Smooth = 0, Part = "Head",
+		TeamCheck = false, AliveCheck = true, WallCheck = false, Toggle = false,
+		ShowFov = true, ShowTracer = false, Triggerbot = false, TriggerDelay = 0,
+	}
+	local running = false          -- 按住 / 切换后的激活状态
+	local target = nil             -- { plr, pos, dist, screen }
+	local bound = false
+	local fallbackConn = nil
+	local trigAt = 0
+	local mouseFns = nil
+	local BIND = "O_X_Aim"
+	local overlayGui, fovFrame, fovStroke, tracerFrame
+	local statusDot, statusText, targetText
+	local lastStatusAt = 0
+
+	local function mouseApi()
+		if mouseFns ~= nil then return mouseFns end
+		mouseFns = {
+			press = execFn("mouse1press"),
+			release = execFn("mouse1release"),
+			click = execFn("mouse1click"),
+		}
+		return mouseFns
+	end
+
+	local function raycastBlocked(from, to, ignore)
+		local params = RaycastParams.new()
+		pcall(function() params.FilterType = Enum.RaycastFilterType.Exclude end)
+		pcall(function() params.FilterType = Enum.RaycastFilterType.Blacklist end)
+		pcall(function() params.FilterDescendantsInstances = ignore end)
+		local ok, hit = pcall(function() return workspace:Raycast(from, to - from, params) end)
+		return ok and hit ~= nil
+	end
+
+	local function pickTarget(mouse)
+		local cam = workspace.CurrentCamera
+		if not cam then return nil end
+		local best, bestD = nil, nil
+		pcall(function()
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if plr ~= LocalPlayer then
+					local char = plr.Character
+					local hum = char and char:FindFirstChildOfClass("Humanoid")
+					if char and hum then
+						local skip = false
+						if cfg.AliveCheck and hum.Health <= 0 then skip = true end
+						if cfg.TeamCheck and plr.Team == LocalPlayer.Team then skip = true end
+						if not skip then
+							local part = char:FindFirstChild(cfg.Part)
+								or char:FindFirstChild("HumanoidRootPart")
+							if part then
+								local pos = part.Position
+								local sp, onScreen = cam:WorldToViewportPoint(pos)
+								if onScreen then
+									local dx, dy = sp.X - mouse.X, sp.Y - mouse.Y
+									local d = math.sqrt(dx * dx + dy * dy)
+									if d <= cfg.Radius then
+										local screen = { X = sp.X, Y = sp.Y }
+										local blocked = false
+										if cfg.WallCheck then
+											blocked = raycastBlocked(cam.CFrame.Position, pos,
+												{ LocalPlayer.Character, char })
+										end
+										if not blocked and (not bestD or d < bestD) then
+											bestD = d
+											best = { plr = plr, pos = pos, screen = screen,
+												dist = (cam.CFrame.Position - pos).Magnitude }
+										end
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end)
+		return best
+	end
+
+	local function unbind()
+		if not bound then return end
+		bound = false
+		pcall(function() RunService:UnbindFromRenderStep(BIND) end)
+		if fallbackConn then
+			pcall(function() fallbackConn:Disconnect() end)
+			fallbackConn = nil
+		end
+	end
+
+	local function tick(dt)
+		if SHUTDOWN or not cfg.Enabled then return end
+		local mouse = UserInputService:GetMouseLocation()
+		local cam = workspace.CurrentCamera
+		dt = tonumber(dt) or 0.016
+
+		if overlayGui and fovFrame then
+			if cfg.ShowFov then
+				fovFrame.Visible = true
+				fovFrame.Size = UDim2.new(0, cfg.Radius * 2, 0, cfg.Radius * 2)
+				fovFrame.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+			else
+				fovFrame.Visible = false
+			end
+		end
+
+		target = running and pickTarget(mouse) or nil
+
+		if target and cam then
+			local goal = CFrame.new(cam.CFrame.Position, target.pos)
+			if cfg.Smooth > 0.001 then
+				cam.CFrame = cam.CFrame:Lerp(goal, math.clamp(dt / cfg.Smooth, 0, 1))
+			else
+				cam.CFrame = goal
+			end
+			if fovStroke then fovStroke.Color = C.Accent end
+
+			if tracerFrame then
+				if cfg.ShowTracer then
+					local ox, oy = mouse.X, mouse.Y
+					local tx, ty = target.screen.X, target.screen.Y
+					local dx, dy = tx - ox, ty - oy
+					local len = math.sqrt(dx * dx + dy * dy)
+					tracerFrame.Visible = len > 1
+					tracerFrame.Size = UDim2.new(0, len, 0, 1)
+					tracerFrame.Position = UDim2.new(0, ox, 0, oy)
+					tracerFrame.Rotation = math.deg(math.atan2(dy, dx))
+				else
+					tracerFrame.Visible = false
+				end
+			end
+
+			if cfg.Triggerbot and (os.clock() - trigAt >= cfg.TriggerDelay) then
+				trigAt = os.clock()
+				local fns = mouseApi()
+				if fns.click then
+					pcall(fns.click)
+				elseif fns.press and fns.release then
+					pcall(fns.press); pcall(fns.release)
+				else
+					pcall(function()
+						game:GetService("VirtualUser"):ClickButton1(Vector2.new(mouse.X, mouse.Y))
+					end)
+				end
+			end
+		else
+			if fovStroke then fovStroke.Color = C.White end
+			if tracerFrame then tracerFrame.Visible = false end
+		end
+
+		local now = os.clock()
+		if now - lastStatusAt > 0.15 then
+			lastStatusAt = now
+			if statusText then
+				statusText.Text = target and L("aimLocked") or L("aimIdle")
+				statusText.TextColor3 = target and C.Accent or C.Dim
+			end
+			if statusDot then
+				statusDot.BackgroundColor3 = target and C.Accent or C.Dim
+			end
+			if targetText then
+				targetText.Text = target
+					and (target.plr.Name .. "  ·  " .. tostring(math.floor(target.dist)) .. "m")
+					or L("aimNone")
+				targetText.TextColor3 = target and C.Text or C.Dim
+			end
+		end
+	end
+
+	local function bind()
+		if bound then return end
+		bound = true
+		local ok = pcall(function()
+			RunService:BindToRenderStep(BIND, Enum.RenderPriority.Camera.Value + 5, tick)
+		end)
+		if not ok then
+			fallbackConn = RunService.RenderStepped:Connect(tick)
+		end
+	end
+
+	-- UI：把自瞄页铺成"分区 + 卡片"的可滚动内容
+	local function build(page)
+		local scroll = new("ScrollingFrame", {
+			Name = "AimScroll",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1, BorderSizePixel = 0,
+			ScrollBarThickness = 4, ScrollBarImageColor3 = C.Stroke2,
+			ScrollBarImageTransparency = 0.25,
+			ScrollingDirection = Enum.ScrollingDirection.Y,
+			CanvasSize = UDim2.new(0, 0, 0, 0),
+			Parent = page,
+		})
+
+		local function label(y, text, size, color, font)
+			return new("TextLabel", {
+				Size = UDim2.new(1, -6, 0, 18), Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1, Text = text, TextSize = size or 12,
+				Font = font or FONT_N, TextColor3 = color or C.Sub,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd, Parent = scroll,
+			})
+		end
+		local function section(y, text)
+			label(y, text, 11, C.Dim, FONT_M)
+			new("Frame", {
+				Size = UDim2.new(1, -6, 0, 1), Position = UDim2.new(0, 0, 0, y + 15),
+				BackgroundColor3 = C.Stroke, BorderSizePixel = 0, Parent = scroll,
+			})
+		end
+		local function slider(y, title, min, max, def, log, fmt, onChange)
+			new("TextLabel", {
+				Size = UDim2.new(1, -70, 0, 16), Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1, Text = title, TextSize = 12, Font = FONT_N,
+				TextColor3 = C.Sub, TextXAlignment = Enum.TextXAlignment.Left, Parent = scroll,
+			})
+			local val = new("TextLabel", {
+				Size = UDim2.new(0, 66, 0, 16), Position = UDim2.new(1, -66, 0, y),
+				BackgroundTransparency = 1, Text = fmt(def), TextSize = 12, Font = FONT_M,
+				TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Right, Parent = scroll,
+			})
+			createSlider(scroll, {
+				Position = UDim2.new(0, 0, 0, y + 18),
+				Min = min, Max = max, Default = def, Log = log,
+				OnChange = function(v) val.Text = fmt(v); if onChange then onChange(v) end end,
+			})
+		end
+		local function switchCard(x, y, w, name, title, sub, def, onChange)
+			local box = new("Frame", {
+				Name = name .. "Card",
+				Size = UDim2.new(0, w, 0, 46), Position = UDim2.new(0, x, 0, y),
+				BackgroundColor3 = C.Card, BorderSizePixel = 0, Parent = scroll,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = box })
+			new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = box })
+			new("TextLabel", {
+				Size = UDim2.new(1, -50, 0, 16), Position = UDim2.new(0, 12, 0, 7),
+				BackgroundTransparency = 1, Text = title, TextSize = 12, Font = FONT_B,
+				TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd, Parent = box,
+			})
+			if sub and sub ~= "" then
+				new("TextLabel", {
+					Size = UDim2.new(1, -50, 0, 12), Position = UDim2.new(0, 12, 0, 24),
+					BackgroundTransparency = 1, Text = sub, TextSize = 9, Font = FONT_N,
+					TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left,
+					TextTruncate = Enum.TextTruncate.AtEnd, Parent = box,
+				})
+			end
+			return createSwitch(box, {
+				Name = name, Position = UDim2.new(1, -50, 0.5, 0), Default = def,
+				OnChange = function(v) if onChange then onChange(v) end end,
+			})
+		end
+		local function pills(y, title, opts, def, onPick)
+			label(y, title)
+			local row = new("Frame", {
+				Size = UDim2.new(1, -6, 0, 28), Position = UDim2.new(0, 0, 0, y + 18),
+				BackgroundColor3 = C.Card2, BorderSizePixel = 0, Parent = scroll,
+			})
+			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = row })
+			local items, n = {}, #opts
+			local function select(i)
+				for j, it in ipairs(items) do
+					local on = (j == i)
+					tween(it.btn, EASE.soft, { BackgroundColor3 = on and C.Accent or C.Card2 })
+					tween(it.lb, EASE.soft, { TextColor3 = on and C.White or C.Sub })
+				end
+				if onPick then onPick(opts[i].v) end
+			end
+			for i, o in ipairs(opts) do
+				local b = new("TextButton", {
+					Name = "Pill_" .. tostring(o.v),
+					Size = UDim2.new(1 / n, -4, 1, -6),
+					Position = UDim2.new((i - 1) / n, 2, 0, 3),
+					BackgroundColor3 = C.Card2, BorderSizePixel = 0, AutoButtonColor = false,
+					Text = "", Parent = row,
+				})
+				new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = b })
+				local lb = new("TextLabel", {
+					Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = o.t,
+					TextSize = 11, Font = FONT_B, TextColor3 = C.Sub, Parent = b,
+				})
+				b.MouseButton1Click:Connect(function() select(i) end)
+				items[i] = { btn = b, lb = lb }
+			end
+			local di = 1
+			for i, o in ipairs(opts) do if o.v == def then di = i end end
+			select(di)
+		end
+
+		-- 标题 + 状态
+		new("TextLabel", {
+			Size = UDim2.new(1, -6, 0, 22), Position = UDim2.new(0, 0, 0, 0),
+			BackgroundTransparency = 1, Text = L("aimTitle"), TextSize = 17, Font = FONT_B,
+			TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Left, Parent = scroll,
+		})
+		label(24, L("aimSub"), 11, C.Dim)
+		local chip = new("Frame", {
+			Name = "AimStatusChip",
+			Size = UDim2.new(0, 96, 0, 22), Position = UDim2.new(0, 0, 0, 44),
+			BackgroundColor3 = C.Card, BorderSizePixel = 0, Parent = scroll,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = chip })
+		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = chip })
+		statusDot = new("Frame", {
+			Name = "Dot", Size = UDim2.new(0, 6, 0, 6),
+			Position = UDim2.new(0, 10, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Dim, BorderSizePixel = 0, Parent = chip,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = statusDot })
+		statusText = new("TextLabel", {
+			Name = "AimStatus", Size = UDim2.new(1, -20, 1, 0),
+			Position = UDim2.new(0, 20, 0, 0), BackgroundTransparency = 1,
+			Text = L("aimIdle"), TextSize = 11, Font = FONT_B, TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left, Parent = chip,
+		})
+		local master = createSwitch(scroll, {
+			Name = "AimMaster", Position = UDim2.new(1, -50, 0, 42), Default = false,
+			OnChange = function(v) cfg.Enabled = v; running = false end,
+		})
+		master.Name = "AimMaster"
+		new("TextLabel", {
+			Size = UDim2.new(1, -60, 0, 16), Position = UDim2.new(0, 0, 0, 74),
+			BackgroundTransparency = 1, Text = L("aimTarget"), TextSize = 10, Font = FONT_M,
+			TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, Parent = scroll,
+		})
+		targetText = new("TextLabel", {
+			Name = "AimTarget", Size = UDim2.new(1, -6, 0, 16), Position = UDim2.new(0, 0, 0, 90),
+			BackgroundTransparency = 1, Text = L("aimNone"), TextSize = 12, Font = FONT_M,
+			TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, Parent = scroll,
+		})
+
+		section(116, L("aimSecLock"))
+		pills(136, L("aimPart"), {
+			{ v = "Head", t = L("aimPartHead") },
+			{ v = "HumanoidRootPart", t = L("aimPartBody") },
+		}, cfg.Part, function(v) cfg.Part = v end)
+		slider(182, L("aimRadius"), 20, 900, cfg.Radius, false,
+			function(v) return tostring(math.floor(v)) end, function(v) cfg.Radius = v end)
+		slider(230, L("aimSmooth"), 0, 100, 0, false,
+			function(v) return string.format("%.2f", v / 100) end,
+			function(v) cfg.Smooth = v / 100 end)
+
+		section(280, L("aimSecCheck"))
+		local colW = 184
+		switchCard(0, 300, colW, "AimTeam", L("aimTeam"), "", false,
+			function(v) cfg.TeamCheck = v end)
+		switchCard(196, 300, colW, "AimAlive", L("aimAlive"), "", true,
+			function(v) cfg.AliveCheck = v end)
+		switchCard(0, 352, colW, "AimWall", L("aimWall"), "", false,
+			function(v) cfg.WallCheck = v end)
+		switchCard(196, 352, colW, "AimToggle", L("aimToggle"), "", false,
+			function(v) cfg.Toggle = v; running = false end)
+
+		section(408, L("aimSecShow"))
+		switchCard(0, 428, colW, "AimFov", L("aimFov"), "", true,
+			function(v) cfg.ShowFov = v end)
+		switchCard(196, 428, colW, "AimTracer", L("aimTracer"), "", false,
+			function(v) cfg.ShowTracer = v end)
+
+		section(484, L("aimSecTrigger"))
+		switchCard(0, 504, colW, "AimTrig", L("aimTrig"), "", false,
+			function(v) cfg.Triggerbot = v end)
+		slider(556, L("aimTrigDelay"), 0, 100, 0, false,
+			function(v) return string.format("%.2f", v / 100) end,
+			function(v) cfg.TriggerDelay = v / 100 end)
+
+		label(606, L("aimHint"), 10, C.Dim)
+		scroll.CanvasSize = UDim2.new(0, 0, 0, 640)
+		return scroll
+	end
+
+	createAimbotModule = function(page)
+		-- 覆盖层：视场圈 + 连线（纯 GUI）
+		overlayGui = new("ScreenGui", {
+			Name = "O_X_HUB_Aim",
+			IgnoreGuiInset = true,
+			ResetOnSpawn = false,
+			DisplayOrder = 100002,
+			ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+			Parent = GUI_PARENT,
+		})
+		fovFrame = new("Frame", {
+			Name = "FovCircle",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Size = UDim2.new(0, cfg.Radius * 2, 0, cfg.Radius * 2),
+			BackgroundTransparency = 1, BorderSizePixel = 0, Visible = false,
+			ZIndex = 1, Parent = overlayGui,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = fovFrame })
+		fovStroke = new("UIStroke", { Color = C.White, Thickness = 1, Transparency = 0.3,
+			Parent = fovFrame })
+		tracerFrame = new("Frame", {
+			Name = "Tracer",
+			AnchorPoint = Vector2.new(0, 0.5),
+			Size = UDim2.new(0, 1, 0, 1),
+			BackgroundColor3 = C.Accent, BorderSizePixel = 0, Visible = false,
+			ZIndex = 2, Parent = overlayGui,
+		})
+
+		build(page)
+
+		-- 输入：默认鼠标右键（按住；开了「按一下切换」就是点一下）
+		local conns = {}
+		conns[#conns + 1] = UserInputService.InputBegan:Connect(function(input, processed)
+			if processed or SHUTDOWN or not cfg.Enabled then return end
+			if input.UserInputType == Enum.UserInputType.MouseButton2 then
+				if cfg.Toggle then running = not running else running = true end
+			end
+		end)
+		conns[#conns + 1] = UserInputService.InputEnded:Connect(function(input)
+			if SHUTDOWN then return end
+			if input.UserInputType == Enum.UserInputType.MouseButton2 and not cfg.Toggle then
+				running = false
+			end
+		end)
+		bind()
+
+		return {
+			cleanup = function()
+				cfg.Enabled = false
+				running = false
+				target = nil
+				unbind()
+				for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
+				conns = {}
+				if overlayGui then
+					pcall(function() overlayGui:Destroy() end)
+					overlayGui = nil
+				end
+			end,
+			setEnabled = function(v) cfg.Enabled = v and true or false; running = false end,
+		}
+	end
+end
+
 --=====================================================================
 --  二、主界面
 --  整个界面（含飞行窗口、悬浮图标、所有连接）都装在 boot 里。
@@ -12606,6 +13121,12 @@ boot = function(lang)
 	-- 主窗口 ✕ = 结束整个脚本；飞行窗口 ✕ = 只结束飞行（都在后面接上）
 	local ShutdownRequest = function() end
 	local FlyCloseRequest = function() end
+	-- 自瞄模块（实现在上面那个 do 块里）；关脚本时要收掉覆盖层与连接
+	local aimCleanup = function() end
+
+	--========================== 自瞄 ==========================
+	addNav("aim", L("navAim"), 2)
+	aimCleanup = createAimbotModule(addPage("aim")).cleanup
 
 	--========================== 主页 ==========================
 	local home = addPage("home")
@@ -12989,7 +13510,12 @@ boot = function(lang)
 			{ "AutoJump", "gmAutoJump", "gmAutoJumpD", C.Accent, nil },
 			{ "QuickRespawn", "gmQuickRespawn", "gmQuickRespawnD", C.Amber, nil },
 			{ "AutoSit", "gmAutoSit", "gmAutoSitD", C.Sub, nil },
-			{ "Spin", "gmSpin", "gmSpinD", C.Accent2, nil },
+			{ "Spin", "gmSpin", "gmSpinD", C.Accent2, function(v)
+				-- 自转：关掉 AutoRotate 免得跟角色的朝向互抢；打开时记下起始时刻
+				local hum = getHumanoid()
+				if hum then pcall(function() hum.AutoRotate = not v end) end
+				U.spinAt = os.clock()
+			end },
 			{ "LockCam", "gmLockCam", "gmLockCamD", C.Green, nil },
 			{ "FullHealth", "gmFullHealth", "gmFullHealthD", C.Green, nil },
 			{ "Invisible", "gmInvisible", "gmInvisibleD", C.Sub, nil },
@@ -13013,10 +13539,13 @@ boot = function(lang)
 		sliderAt(pGen, sy + 96, L("gmGravity"), 0, 500, 196, false, function(v)
 			return tostring(math.floor(v))
 		end, function(v) U.Gravity = v; U.apply() end)
+		sliderAt(pGen, sy + 144, L("gmSpinSpeed"), 90, 2160, 720, false, function(v)
+			return tostring(math.floor(v)) .. "/s"
+		end, function(v) U.SpinSpeed = v end)
 		createButton(pGen, {
 			Name = "ResetChar",
 			Size = UDim2.new(0, CW, 0, 30),
-			Position = UDim2.new(0, 0, 0, sy + 146),
+			Position = UDim2.new(0, 0, 0, sy + 194),
 			Text = L("gmReset"), TextSize = 12, Style = "solid",
 			OnClick = function()
 				pcall(function()
@@ -13382,6 +13911,17 @@ boot = function(lang)
 		end
 
 		U.step = function(now)
+			-- 自转（通用页的「自转」开关）：只转朝向，不动位置
+			if U.Spin then
+				local root = getRoot()
+				if root then
+					local dt = now - (U.spinAt or now)
+					U.spinAt = now
+					if dt > 0 and dt < 0.5 then
+						pcall(spinRoot, root, (U.SpinSpeed or 720) * dt)
+					end
+				end
+			end
 			if U.Noclip then
 				local char = LocalPlayer.Character
 				if char then
@@ -13634,6 +14174,7 @@ boot = function(lang)
 			if hum then
 				pcall(function() hum.WalkSpeed = 16 end)
 				pcall(function() hum.UseJumpPower = true; hum.JumpPower = 50 end)
+				pcall(function() hum.AutoRotate = true end)   -- 自转关掉时还原
 			end
 			pcall(function() workspace.Gravity = 196.2 end)
 			local cam = workspace.CurrentCamera
@@ -14411,7 +14952,7 @@ boot = function(lang)
 		-- 一台服务器一张卡（3 台精装 + 122 台通用），带搜索 + 翻页。
 		-- 搜索匹配：中文名 / 英文名 / key / PlaceId / 关键词，中英都能搜。
 		local serversPage = addPage("servers")
-		addNav("servers", L("navServers"), 2)
+		addNav("servers", L("navServers"), 3)
 
 		new("TextLabel", {
 			Size = UDim2.new(1, 0, 0, 18),
@@ -14879,7 +15420,21 @@ boot = function(lang)
 
 	--========================== 通用设置 ==========================
 	local general = addPage("general")
-	addNav("general", L("navGeneral"), 3)
+	addNav("general", L("navGeneral"), 4)
+	-- 内容多了一层滚动（下面还挂了「自转」），这样小屏也滑得到
+	do
+		local outer = general
+		general = new("ScrollingFrame", {
+			Name = "GeneralScroll",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1, BorderSizePixel = 0,
+			ScrollBarThickness = 4, ScrollBarImageColor3 = C.Stroke2,
+			ScrollBarImageTransparency = 0.25,
+			ScrollingDirection = Enum.ScrollingDirection.Y,
+			CanvasSize = UDim2.new(0, 0, 0, 0),
+			Parent = outer,
+		})
+	end
 
 	new("TextLabel", {
 		Size = UDim2.new(1, 0, 0, 20),
@@ -15130,10 +15685,81 @@ boot = function(lang)
 		Parent = general,
 	})
 
+	-- ---------- 自转（参考社区 gh 上的 spin：只转朝向，不动位置） ----------
+	do
+	local spinOn, spinSpeed, spinAt = false, 720, 0
+	local function applySpin()
+		local hum = getHumanoid()
+		if hum then pcall(function() hum.AutoRotate = not spinOn end) end
+		spinAt = os.clock()
+	end
+	track(RunService.Heartbeat:Connect(function()
+		if SHUTDOWN or not spinOn then return end
+		local root = getRoot()
+		if not root then return end
+		local now = os.clock()
+		local dt = now - spinAt
+		spinAt = now
+		if dt > 0 and dt < 0.5 then
+			pcall(spinRoot, root, spinSpeed * dt)
+		end
+	end))
+
+	new("Frame", {
+		Size = UDim2.new(1, 0, 0, 1),
+		Position = UDim2.new(0, 0, 0, 330),
+		BackgroundColor3 = C.Stroke,
+		BorderSizePixel = 0,
+		Parent = general,
+	})
+
+	local spinRow = new("Frame", {
+		Name = "SpinRow",
+		Size = UDim2.new(1, 0, 0, 52),
+		Position = UDim2.new(0, 0, 0, 340),
+		BackgroundColor3 = C.Card,
+		BorderSizePixel = 0,
+		Parent = general,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = spinRow })
+	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = spinRow })
+	new("TextLabel", {
+		Size = UDim2.new(1, -104, 0, 18), Position = UDim2.new(0, 14, 0, 9),
+		BackgroundTransparency = 1, Text = L("gmSpin"), TextSize = 13, Font = FONT_B,
+		TextColor3 = C.Text, TextXAlignment = Enum.TextXAlignment.Left, Parent = spinRow,
+	})
+	new("TextLabel", {
+		Size = UDim2.new(1, -104, 0, 14), Position = UDim2.new(0, 14, 0, 30),
+		BackgroundTransparency = 1, Text = L("gmSpinD"), TextSize = 10, Font = FONT_N,
+		TextColor3 = C.Dim, TextXAlignment = Enum.TextXAlignment.Left, Parent = spinRow,
+	})
+	createSwitch(spinRow, {
+		Name = "SpinSwitch",
+		Position = UDim2.new(1, -54, 0, 15),
+		Default = false,
+		OnChange = function(v)
+			spinOn = v
+			applySpin()
+			notify(v and L("gmSpin") or L("gmSpinOff"), v and C.Green or C.Sub)
+		end,
+	})
+
+	addSettingRow(402, {
+		Label = L("gmSpinSpeed"),
+		Min = 90, Max = 2160,
+		Default = 720,
+		Format = function(v) return string.format("%d/s", math.floor(v + 0.5)) end,
+		OnChange = function(v) spinSpeed = v end,
+	})
+
+	-- 滚动区高度（内容到底了）
+	pcall(function() general.CanvasSize = UDim2.new(0, 0, 0, 460) end)
+	end
+
 	--========================== 设置 ==========================
 	-- 跟主页一样是个 page（不新开窗口）
 	local settingsPage = addPage("settings")
-	addNav("settings", L("navSettings"), 5)
+	addNav("settings", L("navSettings"), 6)
 
 	new("TextLabel", {
 		Size = UDim2.new(1, 0, 0, 20),
@@ -15351,7 +15977,7 @@ boot = function(lang)
 	})
 
 	--========================== 飞行（独立窗口） ==========================
-	local flyNavBtn = addNav("fly", L("navFly"), 4, function() openFlyWindow() end)
+	local flyNavBtn = addNav("fly", L("navFly"), 5, function() openFlyWindow() end)
 
 	local flyWin = new("Frame", {
 		Name = "FlyWindow",
@@ -21878,6 +22504,7 @@ boot = function(lang)
 		pcall(pdCleanup)
 		pcall(dsCleanup)
 		pcall(gameCleanup)
+		pcall(aimCleanup)
 		pcall(closeDenyModal)
 
 		-- 1. 停飞行。走缓降流程，别让玩家直接摔死
@@ -21902,6 +22529,7 @@ boot = function(lang)
 				hum.UseJumpPower = true
 				hum.JumpPower = jumpDef
 			end)
+			pcall(function() hum.AutoRotate = true end)   -- 自转开着的还原
 		end
 
 		-- 4. 收起界面再销毁
