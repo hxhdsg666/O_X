@@ -21486,14 +21486,19 @@ boot = function(lang)
 		local function fitCanvas(key)
 			local p = pages[key]
 			if not p then return end
-			local h = 0
+			local h, wmax = 0, 0
 			for _, c in ipairs(p:GetChildren()) do
-				local okp, y = pcall(function()
-					return c.Position.Y.Offset + c.Size.Y.Offset
+				local okp, y, x = pcall(function()
+					return c.Position.Y.Offset + c.Size.Y.Offset,
+						c.Position.X.Offset + c.Size.X.Offset
 				end)
-				if okp and y > h then h = y end
+				if okp then
+					if y > h then h = y end
+					if x > wmax then wmax = x end
+				end
 			end
-			p.CanvasSize = UDim2.new(0, 0, 0, h + 14)
+			-- 宽度用"内容宽度 vs 视口"取大者：窗口缩小时给横向滚动条，别把右边的卡片切掉
+			p.CanvasSize = UDim2.new(0, math.max(wmax + 4, G_CONTENT_W), 0, h + 14)
 		end
 		local function clearAll()
 			for k, p in pairs(pages) do
@@ -21516,7 +21521,7 @@ boot = function(lang)
 				ScrollBarThickness = 4,
 				ScrollBarImageColor3 = C.Stroke2,
 				ScrollBarImageTransparency = 0.25,
-				ScrollingDirection = Enum.ScrollingDirection.Y,
+				ScrollingDirection = Enum.ScrollingDirection.XY,
 				CanvasSize = UDim2.new(0, 0, 0, 0),
 				Visible = false,
 				Parent = gContent,
