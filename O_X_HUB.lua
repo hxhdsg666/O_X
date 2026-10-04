@@ -336,11 +336,18 @@ local LOCALES = {
 		aimAlive       = "存活检查",
 		aimWall        = "穿墙检查",
 		aimToggle      = "按一下切换",
+		aimTriggerMode = "触发方式",
+		aimTrigHold    = "按住右键",
+		aimTrigToggle  = "按一下切换",
+		aimTrigAlways  = "一直自瞄",
+		aimTriggerHint = "「一直自瞄」不用按键，自动锁定屏幕内最近的人",
+		aimIgnoreFov   = "无视视场",
 		aimFov         = "视场圈",
 		aimTracer      = "连线",
+		aimSecFire     = "自动开火",
 		aimTrig        = "自动开火",
 		aimTrigDelay   = "开火延迟",
-		aimHint        = "键位：按住鼠标右键自瞄；开启「按一下切换」后点一下即锁。",
+		aimHint        = "锁不到人时：把「触发方式」调成「一直自瞄」，或开「无视视场」。",
 		aimOn          = "自瞄已开启",
 		aimOff         = "自瞄已关闭",
 		gmLockCam      = "锁定鼠标",
@@ -492,6 +499,10 @@ local LOCALES = {
 		srvEmpty       = "没搜到，换个词试试（中英文都可以）",
 		srvHere        = "在此",
 		srvSpecial     = "专属面板",
+		srvSecSpecial  = "专属面板",
+		srvSecSpecialSub = "%s 台 · 每台都是单独做的功能",
+		srvSecAll      = "全部游戏",
+		srvSecAllSub   = "%s 台 · 每台 50 项专属功能",
 		srvGeneric     = "通用面板",
 		pkItems        = "项",
 		pkRun          = "执行",
@@ -941,11 +952,18 @@ local LOCALES = {
 		aimAlive       = "Alive check",
 		aimWall        = "Wall check",
 		aimToggle      = "Toggle mode",
+		aimTriggerMode = "Trigger",
+		aimTrigHold    = "Hold RMB",
+		aimTrigToggle  = "Toggle",
+		aimTrigAlways  = "Always on",
+		aimTriggerHint = "Always on locks the closest player on screen with no key needed",
+		aimIgnoreFov   = "Ignore FOV",
 		aimFov         = "FOV circle",
 		aimTracer      = "Tracer",
+		aimSecFire     = "Auto fire",
 		aimTrig        = "Auto fire",
 		aimTrigDelay   = "Fire delay",
-		aimHint        = "Key: hold right mouse to lock; click once when Toggle mode is on.",
+		aimHint        = "Not locking? Set Trigger to \"Always on\", or turn on \"Ignore FOV\".",
 		aimOn          = "Aimbot on",
 		aimOff         = "Aimbot off",
 		gmLockCam      = "Lock mouse",
@@ -1097,6 +1115,10 @@ local LOCALES = {
 		srvEmpty       = "Nothing found, try another word (English or Chinese)",
 		srvHere        = "HERE",
 		srvSpecial     = "Dedicated",
+		srvSecSpecial  = "Dedicated panels",
+		srvSecSpecialSub = "%s servers - each hand-built",
+		srvSecAll      = "All games",
+		srvSecAllSub   = "%s servers - 50 features each",
 		srvGeneric     = "Universal",
 		pkItems        = "items",
 		pkRun          = "Run",
@@ -12292,11 +12314,14 @@ end
 local createAimbotModule
 do
 	local cfg = {
-		Enabled = false, Radius = 180, Smooth = 0, Part = "Head",
-		TeamCheck = false, AliveCheck = true, WallCheck = false, Toggle = false,
+		Enabled = false, Radius = 320, Smooth = 0, Part = "Head",
+		TeamCheck = false, AliveCheck = true, WallCheck = false,
+		IgnoreFov = false,          -- 无视视场：只挑屏幕内最近的人
+		TriggerMode = "hold",       -- hold = 按住右键 / toggle = 按一下切换 / always = 一直自瞄
 		ShowFov = true, ShowTracer = false, Triggerbot = false, TriggerDelay = 0,
 	}
 	local running = false          -- 按住 / 切换后的激活状态
+	local locked = nil             -- 粘性：当前锁住的目标
 	local target = nil             -- { plr, pos, dist, screen }
 	local bound = false
 	local fallbackConn = nil
@@ -12326,48 +12351,64 @@ do
 		return ok and hit ~= nil
 	end
 
-	local function pickTarget(mouse)
+	-- 每个目标的屏幕坐标只算一次，选目标 / 锁镜头 / 画连线都用它
+	local function measure(plr)
 		local cam = workspace.CurrentCamera
 		if not cam then return nil end
+		local char = plr.Character
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		if not (char and hum) then return nil end
+		if cfg.AliveCheck and hum.Health <= 0 then return nil end
+		if cfg.TeamCheck and plr.Team == LocalPlayer.Team then return nil end
+		local part = char:FindFirstChild(cfg.Part) or char:FindFirstChild("HumanoidRootPart")
+		if not part then return nil end
+		local pos = part.Position
+		local sp, onScreen = cam:WorldToViewportPoint(pos)
+		if not onScreen then return nil end
+		local blocked = false
+		if cfg.WallCheck then
+			blocked = raycastBlocked(cam.CFrame.Position, pos, { LocalPlayer.Character, char })
+		end
+		if blocked then return nil end
+		return {
+			plr = plr, pos = pos, part = part,
+			screen = { X = sp.X, Y = sp.Y },
+			dist = (cam.CFrame.Position - pos).Magnitude,
+		}
+	end
+
+	-- 选目标：优先"已经锁住的那个"（粘性），否则挑视场里离准星最近的。
+	-- 无视视场时视场半径直接拉到很大，屏幕内最近的一个就会中。
+	local function pickTarget(mouse)
+		local keep = cfg.IgnoreFov and 100000 or cfg.Radius
+		-- ① 粘性：锁住的目标只要还在（且没跑太远）就继续锁
+		if locked and locked.plr and locked.plr.Parent then
+			local again = measure(locked.plr)
+			if again then
+				local dx, dy = again.screen.X - mouse.X, again.screen.Y - mouse.Y
+				if math.sqrt(dx * dx + dy * dy) <= keep * 1.6 then
+					return again
+				end
+			end
+			locked = nil
+		end
+		-- ② 重新挑一个
 		local best, bestD = nil, nil
 		pcall(function()
 			for _, plr in ipairs(Players:GetPlayers()) do
 				if plr ~= LocalPlayer then
-					local char = plr.Character
-					local hum = char and char:FindFirstChildOfClass("Humanoid")
-					if char and hum then
-						local skip = false
-						if cfg.AliveCheck and hum.Health <= 0 then skip = true end
-						if cfg.TeamCheck and plr.Team == LocalPlayer.Team then skip = true end
-						if not skip then
-							local part = char:FindFirstChild(cfg.Part)
-								or char:FindFirstChild("HumanoidRootPart")
-							if part then
-								local pos = part.Position
-								local sp, onScreen = cam:WorldToViewportPoint(pos)
-								if onScreen then
-									local dx, dy = sp.X - mouse.X, sp.Y - mouse.Y
-									local d = math.sqrt(dx * dx + dy * dy)
-									if d <= cfg.Radius then
-										local screen = { X = sp.X, Y = sp.Y }
-										local blocked = false
-										if cfg.WallCheck then
-											blocked = raycastBlocked(cam.CFrame.Position, pos,
-												{ LocalPlayer.Character, char })
-										end
-										if not blocked and (not bestD or d < bestD) then
-											bestD = d
-											best = { plr = plr, pos = pos, screen = screen,
-												dist = (cam.CFrame.Position - pos).Magnitude }
-										end
-									end
-								end
-							end
+					local t = measure(plr)
+					if t then
+						local dx, dy = t.screen.X - mouse.X, t.screen.Y - mouse.Y
+						local d = math.sqrt(dx * dx + dy * dy)
+						if d <= keep and (not bestD or d < bestD) then
+							bestD, best = d, t
 						end
 					end
 				end
 			end
 		end)
+		locked = best
 		return best
 	end
 
@@ -12397,7 +12438,9 @@ do
 			end
 		end
 
-		target = running and pickTarget(mouse) or nil
+		local active = (cfg.TriggerMode == "always") or running
+		target = active and pickTarget(mouse) or nil
+		if not active then locked = nil end
 
 		if target and cam then
 			local goal = CFrame.new(cam.CFrame.Position, target.pos)
@@ -12464,7 +12507,8 @@ do
 		if bound then return end
 		bound = true
 		local ok = pcall(function()
-			RunService:BindToRenderStep(BIND, Enum.RenderPriority.Camera.Value + 5, tick)
+			-- 优先级压得比游戏相机高不少：有的游戏在 Camera+1 也写了相机
+			RunService:BindToRenderStep(BIND, Enum.RenderPriority.Camera.Value + 50, tick)
 		end)
 		if not ok then
 			fallbackConn = RunService.RenderStepped:Connect(tick)
@@ -12628,38 +12672,50 @@ do
 			{ v = "Head", t = L("aimPartHead") },
 			{ v = "HumanoidRootPart", t = L("aimPartBody") },
 		}, cfg.Part, function(v) cfg.Part = v end)
-		slider(182, L("aimRadius"), 20, 900, cfg.Radius, false,
+		slider(182, L("aimRadius"), 20, 1500, cfg.Radius, false,
 			function(v) return tostring(math.floor(v)) end, function(v) cfg.Radius = v end)
 		slider(230, L("aimSmooth"), 0, 100, 0, false,
 			function(v) return string.format("%.2f", v / 100) end,
 			function(v) cfg.Smooth = v / 100 end)
 
-		section(280, L("aimSecCheck"))
-		local colW = 184
-		switchCard(0, 300, colW, "AimTeam", L("aimTeam"), "", false,
-			function(v) cfg.TeamCheck = v end)
-		switchCard(196, 300, colW, "AimAlive", L("aimAlive"), "", true,
-			function(v) cfg.AliveCheck = v end)
-		switchCard(0, 352, colW, "AimWall", L("aimWall"), "", false,
-			function(v) cfg.WallCheck = v end)
-		switchCard(196, 352, colW, "AimToggle", L("aimToggle"), "", false,
-			function(v) cfg.Toggle = v; running = false end)
+		section(280, L("aimSecTrigger"))
+		pills(300, L("aimTriggerMode"), {
+			{ v = "hold", t = L("aimTrigHold") },
+			{ v = "toggle", t = L("aimTrigToggle") },
+			{ v = "always", t = L("aimTrigAlways") },
+		}, cfg.TriggerMode, function(v)
+			cfg.TriggerMode = v
+			running = false
+			locked = nil
+		end)
+		label(346, L("aimTriggerHint"), 10, C.Dim)
 
-		section(408, L("aimSecShow"))
-		switchCard(0, 428, colW, "AimFov", L("aimFov"), "", true,
+		section(374, L("aimSecCheck"))
+		local colW = 184
+		switchCard(0, 394, colW, "AimTeam", L("aimTeam"), "", false,
+			function(v) cfg.TeamCheck = v end)
+		switchCard(196, 394, colW, "AimAlive", L("aimAlive"), "", true,
+			function(v) cfg.AliveCheck = v end)
+		switchCard(0, 446, colW, "AimWall", L("aimWall"), "", false,
+			function(v) cfg.WallCheck = v end)
+		switchCard(196, 446, colW, "AimIgnoreFov", L("aimIgnoreFov"), "", false,
+			function(v) cfg.IgnoreFov = v; locked = nil end)
+
+		section(502, L("aimSecShow"))
+		switchCard(0, 522, colW, "AimFov", L("aimFov"), "", true,
 			function(v) cfg.ShowFov = v end)
-		switchCard(196, 428, colW, "AimTracer", L("aimTracer"), "", false,
+		switchCard(196, 522, colW, "AimTracer", L("aimTracer"), "", false,
 			function(v) cfg.ShowTracer = v end)
 
-		section(484, L("aimSecTrigger"))
-		switchCard(0, 504, colW, "AimTrig", L("aimTrig"), "", false,
+		section(578, L("aimSecFire"))
+		switchCard(0, 598, colW, "AimTrig", L("aimTrig"), "", false,
 			function(v) cfg.Triggerbot = v end)
-		slider(556, L("aimTrigDelay"), 0, 100, 0, false,
+		slider(650, L("aimTrigDelay"), 0, 100, 0, false,
 			function(v) return string.format("%.2f", v / 100) end,
 			function(v) cfg.TriggerDelay = v / 100 end)
 
-		label(606, L("aimHint"), 10, C.Dim)
-		scroll.CanvasSize = UDim2.new(0, 0, 0, 640)
+		label(700, L("aimHint"), 10, C.Dim)
+		scroll.CanvasSize = UDim2.new(0, 0, 0, 740)
 		return scroll
 	end
 
@@ -12695,16 +12751,25 @@ do
 
 		-- 输入：默认鼠标右键（按住；开了「按一下切换」就是点一下）
 		local conns = {}
-		conns[#conns + 1] = UserInputService.InputBegan:Connect(function(input, processed)
-			if processed or SHUTDOWN or not cfg.Enabled then return end
+		-- ⚠️ 别拦 processed：很多游戏右键会被自己吃掉（开镜等），
+		--    带 processed 判断的话就永远按不出自瞄 —— 这是"瞄不到"的头号原因。
+		conns[#conns + 1] = UserInputService.InputBegan:Connect(function(input)
+			if SHUTDOWN or not cfg.Enabled then return end
 			if input.UserInputType == Enum.UserInputType.MouseButton2 then
-				if cfg.Toggle then running = not running else running = true end
+				if cfg.TriggerMode == "toggle" then
+					running = not running
+					if not running then locked = nil end
+				else
+					running = true
+				end
 			end
 		end)
 		conns[#conns + 1] = UserInputService.InputEnded:Connect(function(input)
 			if SHUTDOWN then return end
-			if input.UserInputType == Enum.UserInputType.MouseButton2 and not cfg.Toggle then
+			if input.UserInputType == Enum.UserInputType.MouseButton2
+				and cfg.TriggerMode == "hold" then
 				running = false
+				locked = nil
 			end
 		end)
 		bind()
@@ -13730,7 +13795,7 @@ boot = function(lang)
 		sliderAt(pGen, sy + 96, L("gmGravity"), 0, 500, 196, false, function(v)
 			return tostring(math.floor(v))
 		end, function(v) U.Gravity = v; U.apply() end)
-		sliderAt(pGen, sy + 144, L("gmSpinSpeed"), 90, 2160, 720, false, function(v)
+		sliderAt(pGen, sy + 144, L("gmSpinSpeed"), 90, 7200, 1800, false, function(v)
 			return tostring(math.floor(v)) .. "/s"
 		end, function(v) U.SpinSpeed = v end)
 		createButton(pGen, {
@@ -14109,7 +14174,7 @@ boot = function(lang)
 					local dt = now - (U.spinAt or now)
 					U.spinAt = now
 					if dt > 0 and dt < 0.5 then
-						pcall(spinRoot, root, (U.SpinSpeed or 720) * dt)
+						pcall(spinRoot, root, (U.SpinSpeed or 1800) * dt)
 					end
 				end
 			end
@@ -15174,7 +15239,7 @@ boot = function(lang)
 			ClearTextOnFocus = false,
 			Parent = serversPage,
 		})
-		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = searchBox })
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = searchBox })
 		local searchStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = searchBox })
 		new("UIPadding", { PaddingLeft = UDim.new(0, 12), Parent = searchBox })
 		pcall(function()
@@ -15320,12 +15385,11 @@ boot = function(lang)
 			openGameWindow(s.g)
 		end
 
-		local function srvRow(i, s)
-			local y = (i - 1) * 42
+		local function srvRow(y, s)
 			local here = srvHere(s)
 			local card = new("TextButton", {
 				Name = "Srv_" .. s.k,
-				Size = UDim2.new(1, 0, 0, 38),
+				Size = UDim2.new(1, 0, 0, 44),
 				Position = UDim2.new(0, 0, 0, y),
 				BackgroundColor3 = here and C.Card2 or C.Card,
 				BorderSizePixel = 0,
@@ -15334,7 +15398,7 @@ boot = function(lang)
 				ClipsDescendants = true,
 				Parent = srvList,
 			})
-			new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = card })
+			new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = card })
 			local stroke = new("UIStroke", { Color = here and C.Accent or C.Stroke, Thickness = 1,
 				Parent = card })
 
@@ -15342,7 +15406,7 @@ boot = function(lang)
 
 			new("TextLabel", {
 				Size = UDim2.new(1, -190, 0, 16),
-				Position = UDim2.new(0, 48, 0, 5),
+				Position = UDim2.new(0, 48, 0, 8),
 				BackgroundTransparency = 1,
 				Text = s.name,
 				TextSize = 13,
@@ -15353,7 +15417,7 @@ boot = function(lang)
 			})
 			new("TextLabel", {
 				Size = UDim2.new(1, -190, 0, 12),
-				Position = UDim2.new(0, 48, 0, 21),
+				Position = UDim2.new(0, 48, 0, 25),
 				BackgroundTransparency = 1,
 				Text = (s.tag == "special" and L("srvSpecial") or L("srvGeneric"))
 					.. "  ·  place " .. tostring(s.p),
@@ -15412,23 +15476,74 @@ boot = function(lang)
 			return card
 		end
 
+		-- 分节标题：Spotify 那种"小节名 + 说明"，把专属面板和全部游戏分开
+		local function srvSection(y, title, sub)
+			srvRows[#srvRows + 1] = new("TextLabel", {
+				Name = "SrvSection",
+				Size = UDim2.new(1, 0, 0, 18),
+				Position = UDim2.new(0, 0, 0, y),
+				BackgroundTransparency = 1,
+				Text = title,
+				TextSize = 14,
+				Font = FONT_B,
+				TextColor3 = C.Text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = srvList,
+			})
+			srvRows[#srvRows + 1] = new("TextLabel", {
+				Name = "SrvSectionSub",
+				Size = UDim2.new(1, 0, 0, 12),
+				Position = UDim2.new(0, 0, 0, y + 18),
+				BackgroundTransparency = 1,
+				Text = sub,
+				TextSize = 9,
+				Font = FONT_M,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = srvList,
+			})
+		end
+
 		renderServers = function()
 			for _, r in ipairs(srvRows) do
 				pcall(function() r:Destroy() end)
 			end
 			srvRows = {}
 			local q = searchBox.Text or ""
-			local out = {}
+			local specials, generics = {}, {}
 			for _, s in ipairs(SERVERS) do
-				if srvMatch(s, q) then out[#out + 1] = s end
+				if srvMatch(s, q) then
+					if s.tag == "special" then
+						specials[#specials + 1] = s
+					else
+						generics[#generics + 1] = s
+					end
+				end
 			end
-			for i, s in ipairs(out) do
-				srvRows[#srvRows + 1] = srvRow(i, s)
+			local total = #specials + #generics
+			local y = 2
+			if #specials > 0 then
+				srvSection(y, L("srvSecSpecial"), string.format(L("srvSecSpecialSub"),
+					tostring(#specials)))
+				y = y + 34
+				for _, s in ipairs(specials) do
+					srvRows[#srvRows + 1] = srvRow(y, s)
+					y = y + 48
+				end
+				y = y + 10
 			end
-			-- 滚动区高度随结果数增长（每行 42px）
-			srvList.CanvasSize = UDim2.new(0, 0, 0, #out * 42 + 6)
-			countLabel.Text = string.format(L("srvCount"), tostring(#out))
-			if #out == 0 then
+			if #generics > 0 then
+				srvSection(y, L("srvSecAll"), string.format(L("srvSecAllSub"),
+					tostring(#generics)))
+				y = y + 34
+				for _, s in ipairs(generics) do
+					srvRows[#srvRows + 1] = srvRow(y, s)
+					y = y + 48
+				end
+			end
+			srvList.CanvasSize = UDim2.new(0, 0, 0, y + 10)
+			countLabel.Text = string.format(L("srvCount"), tostring(total))
+			if total == 0 then
 				srvRows[#srvRows + 1] = new("TextLabel", {
 					Name = "SrvEmpty",
 					Size = UDim2.new(1, 0, 0, 40),
@@ -15878,7 +15993,7 @@ boot = function(lang)
 
 	-- ---------- 自转（参考社区 gh 上的 spin：只转朝向，不动位置） ----------
 	do
-	local spinOn, spinSpeed, spinAt = false, 720, 0
+	local spinOn, spinSpeed, spinAt = false, 1800, 0
 	local function applySpin()
 		local hum = getHumanoid()
 		if hum then pcall(function() hum.AutoRotate = not spinOn end) end
@@ -15937,8 +16052,8 @@ boot = function(lang)
 
 	addSettingRow(402, {
 		Label = L("gmSpinSpeed"),
-		Min = 90, Max = 2160,
-		Default = 720,
+		Min = 90, Max = 7200,
+		Default = 1800,
 		Format = function(v) return string.format("%d/s", math.floor(v + 0.5)) end,
 		OnChange = function(v) spinSpeed = v end,
 	})
@@ -16945,12 +17060,7 @@ boot = function(lang)
 		Parent = farmPage,
 	})
 
-	-- v3.0.2：自然灾害也挂上"通用 30 项 + 生存类型 20 项"
-	local srvUniv = buildUniv(srvAddPage, srvAddNav, SRV_W - SRV_SIDE_W - 18, 2, "u")
-	UNIVS[#UNIVS + 1] = srvUniv
-	local srvGenre = buildGenre(srvAddPage, srvAddNav, SRV_W - SRV_SIDE_W - 18, 6, "action", "g")
-	UNIVS[#UNIVS + 1] = srvGenre
-
+	-- v3.1.0：不再挂那套"所有服务器都一样"的通用功能组（用户明确不要）
 	srvShow("tp")
 
 	-- 服务器窗口的开场动画（共用 helper）
@@ -18496,12 +18606,7 @@ boot = function(lang)
 		local pdDiagStealth = pdDiagLabel(pdStealth, "HeistDiag")
 		local pdDiagAssault = pdDiagLabel(pdAssault, "HeistDiag")
 
-		-- v3.0.2：劫案也挂上"通用 30 项 + 射击类型 20 项"
-		local pdUniv = buildUniv(pdAddPage, pdAddNav, PD_W - SRV_SIDE_W - 18, 2, "u")
-		UNIVS[#UNIVS + 1] = pdUniv
-		local pdGenre = buildGenre(pdAddPage, pdAddNav, PD_W - SRV_SIDE_W - 18, 6, "fps", "g")
-		UNIVS[#UNIVS + 1] = pdGenre
-
+		-- v3.1.0：去掉通用功能组（用户不要重复的那套）
 		pdShow("stealth")
 
 		-- ---------------- 主游戏 / 地图 两种形态 ----------------
@@ -21270,9 +21375,7 @@ boot = function(lang)
 			Parent = dsMapPage,
 		})
 
-		-- v3.0.2：DOORS 再挂一套"恐怖类型 20 项"（它自己那 40 项留着）
-		local dsGenre = buildGenre(dsAddPage, dsAddTab, DS_W - 20, 5, "horror", "g")
-		UNIVS[#UNIVS + 1] = dsGenre
+		-- v3.1.0：去掉通用类型包（DOORS 自己那 40 项留着）
 
 		-- 页签：顺序固定，跟上面 4 个页面一一对应
 		DS_TABS = {
