@@ -1,6 +1,6 @@
 --=====================================================================
 --  O_X HUB  ·  通用设置 + 飞行 + 122 台游戏服务器
---  Version : 3.0.2
+--  Version : 3.1.0
 --  Date    : 2026-10-02
 --
 --  用法（执行器里粘贴执行）：
@@ -312,6 +312,10 @@ local LOCALES = {
 		gmSpinD        = "角色原地转圈",
 		gmSpinSpeed    = "自转速度",
 		gmSpinOff      = "自转已关闭",
+		footReady      = "运行中",
+		homeQuick      = "快捷入口",
+		homeStatsTitle = "当前数值",
+		homeAimDesc    = "锁定最近目标（按住右键）",
 		navAim         = "自瞄",
 		aimTitle       = "自瞄",
 		aimSub         = "按住鼠标右键锁定最近的目标",
@@ -913,6 +917,10 @@ local LOCALES = {
 		gmSpinD        = "Spins your character in place",
 		gmSpinSpeed    = "Spin speed",
 		gmSpinOff      = "Spin off",
+		footReady      = "Running",
+		homeQuick      = "Quick access",
+		homeStatsTitle = "Current values",
+		homeAimDesc    = "Lock onto the closest target (hold right mouse)",
 		navAim         = "Aimbot",
 		aimTitle       = "Aimbot",
 		aimSub         = "Hold right mouse to lock onto the closest target",
@@ -1265,7 +1273,7 @@ end
 --========================== 配置区 ==========================
 local CONFIG = {
 	Title   = "O_X HUB",
-	Version = "v3.0.2",
+	Version = "v3.1.0",
 
 	-- ---------- 飞行 ----------
 	FlySpeed = 60,        -- 默认飞行速度
@@ -1324,37 +1332,39 @@ local CONFIG = {
 --========================== 设计令牌 ==========================
 -- 全界面只允许用这里的值，别在别处现编颜色 / 圆角 / 缓动。
 -- 一个强调色（红），一个圆角刻度，一套动效曲线 —— 三样都锁死。
+-- v3.1.0：整份换成"流媒体深色"（Spotify 那种）—— 纯黑侧栏 + 近黑内容面 +
+--         中性灰卡片，靠明度分层而不是靠蓝紫偏色；强调色仍是品牌红。
 local C = {
-	-- 底层：不用纯黑，留一点冷灰层次，深色才有深度
-	Void    = Color3.fromRGB(6, 6, 9),
-	Bg      = Color3.fromRGB(9, 9, 12),
-	Side    = Color3.fromRGB(11, 11, 15),
-	Window  = Color3.fromRGB(14, 14, 18),
-	Card    = Color3.fromRGB(20, 20, 26),
-	Card2   = Color3.fromRGB(27, 27, 35),
-	Raised  = Color3.fromRGB(35, 35, 45),
-	Stroke  = Color3.fromRGB(37, 37, 47),
-	Stroke2 = Color3.fromRGB(58, 58, 72),
+	-- 底层：纯黑起手，往上每一层抬一档明度
+	Void    = Color3.fromRGB(0, 0, 0),
+	Bg      = Color3.fromRGB(10, 10, 10),
+	Side    = Color3.fromRGB(0, 0, 0),
+	Window  = Color3.fromRGB(18, 18, 18),
+	Card    = Color3.fromRGB(24, 24, 24),
+	Card2   = Color3.fromRGB(36, 36, 36),
+	Raised  = Color3.fromRGB(42, 42, 42),
+	Stroke  = Color3.fromRGB(42, 42, 42),
+	Stroke2 = Color3.fromRGB(64, 64, 64),
 
 	-- 唯一强调色（锁死，整份界面只用这一支）
 	Accent   = Color3.fromRGB(232, 52, 72),
 	Accent2  = Color3.fromRGB(255, 122, 46),
-	AccentLo = Color3.fromRGB(72, 20, 28),
+	AccentLo = Color3.fromRGB(58, 14, 20),
 
 	-- 文字层级：靠明度分层，不靠字号堆叠
-	Text  = Color3.fromRGB(238, 238, 244),
-	Sub   = Color3.fromRGB(148, 150, 164),
-	Dim   = Color3.fromRGB(96, 98, 112),
+	Text  = Color3.fromRGB(255, 255, 255),
+	Sub   = Color3.fromRGB(179, 179, 179),
+	Dim   = Color3.fromRGB(122, 122, 122),
 	White = Color3.fromRGB(255, 255, 255),
 
 	-- 语义色：只表达状态，不做装饰
-	Green = Color3.fromRGB(52, 199, 123),
+	Green = Color3.fromRGB(30, 215, 96),
 	Amber = Color3.fromRGB(240, 180, 60),
 	Red   = Color3.fromRGB(240, 88, 88),
 }
 
--- 圆角刻度：窗口 20 / 卡片 14 / 控件 10 / 胶囊（v3.0.0 整体放大一档，更软更简约）
-local R = { win = 20, card = 14, ctl = 10, pill = 999 }
+-- 圆角刻度：窗口 14 / 卡片 10 / 控件 8 / 胶囊（v3.1.0 收紧一档，更接近流媒体那种克制感）
+local R = { win = 14, card = 10, ctl = 8, pill = 999 }
 
 -- 动效曲线：统一节奏，别到处现编 TweenInfo
 local EASE = {
@@ -3832,24 +3842,6 @@ local function createLoadingScreen(opts, onDone)
 		Parent = gui,
 	})
 
-	-- 顶部一层很淡的氛围光：只压一点暖色，不做霓虹
-	local glow = new("Frame", {
-		Size = UDim2.new(1, 0, 0, 340),
-		Position = UDim2.new(0, 0, 0, -220),
-		BackgroundColor3 = C.Accent,
-		BackgroundTransparency = 0.94,
-		BorderSizePixel = 0,
-		Parent = bg,
-	})
-	new("UIGradient", {
-		Rotation = 90,
-		Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0),
-			NumberSequenceKeypoint.new(1, 1),
-		}),
-		Parent = glow,
-	})
-
 	local stage = new("Frame", {
 		Name = "BootStage",
 		Size = UDim2.new(0, 720, 0, 420),
@@ -3867,16 +3859,73 @@ local function createLoadingScreen(opts, onDone)
 	end
 	fitStage()
 
-	-- 扫过整屏的一条细光带：暗示"正在跑"
-	local scan = new("Frame", {
-		Name = "Scan",
-		Size = UDim2.new(1, 0, 0, 2),
-		Position = UDim2.new(0, 0, 0, -8),
+	-- 中轴：字标、红晕、扫光都对着这条线
+	local MID_Y = 150
+
+	-- 背后那团红晕（Netflix 的红）：从中间往两边展开
+	local glow = new("Frame", {
+		Name = "BootGlow",
+		Size = UDim2.new(0, 0, 0, 132),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0, MID_Y),
 		BackgroundColor3 = C.Accent,
-		BackgroundTransparency = 0.8,
+		BackgroundTransparency = 0.62,
 		BorderSizePixel = 0,
-		ZIndex = 1,
 		Parent = stage,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = glow })
+	new("UIGradient", {
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Parent = glow,
+	})
+
+	-- 字标：一个字一个 label，逐字"砸"下来。
+	-- 用等宽字体（Code），每个字的宽度是固定的，位置算得准，不用量文本。
+	local WORD = opts.Title or CONFIG.Title
+	local TS = 68
+	local CW = TS * 0.601
+	local total = #WORD * CW
+	local x0 = 360 - total / 2
+	local letters = {}
+	for i = 1, #WORD do
+		local ch = WORD:sub(i, i)
+		local lb = new("TextLabel", {
+			Name = "BootLetter",
+			Size = UDim2.new(0, CW, 0, TS + 20),
+			Position = UDim2.new(0, x0 + (i - 1) * CW, 0, MID_Y - (TS + 20) / 2),
+			BackgroundTransparency = 1,
+			Text = (ch == " " and "" or ch),
+			TextSize = TS,
+			Font = FONT_M,
+			TextColor3 = C.Accent,
+			TextTransparency = 1,
+			Parent = stage,
+		})
+		local sc = new("UIScale", { Scale = 2.1, Parent = lb })
+		letters[#letters + 1] = { lb = lb, sc = sc }
+	end
+
+	-- 扫光：一条斜着的白带从左扫到右（Netflix 那个高光）
+	local sweepBox = new("Frame", {
+		Name = "BootSweep",
+		Size = UDim2.new(0, total + 120, 0, TS + 40),
+		Position = UDim2.new(0, x0 - 60, 0, MID_Y - (TS + 40) / 2),
+		BackgroundTransparency = 1,
+		ClipsDescendants = true,
+		Parent = stage,
+	})
+	local sweep = new("Frame", {
+		Size = UDim2.new(0, 90, 1, 0),
+		Position = UDim2.new(0, -(total + 120), 0, 0),
+		BackgroundColor3 = C.White,
+		BackgroundTransparency = 0.72,
+		BorderSizePixel = 0,
+		Rotation = 16,
+		Parent = sweepBox,
 	})
 	new("UIGradient", {
 		Transparency = NumberSequence.new({
@@ -3884,122 +3933,19 @@ local function createLoadingScreen(opts, onDone)
 			NumberSequenceKeypoint.new(0.5, 0),
 			NumberSequenceKeypoint.new(1, 1),
 		}),
-		Parent = scan,
-	})
-	tween(scan, TweenInfo.new(2.1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1),
-		{ Position = UDim2.new(0, 0, 0, 420) })
-
-	-- ---------- 品牌区 ----------
-	local logo = createLogo(stage, {
-		Size = UDim2.new(0, 62, 0, 62),
-		Position = UDim2.new(0, 0, 0, 6),
-		Radius = 18,
-		TextSize = 30,
-	})
-	local brand = new("TextLabel", {
-		Size = UDim2.new(0, 460, 0, 36),
-		Position = UDim2.new(0, 78, 0, 8),
-		BackgroundTransparency = 1,
-		Text = opts.Title or CONFIG.Title,
-		TextSize = 28,
-		Font = FONT_B,
-		TextColor3 = C.Text,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = stage,
-	})
-	local subtitle = new("TextLabel", {
-		Size = UDim2.new(0, 460, 0, 18),
-		Position = UDim2.new(0, 79, 0, 44),
-		BackgroundTransparency = 1,
-		Text = opts.Subtitle or L("loading"),
-		TextSize = 12,
-		Font = FONT_M,
-		TextColor3 = C.Dim,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = stage,
+		Parent = sweep,
 	})
 
-	local rule = new("Frame", {
-		Size = UDim2.new(0, 44, 0, 3),
-		Position = UDim2.new(0, 0, 0, 84),
-		BackgroundColor3 = C.Accent,
-		BorderSizePixel = 0,
-		Parent = stage,
-	})
-	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = rule })
-	tween(rule, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{ Size = UDim2.new(0, 132, 0, 3) })
-
-	-- ---------- 终端面板 ----------
-	local term = new("Frame", {
-		Name = "BootTerm",
-		Size = UDim2.new(1, 0, 0, 130),
-		Position = UDim2.new(0, 0, 0, 112),
-		BackgroundColor3 = C.Window,
-		BorderSizePixel = 0,
-		ClipsDescendants = true,
-		Parent = stage,
-	})
-	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = term })
-	new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = term })
-
-	local termLines = {}
-	local function addLine(text)
-		local y = 16 + #termLines * 21
-		local row = new("Frame", {
-			Name = "TermRow",
-			Size = UDim2.new(1, -28, 0, 18),
-			Position = UDim2.new(0, 14, 0, y),
-			BackgroundTransparency = 1,
-			Parent = term,
-		})
-		new("TextLabel", {
-			Size = UDim2.new(0, 12, 1, 0),
-			BackgroundTransparency = 1,
-			Text = ">",
-			TextSize = 12,
-			Font = FONT_M,
-			TextColor3 = C.Accent,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = row,
-		})
-		new("TextLabel", {
-			Size = UDim2.new(1, -76, 1, 0),
-			Position = UDim2.new(0, 16, 0, 0),
-			BackgroundTransparency = 1,
-			Text = text,
-			TextSize = 12,
-			Font = FONT_M,
-			TextColor3 = C.Sub,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = row,
-		})
-		local mark = new("TextLabel", {
-			Size = UDim2.new(0, 56, 1, 0),
-			Position = UDim2.new(1, -56, 0, 0),
-			BackgroundTransparency = 1,
-			Text = "...",
-			TextSize = 11,
-			Font = FONT_M,
-			TextColor3 = C.Dim,
-			TextXAlignment = Enum.TextXAlignment.Right,
-			Parent = row,
-		})
-		slideIn(row, 6, 0, 0.22)
-		table.insert(termLines, { row = row, mark = mark })
-		return mark
-	end
-
-	-- ---------- 进度条 ----------
+	-- 底部：一条极细的进度线 + 状态字（克制，不搞终端面板）
 	local track = new("Frame", {
-		Size = UDim2.new(1, -72, 0, 6),
-		Position = UDim2.new(0, 0, 0, 356),
+		Name = "BootTrack",
+		Size = UDim2.new(1, -160, 0, 2),
+		Position = UDim2.new(0, 80, 0, 366),
 		BackgroundColor3 = C.Card2,
 		BorderSizePixel = 0,
 		Parent = stage,
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = track })
-
 	local fill = new("Frame", {
 		Size = UDim2.new(0, 0, 1, 0),
 		BackgroundColor3 = C.Accent,
@@ -4007,53 +3953,37 @@ local function createLoadingScreen(opts, onDone)
 		Parent = track,
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = fill })
-	new("UIGradient", { Color = ColorSequence.new(C.Accent, C.Accent2), Parent = fill })
 
-	local head = new("Frame", {
-		Size = UDim2.new(0, 10, 0, 10),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.new(0, 0, 0.5, 0),
-		BackgroundColor3 = C.White,
-		BorderSizePixel = 0,
-		ZIndex = 2,
-		Parent = track,
-	})
-	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = head })
-
-	local percent = new("TextLabel", {
-		Size = UDim2.new(0, 64, 0, 16),
-		Position = UDim2.new(1, 0, 0, 351),
+	local status = new("TextLabel", {
+		Name = "BootStatus",
+		Size = UDim2.new(1, -160, 0, 16),
+		Position = UDim2.new(0, 80, 0, 378),
 		BackgroundTransparency = 1,
-		Text = "0%",
-		TextSize = 12,
-		Font = FONT_M,
-		TextColor3 = C.Sub,
-		TextXAlignment = Enum.TextXAlignment.Right,
-		Parent = stage,
-	})
-
-	local version = new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0, 0, 1, -22),
-		BackgroundTransparency = 1,
-		Text = CONFIG.Title .. "   " .. CONFIG.Version,
+		Text = opts.Subtitle or L("loading"),
 		TextSize = 11,
 		Font = FONT_M,
-		TextColor3 = Color3.fromRGB(66, 68, 80),
+		TextColor3 = C.Dim,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = stage,
 	})
-
-	-- 品牌区依次落下
-	staggerIn({ logo, brand, subtitle, rule }, 14, 0.06, 0.4)
-	slideIn(term, 18, 0.18, 0.42)
+	local pctLabel = new("TextLabel", {
+		Name = "BootPct",
+		Size = UDim2.new(1, -160, 0, 16),
+		Position = UDim2.new(0, 80, 0, 378),
+		BackgroundTransparency = 1,
+		Text = "0%",
+		TextSize = 11,
+		Font = FONT_M,
+		TextColor3 = C.Dim,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = stage,
+	})
 
 	local current = 0
 	local function setPct(v)
 		current = v
 		fill.Size = UDim2.new(v / 100, 0, 1, 0)
-		head.Position = UDim2.new(v / 100, 0, 0.5, 0)
-		percent.Text = string.format("%d%%", math.floor(v + 0.5))
+		pctLabel.Text = string.format("%d%%", math.floor(v + 0.5))
 	end
 	setPct(0)
 
@@ -4074,29 +4004,61 @@ local function createLoadingScreen(opts, onDone)
 	end
 
 	local stages = opts.Stages or {
-		{ L("boot1"), 18,  0.36 },
-		{ L("boot2"), 42,  0.44 },
-		{ L("boot3"), 68,  0.44 },
-		{ L("boot4"), 90,  0.34 },
-		{ L("boot5"), 100, 0.26 },
+		{ L("boot1"), 18,  0.34 },
+		{ L("boot2"), 42,  0.40 },
+		{ L("boot3"), 68,  0.40 },
+		{ L("boot4"), 90,  0.30 },
+		{ L("boot5"), 100, 0.24 },
 	}
 
+	-- ---------------- 开场编排（Netflix 那种节奏） ----------------
 	task.spawn(function()
-		task.wait(0.2)
+		-- ① 红晕展开 + 逐字砸下来
+		tween(glow, TweenInfo.new(0.9, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+			{ Size = UDim2.new(0, 540, 0, 132), BackgroundTransparency = 0.78 })
+		for i, it in ipairs(letters) do
+			task.spawn(function()
+				task.wait(0.06 + (i - 1) * 0.055)
+				tween(it.sc, EASE.pop, { Scale = 1 })
+				tween(it.lb, EASE.soft, { TextTransparency = 0 })
+			end)
+		end
+		task.wait(0.06 + #letters * 0.055 + 0.30)
+
+		-- ② 扫光过去
+		tween(sweep, TweenInfo.new(0.75, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+			{ Position = UDim2.new(0, total + 120, 0, 0) })
+		task.wait(0.52)
+
+		-- ③ "ta-dum"：整体轻轻一顿 + 红晕收一下
+		for _, it in ipairs(letters) do
+			tween(it.sc, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{ Scale = 1.06 })
+		end
+		tween(glow, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ BackgroundTransparency = 0.66 })
+		task.wait(0.22)
+		for _, it in ipairs(letters) do
+			tween(it.sc, TweenInfo.new(0.26, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+				{ Scale = 1 })
+		end
+
+		-- ④ 加载阶段（进度线 + 状态字）
+		task.wait(0.1)
 		for _, st in ipairs(stages) do
-			subtitle.Text = st[1]
-			local mark = addLine(st[1])
+			status.Text = st[1]
 			animateTo(st[2], st[3])
-			mark.Text = "OK"
-			mark.TextColor3 = C.Green
 			task.wait(0.04)
 		end
-		task.wait(0.3)
+		task.wait(0.28)
 
-		-- 整屏淡出
-		local fade = TweenInfo.new(0.42, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		-- ⑤ 收尾：字标稍微放大再退场
+		for _, it in ipairs(letters) do
+			tween(it.sc, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{ Scale = 1.14 })
+		end
+		local fade = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		TweenService:Create(bg, fade, { BackgroundTransparency = 1 }):Play()
-		TweenService:Create(glow, fade, { BackgroundTransparency = 1 }):Play()
 		for _, d in ipairs(stage:GetDescendants()) do
 			if d:IsA("TextLabel") then
 				TweenService:Create(d, fade, { TextTransparency = 1 }):Play()
@@ -4106,7 +4068,7 @@ local function createLoadingScreen(opts, onDone)
 				TweenService:Create(d, fade, { ImageTransparency = 1 }):Play()
 			end
 		end
-		task.wait(0.46)
+		task.wait(0.54)
 		gui:Destroy()
 		if onDone then onDone() end
 	end)
@@ -12248,6 +12210,66 @@ local function addResizeHandle(frame, opts)
 	return grip
 end
 
+--=====================================================================
+--  侧栏导航的小图标：全用 Frame 画（不依赖字体里的特殊符号，任何设备都长一样）
+--  返回 { fills = {框架...}, strokes = {描边...} }，切页时一起换色
+--=====================================================================
+local function navGlyph(parent, key, tint)
+	tint = tint or C.Sub
+	local box = new("Frame", {
+		Name = "Glyph",
+		Size = UDim2.new(0, 16, 0, 16),
+		Position = UDim2.new(0, 12, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundTransparency = 1,
+		Parent = parent,
+	})
+	local fills, strokes = {}, {}
+	local function sq(x, y, w, h, r, filled)
+		local f = new("Frame", {
+			Size = UDim2.new(0, w, 0, h),
+			Position = UDim2.new(0, x, 0, y),
+			BackgroundColor3 = tint,
+			BackgroundTransparency = filled and 0 or 1,
+			BorderSizePixel = 0,
+			Parent = box,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, r), Parent = f })
+		if filled then
+			fills[#fills + 1] = f
+		else
+			local st = new("UIStroke", { Color = tint, Thickness = 1.4, Parent = f })
+			strokes[#strokes + 1] = st
+		end
+		return f
+	end
+
+	if key == "home" then
+		sq(3, 3, 10, 10, 3, true)                       -- 主页：实心方块
+	elseif key == "aim" then
+		sq(2, 2, 12, 12, 6, false)                      -- 自瞄：圆环 + 中心点
+		sq(6.5, 6.5, 3, 3, 2, true)
+	elseif key == "servers" then
+		sq(2, 3, 12, 2, 1, true)                        -- 服务器：三条横杠
+		sq(2, 7, 12, 2, 1, true)
+		sq(2, 11, 12, 2, 1, true)
+	elseif key == "general" then
+		sq(2, 4, 12, 2, 1, true)                        -- 通用：两条滑轨 + 一个滑块
+		sq(2, 10, 12, 2, 1, true)
+		sq(9, 2, 4, 6, 2, true)
+	elseif key == "fly" then
+		local d = sq(3.5, 3.5, 9, 9, 2, true)           -- 飞行：菱形
+		d.Rotation = 45
+	elseif key == "settings" then
+		sq(2, 2, 12, 12, 6, false)                      -- 设置：圆环 + 两个点
+		sq(6.5, 1, 3, 3, 2, true)
+		sq(6.5, 12, 3, 3, 2, true)
+	else
+		sq(3, 3, 10, 10, 3, true)
+	end
+	return { fills = fills, strokes = strokes }
+end
+
 -- 让角色原地自转：只改朝向，不动位置。
 -- 刻意不写 CFrame * CFrame.Angles —— 直接用 CFrame.new(pos, 看的方向)，
 -- 任何环境都能跑，也不依赖执行器的 CFrame 实现。
@@ -12730,8 +12752,8 @@ boot = function(lang)
 	end
 
 	local WIN_W, WIN_H   = 560, 440
-	local SIDEBAR_W      = 132
-	local HEADER_H       = 46
+	local SIDEBAR_W      = 176
+	local HEADER_H       = 54
 
 	local FLY_W, FLY_H   = 380, 356
 
@@ -12763,7 +12785,7 @@ boot = function(lang)
 		Size = UDim2.new(0, WIN_W, 0, WIN_H),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		BackgroundColor3 = C.Window,
+		BackgroundColor3 = C.Bg,
 		BorderSizePixel = 0,
 		Parent = guiMain,
 	})
@@ -12792,60 +12814,105 @@ boot = function(lang)
 		Parent = topRule,
 	})
 
-	-- 顶栏
+	-- 顶栏（Spotify 那种：左边品牌，右边"当前账号"胶囊 + 窗口按钮）
 	local header = new("Frame", {
 		Name = "Header",
 		Size = UDim2.new(1, 0, 0, HEADER_H),
-		BackgroundColor3 = C.Window,
+		BackgroundColor3 = C.Bg,
 		BorderSizePixel = 0,
 		Parent = window,
 	})
 	new("UICorner", { CornerRadius = UDim.new(0, R.win), Parent = header })
 	new("Frame", {
-		Size = UDim2.new(1, 0, 0, 14),
-		Position = UDim2.new(0, 0, 1, -14),
-		BackgroundColor3 = C.Window,
-		BorderSizePixel = 0,
-		Parent = header,
-	})
-	new("Frame", {
-		Size = UDim2.new(1, -24, 0, 1),
-		Position = UDim2.new(0, 12, 1, -1),
-		BackgroundColor3 = C.Stroke,
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.new(0, 0, 1, -16),
+		BackgroundColor3 = C.Bg,
 		BorderSizePixel = 0,
 		Parent = header,
 	})
 
 	createLogo(header, {
-		Size = UDim2.new(0, 26, 0, 26),
-		Position = UDim2.new(0, 14, 0.5, 0),
+		Size = UDim2.new(0, 28, 0, 28),
+		Position = UDim2.new(0, 16, 0.5, 0),
 		AnchorPoint = Vector2.new(0, 0.5),
-		Radius = 8,
-		TextSize = 15,
+		Radius = 9,
+		TextSize = 16,
 	})
 
 	new("TextLabel", {
-		Size = UDim2.new(0, 150, 1, 0),
-		Position = UDim2.new(0, 48, 0, 0),
+		Size = UDim2.new(0, 160, 1, 0),
+		Position = UDim2.new(0, 52, 0, 0),
 		BackgroundTransparency = 1,
 		Text = CONFIG.Title,
-		TextSize = 15,
+		TextSize = 16,
 		Font = FONT_B,
 		TextColor3 = C.Text,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Parent = header,
 	})
 
+	local verChip = new("Frame", {
+		Name = "VersionChip",
+		Size = UDim2.new(0, 58, 0, 20),
+		Position = UDim2.new(0, 168, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card2,
+		BorderSizePixel = 0,
+		Parent = header,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = verChip })
 	new("TextLabel", {
-		Size = UDim2.new(0, 90, 1, 0),
-		Position = UDim2.new(1, -168, 0, 0),
+		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
 		Text = CONFIG.Version,
-		TextSize = 11,
+		TextSize = 10,
 		Font = FONT_M,
-		TextColor3 = C.Dim,
-		TextXAlignment = Enum.TextXAlignment.Right,
+		TextColor3 = C.Sub,
+		Parent = verChip,
+	})
+
+	-- 右上角"当前账号"胶囊：头像圆点 + 玩家名
+	local prof = new("Frame", {
+		Name = "ProfileChip",
+		Size = UDim2.new(0, 132, 0, 28),
+		Position = UDim2.new(1, -204, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Card2,
+		BorderSizePixel = 0,
 		Parent = header,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = prof })
+	local avatar = new("Frame", {
+		Name = "Avatar",
+		Size = UDim2.new(0, 20, 0, 20),
+		Position = UDim2.new(0, 4, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		Parent = prof,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = avatar })
+	new("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Text = string.upper(string.sub(tostring(LocalPlayer.Name or "?"), 1, 1)),
+		TextSize = 11,
+		Font = FONT_B,
+		TextColor3 = C.White,
+		Parent = avatar,
+	})
+	new("TextLabel", {
+		Name = "ProfileName",
+		Size = UDim2.new(1, -32, 1, 0),
+		Position = UDim2.new(0, 28, 0, 0),
+		BackgroundTransparency = 1,
+		Text = tostring(LocalPlayer.Name or "?"),
+		TextSize = 11,
+		Font = FONT_B,
+		TextColor3 = C.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Parent = prof,
 	})
 
 	-- 最小化：只是把窗口缩成一个悬浮图标，什么都不结束
@@ -12905,9 +12972,52 @@ boot = function(lang)
 	})
 	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = sidebar })
 
+	-- 顶部品牌块（Spotify 左上角那个 logo 块的感觉）
+	do
+		local brand = new("Frame", {
+			Name = "SideBrand",
+			Size = UDim2.new(1, -16, 0, 46),
+			Position = UDim2.new(0, 8, 0, 10),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			Parent = sidebar,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = brand })
+		createLogo(brand, {
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(0, 10, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			Radius = 8,
+			TextSize = 15,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -46, 0, 16),
+			Position = UDim2.new(0, 44, 0, 8),
+			BackgroundTransparency = 1,
+			Text = CONFIG.Title,
+			TextSize = 13,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = brand,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -46, 0, 12),
+			Position = UDim2.new(0, 44, 0, 25),
+			BackgroundTransparency = 1,
+			Text = CONFIG.Version,
+			TextSize = 10,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = brand,
+		})
+	end
+
 	new("TextLabel", {
+		Name = "NavGroupLabel",
 		Size = UDim2.new(1, -16, 0, 14),
-		Position = UDim2.new(0, 14, 0, 10),
+		Position = UDim2.new(0, 16, 0, 66),
 		BackgroundTransparency = 1,
 		Text = L("navGroup"),
 		TextSize = 10,
@@ -12921,7 +13031,7 @@ boot = function(lang)
 	local navIndicator = new("Frame", {
 		Name = "NavIndicator",
 		Size = UDim2.new(0, 3, 0, 18),
-		Position = UDim2.new(0, 0, 0, 35),
+		Position = UDim2.new(0, 0, 0, 90),
 		BackgroundColor3 = C.Accent,
 		BorderSizePixel = 0,
 		ZIndex = 2,
@@ -12929,14 +13039,68 @@ boot = function(lang)
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = navIndicator })
 
-	-- 内容区
+	-- 底部：运行状态
+	do
+		local foot = new("Frame", {
+			Name = "SideFoot",
+			Size = UDim2.new(1, -16, 0, 30),
+			Position = UDim2.new(0, 8, 1, -40),
+			BackgroundTransparency = 1,
+			Parent = sidebar,
+		})
+		local fdot = new("Frame", {
+			Size = UDim2.new(0, 6, 0, 6),
+			Position = UDim2.new(0, 6, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Green,
+			BorderSizePixel = 0,
+			Parent = foot,
+		})
+		new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = fdot })
+		new("TextLabel", {
+			Name = "SideFootText",
+			Size = UDim2.new(1, -22, 1, 0),
+			Position = UDim2.new(0, 18, 0, 0),
+			BackgroundTransparency = 1,
+			Text = L("footReady"),
+			TextSize = 10,
+			Font = FONT_M,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = foot,
+		})
+	end
+
+	-- 内容区：一块圆角的"内容面"（Spotify 那种），顶部压一层很淡的渐变
 	local content = new("Frame", {
 		Name = "Content",
 		Size = UDim2.new(1, -(SIDEBAR_W + 32), 1, -HEADER_H - 12),
 		Position = UDim2.new(0, SIDEBAR_W + 22, 0, HEADER_H + 6),
-		BackgroundTransparency = 1,
+		BackgroundColor3 = C.Window,
+		BorderSizePixel = 0,
 		Parent = window,
 	})
+	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = content })
+	do
+		local cg = new("Frame", {
+			Name = "ContentGlow",
+			Size = UDim2.new(1, 0, 0, 140),
+			BackgroundColor3 = C.Card2,
+			BackgroundTransparency = 0.35,
+			BorderSizePixel = 0,
+			ZIndex = 0,
+			Parent = content,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = cg })
+		new("UIGradient", {
+			Rotation = 90,
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(1, 1),
+			}),
+			Parent = cg,
+		})
+	end
 
 	--========================== 页面系统 ==========================
 	local pages = {}
@@ -13008,8 +13172,17 @@ boot = function(lang)
 		end
 		for k, item in pairs(navItems) do
 			local active = (k == key)
-			tween(item.label, EASE.soft, { TextColor3 = active and C.Text or C.Sub })
-			tween(item.btn, EASE.soft, { BackgroundColor3 = active and C.Card or C.Side })
+			local col = active and C.Text or C.Sub
+			tween(item.label, EASE.soft, { TextColor3 = col })
+			tween(item.btn, EASE.soft, { BackgroundColor3 = active and C.Card2 or C.Side })
+			if item.glyph then
+				for _, f in ipairs(item.glyph.fills) do
+					tween(f, EASE.soft, { BackgroundColor3 = col })
+				end
+				for _, s in ipairs(item.glyph.strokes) do
+					tween(s, EASE.soft, { Color = col })
+				end
+			end
 		end
 
 		-- 指示条滑过去，而不是直接跳过去
@@ -13027,10 +13200,10 @@ boot = function(lang)
 	end
 
 	local function addNav(key, text, order, onClick)
-		local y = 30 + (order - 1) * 32
+		local y = 84 + (order - 1) * 34
 		local btn = new("TextButton", {
 			Name = "Nav_" .. key,
-			Size = UDim2.new(1, -16, 0, 28),
+			Size = UDim2.new(1, -16, 0, 30),
 			Position = UDim2.new(0, 8, 0, y),
 			BackgroundColor3 = C.Side,
 			BorderSizePixel = 0,
@@ -13040,9 +13213,11 @@ boot = function(lang)
 		})
 		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = btn })
 
+		local glyph = navGlyph(btn, key, C.Sub)
+
 		local label = new("TextLabel", {
-			Size = UDim2.new(1, -30, 1, 0),
-			Position = UDim2.new(0, 16, 0, 0),
+			Size = UDim2.new(1, -52, 1, 0),
+			Position = UDim2.new(0, 40, 0, 0),
 			BackgroundTransparency = 1,
 			Text = text,
 			TextSize = 13,
@@ -13058,7 +13233,7 @@ boot = function(lang)
 			dot = new("Frame", {
 				Name = "NavDot",
 				Size = UDim2.new(0, 6, 0, 6),
-				Position = UDim2.new(1, -14, 0.5, 0),
+				Position = UDim2.new(1, -16, 0.5, 0),
 				AnchorPoint = Vector2.new(0.5, 0.5),
 				BackgroundColor3 = C.Green,
 				BackgroundTransparency = 1,
@@ -13066,6 +13241,17 @@ boot = function(lang)
 				Parent = btn,
 			})
 			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+		end
+
+		local function tint(on)
+			local col = on and C.Text or C.Sub
+			tween(label, EASE.soft, { TextColor3 = col })
+			for _, f in ipairs(glyph.fills) do
+				tween(f, EASE.soft, { BackgroundColor3 = col })
+			end
+			for _, s in ipairs(glyph.strokes) do
+				tween(s, EASE.soft, { Color = col })
+			end
 		end
 
 		btn.MouseButton1Click:Connect(function()
@@ -13076,18 +13262,16 @@ boot = function(lang)
 			if not pages[key] or not pages[key].Visible then
 				tween(btn, EASE.soft, { BackgroundColor3 = C.Card })
 			end
-			tween(label, EASE.soft, { TextColor3 = C.Text })
+			tint(true)
 		end)
 		btn.MouseLeave:Connect(function()
 			if not pages[key] or not pages[key].Visible then
 				tween(btn, EASE.soft, { BackgroundColor3 = C.Side })
 			end
-			tween(label, EASE.soft, {
-				TextColor3 = (pages[key] and pages[key].Visible) and C.Text or C.Sub,
-			})
+			tint(pages[key] ~= nil and pages[key].Visible == true)
 		end)
 
-		navItems[key] = { btn = btn, label = label, dot = dot, y = y }
+		navItems[key] = { btn = btn, label = label, dot = dot, glyph = glyph, y = y }
 		return btn
 	end
 
@@ -13132,21 +13316,22 @@ boot = function(lang)
 	local home = addPage("home")
 	addNav("home", L("navHome"), 1)
 
+	-- Spotify 那种"大标题 + 快捷入口行 + 数据小卡"
 	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 28),
-		Position = UDim2.new(0, 0, 0, 2),
+		Size = UDim2.new(1, 0, 0, 26),
+		Position = UDim2.new(0, 0, 0, 0),
 		BackgroundTransparency = 1,
 		Text = string.format(L("homeWelcome"), CONFIG.Title),
-		TextSize = 20,
+		TextSize = 21,
 		Font = FONT_B,
 		TextColor3 = C.Text,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
 		Parent = home,
 	})
-
 	new("TextLabel", {
 		Size = UDim2.new(1, 0, 0, 16),
-		Position = UDim2.new(0, 0, 0, 32),
+		Position = UDim2.new(0, 0, 0, 28),
 		BackgroundTransparency = 1,
 		Text = string.format(L("homeSub"), CONFIG.Version),
 		TextSize = 11,
@@ -13156,11 +13341,149 @@ boot = function(lang)
 		Parent = home,
 	})
 
+	-- 分区标题
+	local function homeSection(y, text)
+		new("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 14),
+			Position = UDim2.new(0, 0, 0, y),
+			BackgroundTransparency = 1,
+			Text = text,
+			TextSize = 10,
+			Font = FONT_B,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = home,
+		})
+	end
+
+	-- 一行"快捷入口"：左边方块缩略图 + 标题 + 说明 + 右箭头
+	local function homeRow(y, name, title, desc, onClick, withState)
+		local card = new("TextButton", {
+			Name = name,
+			Size = UDim2.new(1, 0, 0, 54),
+			Position = UDim2.new(0, 0, 0, y),
+			BackgroundColor3 = C.Card,
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Text = "",
+			ClipsDescendants = true,
+			Parent = home,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = card })
+		local stroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = card })
+
+		local thumb = new("Frame", {
+			Name = "Thumb",
+			Size = UDim2.new(0, 34, 0, 34),
+			Position = UDim2.new(0, 10, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			BackgroundColor3 = C.Card2,
+			BorderSizePixel = 0,
+			Parent = card,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0, 7), Parent = thumb })
+		new("UIGradient", {
+			Color = ColorSequence.new(C.Accent, C.Accent2),
+			Rotation = 45,
+			Parent = thumb,
+		})
+
+		new("TextLabel", {
+			Size = UDim2.new(1, -110, 0, 18),
+			Position = UDim2.new(0, 54, 0, 9),
+			BackgroundTransparency = 1,
+			Text = title,
+			TextSize = 14,
+			Font = FONT_B,
+			TextColor3 = C.Text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			Parent = card,
+		})
+		new("TextLabel", {
+			Size = UDim2.new(1, -110, 0, 14),
+			Position = UDim2.new(0, 54, 0, 29),
+			BackgroundTransparency = 1,
+			Text = desc,
+			TextSize = 10,
+			Font = FONT_N,
+			TextColor3 = C.Dim,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			Parent = card,
+		})
+		local arrow = new("TextLabel", {
+			Size = UDim2.new(0, 26, 1, 0),
+			Position = UDim2.new(1, -34, 0, 0),
+			BackgroundTransparency = 1,
+			Text = "→",
+			TextSize = 17,
+			Font = FONT_B,
+			TextColor3 = C.Dim,
+			Parent = card,
+		})
+
+		-- 带状态的入口（飞行）：右边放状态点 + 状态字，不要箭头
+		local dot, stateLb = nil, nil
+		if withState then
+			arrow.Visible = false
+			dot = new("Frame", {
+				Name = "RowDot",
+				Size = UDim2.new(0, 7, 0, 7),
+				Position = UDim2.new(1, -96, 0.5, 0),
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundColor3 = C.Dim,
+				BorderSizePixel = 0,
+				Parent = card,
+			})
+			new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = dot })
+			stateLb = new("TextLabel", {
+				Name = "RowState",
+				Size = UDim2.new(0, 58, 1, 0),
+				Position = UDim2.new(1, -86, 0, 0),
+				BackgroundTransparency = 1,
+				Text = L("stateOff"),
+				TextSize = 11,
+				Font = FONT_B,
+				TextColor3 = C.Dim,
+				TextXAlignment = Enum.TextXAlignment.Right,
+				Parent = card,
+			})
+		end
+
+		card.MouseEnter:Connect(function()
+			tween(card, EASE.soft, { BackgroundColor3 = C.Card2 })
+			tween(stroke, EASE.soft, { Color = C.Accent })
+			if not withState then
+				tween(arrow, EASE.soft, { TextColor3 = C.Text, Position = UDim2.new(1, -30, 0, 0) })
+			end
+		end)
+		card.MouseLeave:Connect(function()
+			tween(card, EASE.soft, { BackgroundColor3 = C.Card })
+			tween(stroke, EASE.soft, { Color = C.Stroke })
+			if not withState then
+				tween(arrow, EASE.soft, { TextColor3 = C.Dim, Position = UDim2.new(1, -34, 0, 0) })
+			end
+		end)
+		bindPress(card, C.Accent)
+		card.MouseButton1Click:Connect(onClick)
+		return card, dot, stateLb, stroke
+	end
+
+	homeSection(52, L("homeQuick"))
+	local flyCard, flyDot, flyCardState, flyCardStroke = homeRow(72, "FlyCard",
+		L("cardFlyTitle"), L("cardFlyDesc"), function() openFlyWindow() end, true)
+	local aimCard = homeRow(130, "AimCard", L("navAim"), L("homeAimDesc"),
+		function() showPage("aim") end)
+	local genCard = homeRow(188, "GeneralCard", L("cardGenTitle"), L("cardGenDesc"),
+		function() showPage("general") end)
+
 	-- 当前数值一览：等宽字体，数字对齐了才有"仪表盘"的感觉
+	homeSection(252, L("homeStatsTitle"))
 	local statRow = new("Frame", {
 		Name = "HomeStats",
-		Size = UDim2.new(1, 0, 0, 52),
-		Position = UDim2.new(0, 0, 0, 58),
+		Size = UDim2.new(1, 0, 0, 46),
+		Position = UDim2.new(0, 0, 0, 272),
 		BackgroundTransparency = 1,
 		Parent = home,
 	})
@@ -13173,8 +13496,8 @@ boot = function(lang)
 	for i, def in ipairs(STAT_DEF) do
 		local tile = new("Frame", {
 			Name = "Stat_" .. def.key,
-			Size = UDim2.new(0, 113, 1, 0),
-			Position = UDim2.new(0, (i - 1) * 121, 0, 0),
+			Size = UDim2.new(1 / 3, -8, 1, 0),
+			Position = UDim2.new((i - 1) / 3, 0, 0, 0),
 			BackgroundColor3 = C.Card,
 			BorderSizePixel = 0,
 			Parent = statRow,
@@ -13182,22 +13505,22 @@ boot = function(lang)
 		new("UICorner", { CornerRadius = UDim.new(0, R.ctl), Parent = tile })
 		new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = tile })
 		new("TextLabel", {
-			Size = UDim2.new(1, -20, 0, 14),
-			Position = UDim2.new(0, 10, 0, 7),
+			Size = UDim2.new(1, -20, 0, 12),
+			Position = UDim2.new(0, 10, 0, 6),
 			BackgroundTransparency = 1,
 			Text = def.label,
-			TextSize = 10,
+			TextSize = 9,
 			Font = FONT_N,
 			TextColor3 = C.Dim,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = tile,
 		})
 		homeStats[def.key] = new("TextLabel", {
-			Size = UDim2.new(1, -20, 0, 22),
-			Position = UDim2.new(0, 10, 0, 23),
+			Size = UDim2.new(1, -20, 0, 20),
+			Position = UDim2.new(0, 10, 0, 20),
 			BackgroundTransparency = 1,
 			Text = "--",
-			TextSize = 17,
+			TextSize = 16,
 			Font = FONT_M,
 			TextColor3 = C.Text,
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -13222,143 +13545,12 @@ boot = function(lang)
 		if homeStats.grav then homeStats.grav.Text = string.format("%d", math.floor(gv + 0.5)) end
 	end
 
-	-- 飞行状态卡片
-	local flyCard = new("TextButton", {
-		Name = "FlyCard",
-		Size = UDim2.new(1, 0, 0, 62),
-		Position = UDim2.new(0, 0, 0, 124),
-		BackgroundColor3 = C.Card,
-		BorderSizePixel = 0,
-		AutoButtonColor = false,
-		Text = "",
-		ClipsDescendants = true,
-		Parent = home,
-	})
-	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = flyCard })
-	local flyCardStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = flyCard })
-
-	local flyDot = new("Frame", {
-		Name = "FlyDot",
-		Size = UDim2.new(0, 7, 0, 7),
-		Position = UDim2.new(0, 16, 0, 18),
-		BackgroundColor3 = C.Dim,
-		BorderSizePixel = 0,
-		Parent = flyCard,
-	})
-	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = flyDot })
-
 	new("TextLabel", {
-		Size = UDim2.new(1, -110, 0, 18),
-		Position = UDim2.new(0, 32, 0, 13),
-		BackgroundTransparency = 1,
-		Text = L("cardFlyTitle"),
-		TextSize = 15,
-		Font = FONT_B,
-		TextColor3 = C.Text,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = flyCard,
-	})
-	new("TextLabel", {
-		Size = UDim2.new(1, -110, 0, 16),
-		Position = UDim2.new(0, 32, 0, 33),
-		BackgroundTransparency = 1,
-		Text = L("cardFlyDesc"),
-		TextSize = 11,
-		Font = FONT_N,
-		TextColor3 = C.Dim,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = flyCard,
-	})
-	local flyCardState = new("TextLabel", {
-		Size = UDim2.new(0, 74, 1, 0),
-		Position = UDim2.new(1, -88, 0, 0),
-		BackgroundTransparency = 1,
-		Text = L("stateOff"),
-		TextSize = 12,
-		Font = FONT_B,
-		TextColor3 = C.Dim,
-		TextXAlignment = Enum.TextXAlignment.Right,
-		Parent = flyCard,
-	})
-
-	flyCard.MouseEnter:Connect(function()
-		tween(flyCard, EASE.soft, { BackgroundColor3 = C.Card2, Position = UDim2.new(0, 0, 0, 122) })
-		tween(flyCardStroke, EASE.soft, { Color = C.Accent })
-	end)
-	flyCard.MouseLeave:Connect(function()
-		tween(flyCard, EASE.soft, { BackgroundColor3 = C.Card, Position = UDim2.new(0, 0, 0, 124) })
-		tween(flyCardStroke, EASE.soft, { Color = C.Stroke })
-	end)
-	bindPress(flyCard, C.Accent)
-	flyCard.MouseButton1Click:Connect(function() openFlyWindow() end)
-
-	-- 通用设置卡片
-	local genCard = new("TextButton", {
-		Name = "GeneralCard",
-		Size = UDim2.new(1, 0, 0, 62),
-		Position = UDim2.new(0, 0, 0, 194),
-		BackgroundColor3 = C.Card,
-		BorderSizePixel = 0,
-		AutoButtonColor = false,
-		Text = "",
-		ClipsDescendants = true,
-		Parent = home,
-	})
-	new("UICorner", { CornerRadius = UDim.new(0, R.card), Parent = genCard })
-	local genCardStroke = new("UIStroke", { Color = C.Stroke, Thickness = 1, Parent = genCard })
-
-	new("TextLabel", {
-		Size = UDim2.new(1, -60, 0, 18),
-		Position = UDim2.new(0, 16, 0, 13),
-		BackgroundTransparency = 1,
-		Text = L("cardGenTitle"),
-		TextSize = 15,
-		Font = FONT_B,
-		TextColor3 = C.Text,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = genCard,
-	})
-	new("TextLabel", {
-		Size = UDim2.new(1, -60, 0, 16),
-		Position = UDim2.new(0, 16, 0, 33),
-		BackgroundTransparency = 1,
-		Text = L("cardGenDesc"),
-		TextSize = 11,
-		Font = FONT_N,
-		TextColor3 = C.Dim,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = genCard,
-	})
-	local genArrow = new("TextLabel", {
-		Size = UDim2.new(0, 30, 1, 0),
-		Position = UDim2.new(1, -44, 0, 0),
-		BackgroundTransparency = 1,
-		Text = "→",
-		TextSize = 18,
-		Font = FONT_B,
-		TextColor3 = C.Dim,
-		Parent = genCard,
-	})
-
-	genCard.MouseEnter:Connect(function()
-		tween(genCard, EASE.soft, { BackgroundColor3 = C.Card2, Position = UDim2.new(0, 0, 0, 192) })
-		tween(genCardStroke, EASE.soft, { Color = C.Accent })
-		tween(genArrow, EASE.soft, { TextColor3 = C.Accent, Position = UDim2.new(1, -38, 0, 0) })
-	end)
-	genCard.MouseLeave:Connect(function()
-		tween(genCard, EASE.soft, { BackgroundColor3 = C.Card, Position = UDim2.new(0, 0, 0, 194) })
-		tween(genCardStroke, EASE.soft, { Color = C.Stroke })
-		tween(genArrow, EASE.soft, { TextColor3 = C.Dim, Position = UDim2.new(1, -44, 0, 0) })
-	end)
-	bindPress(genCard, C.Accent)
-	genCard.MouseButton1Click:Connect(function() showPage("general") end)
-
-	new("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 34),
-		Position = UDim2.new(0, 0, 0, 268),
+		Size = UDim2.new(1, 0, 0, 30),
+		Position = UDim2.new(0, 0, 0, 326),
 		BackgroundTransparency = 1,
 		Text = L("homeHint"),
-		TextSize = 11,
+		TextSize = 10,
 		Font = FONT_N,
 		TextColor3 = C.Dim,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -13366,7 +13558,6 @@ boot = function(lang)
 		TextWrapped = true,
 		Parent = home,
 	})
-
 	--========================== 通用功能组（任何面板都能挂一套，30 项） ==========================
 	-- 自然灾害 / 声名狼藉 / 通用面板 / DOORS 都用它，避免同一套功能写三遍。
 	--   addPage(key)      -> 在目标面板里造一个 page
@@ -22630,5 +22821,14 @@ end
 
 -- 注入后第一屏：选语言。选完才 boot（加载动画 + 主界面）
 createLanguageScreen(function(lang)
-	boot(lang)
+	-- 启动失败别静默半启动：把错误（带堆栈）打到执行器控制台
+	local ok, err = xpcall(boot, function(e)
+		local tb = tostring(e)
+		local ok2, t2 = pcall(function() return debug.traceback("", 2) end)
+		if ok2 and t2 then tb = tb .. "\n" .. tostring(t2) end
+		return tb
+	end, lang)
+	if not ok then
+		pcall(function() print("[O_X HUB] 启动失败:\n" .. tostring(err)) end)
+	end
 end)
