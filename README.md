@@ -6,12 +6,25 @@ Roblox 执行器脚本，通过 `loadstring` + `HttpGet` 分发。
 
 | 文件 | 说明 |
 | --- | --- |
+| `O_X_HUB_Gold.lua` | **Gold Edition v2.0**：极简暗黑界面 + 视频加载动画 + 10 页侧栏 |
 | `O_X_HUB.lua` | 语言选择 + 软件式主界面（主页 / 服务器 / 通用 / 飞行 / 设置）+ 开机动画 |
-| `preview_v200.html` | 全部界面的 1:1 视觉预览（浏览器打开） |
+| `O_X_Loading.lua` | 加载动画模块（18×12 色块流播放 110 帧，无贴图依赖） |
+| `OX_Assets.lua` | 视频帧数据（110 帧 × 18×12 RGB + 图标 6×6 网格，约 635 KB） |
+| `O_X_Telemetry.lua` | FPS / Ping / 人数遥测，供底栏显示 |
+| `O_X_UI.lua` | 备用组件库（暗 / 亮两套配色 + 窗口骨架） |
+| `OX_Skin.lua` | 主题与描边引擎（可切浅色、可开色相旋转描边） |
+| `preview_v200_ui.html` | v2.0 界面的 1:1 可交互预览（浏览器打开） |
+| `preview_v200.html` | 早期版本的界面预览 |
 
 ## 用法
 
-执行器里粘贴执行：
+Gold Edition：
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/main/O_X_HUB_Gold.lua"))()
+```
+
+原版：
 
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/O_X_HUB.lua"))()
@@ -22,6 +35,64 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/he
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hxhdsg666/O_X/refs/heads/main/O_X_HUB.lua?t=" .. os.time()))()
 ```
+
+## Gold Edition v2.0 更新
+
+### 1. 视频加载动画
+
+`fakemink - Easter (Snap YT App)` 的 87 秒视频被抽帧去重成 **110 帧**（12 FPS），
+每帧压成 **18×12 的均值色块网格**（216 个 RGB 三元组），base64 编码后内嵌进 `OX_Assets.lua`。
+
+播放层用 216 个 `Frame` 逐帧改 `BackgroundColor3`——**不依赖任何贴图解码 API**，
+所以 Delta / Fluxus / Arceus X / Codex / KRNL 全都能跑，不会出现加载层全黑。
+
+叠加的电影感动效：
+
+- **推拉镜头**：整层 `UIScale` 1.08 → 1.14 正弦呼吸
+- **扫描线**：一条半透明白线以 0.26 周期巡回，透明度随位置变化
+- **暗角 + 压边**：径向暗化 + 上下 `UIGradient` 把画面往中间收
+- **进度环**：`UIGradient.Transparency` 用 4 段 `NumberSequenceKeypoint` 模拟环形进度
+- **打字机字幕**：7 段启动文案逐字打出，带闪烁光标
+- **收尾白闪**：100% 时 0.07s 白闪，随即整层放大到 1.24 倍并淡出
+
+加载结束后进入「选择运行模式」：电脑版 / 手机版两张卡片。
+
+### 2. 图标
+
+专辑封面被量化成 **6×6 色块网格**（108 字节），加载层中央和顶栏 logo 都用这 36 个
+`Frame` 拼出来，外面套一圈呼吸 `UIStroke`。任何执行器都能显示，不依赖 `getsynasset`。
+
+### 3. 界面
+
+| 令牌 | 值 |
+| --- | --- |
+| 底色 | `#0D0E11` |
+| 面板 / 次级面板 | `#131418` / `#191A1F` |
+| 描边 | `#25262C` |
+| 强调色 | `#7C8CFF`（月光蓝），渐变端 `#5D6EF0` |
+| 语义色 | 绿 `#4ADE80` / 红 `#F87171` |
+| 圆角 | 窗口 12 / 卡片 10 / 控件 8 |
+| 尺寸 | 724×486 · 顶栏 56 · 侧栏 150 · 底栏 30 |
+
+改动点：
+
+- **顶栏**：6×6 logo + `O_X HUB` + version 胶囊 + LIVE 呼吸灯 + 圆点式最小化/关闭
+- **侧栏**：10 页（透视 / 锁头 / 自动开火 / 瞬移 / 换皮 / 飞行 / 杂项 / 脚本 / 设置 / 关于），
+  选中项左侧 2px 强调条 + 图标点亮，切页时内容上浮 6px 淡入
+- **组件**：开关做成 40px 整行卡片（右侧 34×19 胶囊），滑块 48px（拖动时旋钮描边加粗），
+  按钮带 `UIScale` 按压缩放回弹，章节标题用大写小字 + 细线
+- **底栏**：左侧状态文字，右侧实时 FPS / Ping / 人数；FPS < 30 时 LIVE 灯变红写 `LAG`
+- **设置页**：浅色主题切换、边缘吸附、加载时长/倍速、重播动画、执行器能力检测
+- **通知**：右侧滑入、左侧 accent 竖条、底部倒计时细线、最多同时 4 条
+- **悬浮球**：最小化后右下角 44px 圆球，带 2.4s 呼吸光环
+
+### 4. 健壮性
+
+- 所有外部模块走 `tryLoad`，任何模块 404 或报错都只降级、不带崩主流程
+- 加载层缺失时自动退回 1.2s 简易进度条
+- 资源文件缺失时加载层跳过视频，只留纯色渐变
+- 全脚本已通过 `luaparser` AST 校验，并在 Lua 5.4 + 手写 Roblox 模拟层里
+  完整跑过「加载动画 → 选择模式 → 10 个页签 → 86 个按钮」，0 运行时错误
 
 ## 功能
 

@@ -1,0 +1,5 @@
+_frames/
+_vframes/
+tex/
+_tools/
+*.bak.lua

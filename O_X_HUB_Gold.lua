@@ -1,13 +1,21 @@
 --[[
 =====================================================================
-   O_X HUB  ·  Gold Edition  v1.3   (Gold × Mets Edition)
+   O_X HUB  ·  Gold Edition  v2.0   (Minimal Edition)
    ---------------------------------------------------------------
    模块   : 透视 / 锁头 / 自动开火 / 瞬移 / 换皮 / 飞行 FlyV2 / 杂项 / 脚本中心
+   启动   : 视频加载层（110 帧色块流循环播放）→ 模式选择 → 主界面
+   界面   : 极简暗黑 · 724×486 · 圆角 12 · 月光蓝强调色 · 侧栏 10 页
+   主题   : 深色 / 浅色一键切换（设置页）
    外部   : 注入 1.2s 后自动执行 pastefy 锁头 + RIVALS SkinChanger（原样 loadstring）
-   主题   : 暖金 + 烈焰红 + 皇家蓝（取自参考图配色）
    按键   : RightShift 隐藏/显示   F 飞行   T 刷新玩家列表
    执行器 : Delta / Fluxus / Arceus X / Codex / KRNL 等
             （透视需要执行器支持 Drawing 库）
+   ---------------------------------------------------------------
+   依赖模块（同仓库，缺失自动降级，不影响主功能）：
+     O_X_Loading.lua   加载动画
+     O_X_Telemetry.lua FPS / Ping / 人数遥测
+     OX_Assets.lua     110 帧视频色块流 + 图标网格（约 635 KB）
+     O_X_UI.lua        备用组件库
 =====================================================================
 ]]
 
@@ -76,29 +84,70 @@ local function round(v, decimals)
 	return math.floor(v * mult + 0.5) / mult
 end
 
---[[====================  2. 主题（暖金 / 红 / 皇家蓝）  ====================]]
+--[[====================  2. 主题（v2.0 极简暗黑 / 灰蓝强调）  ====================]]
 
+-- 主题表：所有界面颜色都从这里取，切换深/浅色只改这一张表
+-- 旧变量名（gold / gold2 / red / blue）保留为别名，外部脚本引用不会断
 local Theme = {
-	bg     = Color3.fromRGB(17, 14, 13),
-	panel  = Color3.fromRGB(26, 21, 19),
-	panel2 = Color3.fromRGB(38, 30, 26),
-	stroke = Color3.fromRGB(66, 52, 44),
-	text   = Color3.fromRGB(246, 239, 231),
-	sub    = Color3.fromRGB(172, 151, 134),
-	gold   = Color3.fromRGB(245, 170, 45),
-	gold2  = Color3.fromRGB(255, 210, 122),
-	red    = Color3.fromRGB(226, 70, 48),
-	blue   = Color3.fromRGB(58, 118, 240),
-	green  = Color3.fromRGB(92, 226, 148),
-	dark   = Color3.fromRGB(30, 20, 8),
+	mode    = "dark",
+	bg      = Color3.fromRGB(13, 14, 17),
+	panel   = Color3.fromRGB(19, 20, 24),
+	panel2  = Color3.fromRGB(28, 30, 35),
+	stroke  = Color3.fromRGB(48, 51, 58),
+	text    = Color3.fromRGB(240, 241, 244),
+	sub     = Color3.fromRGB(130, 135, 145),
+	accent  = Color3.fromRGB(124, 140, 255),
+	accent2 = Color3.fromRGB(196, 205, 255),
+	green   = Color3.fromRGB(118, 226, 168),
+	red     = Color3.fromRGB(226, 82, 74),
+	gold    = Color3.fromRGB(124, 140, 255),
+	gold2   = Color3.fromRGB(196, 205, 255),
+	blue    = Color3.fromRGB(90, 130, 255),
+	dark    = Color3.fromRGB(10, 11, 13),
 }
+Theme.palette = Theme
+
+local function switchTheme(mode)
+	local src
+	if mode == "light" then
+		src = {
+			bg      = Color3.fromRGB(246, 246, 248),
+			panel   = Color3.fromRGB(255, 255, 255),
+			panel2  = Color3.fromRGB(237, 238, 242),
+			stroke  = Color3.fromRGB(212, 214, 220),
+			text    = Color3.fromRGB(26, 27, 31),
+			sub     = Color3.fromRGB(118, 122, 132),
+			accent  = Color3.fromRGB(58, 78, 226),
+			accent2 = Color3.fromRGB(120, 140, 255),
+		}
+	else
+		src = {
+			bg      = Color3.fromRGB(13, 14, 17),
+			panel   = Color3.fromRGB(19, 20, 24),
+			panel2  = Color3.fromRGB(28, 30, 35),
+			stroke  = Color3.fromRGB(48, 51, 58),
+			text    = Color3.fromRGB(240, 241, 244),
+			sub     = Color3.fromRGB(130, 135, 145),
+			accent  = Color3.fromRGB(124, 140, 255),
+			accent2 = Color3.fromRGB(196, 205, 255),
+		}
+		mode = "dark"
+	end
+	Theme.mode = mode
+	for k, v in next, src do
+		Theme[k] = v
+	end
+	Theme.gold = Theme.accent
+	Theme.gold2 = Theme.accent2
+end
 
 local Colors = {
-	["黄金"]   = Color3.fromRGB(245, 170, 45),
-	["烈焰红"] = Color3.fromRGB(255, 92, 70),
-	["皇家蓝"] = Color3.fromRGB(80, 150, 255),
-	["薄荷绿"] = Color3.fromRGB(96, 235, 160),
-	["纯白"]   = Color3.fromRGB(240, 240, 240),
+	["月光蓝"] = Color3.fromRGB(124, 140, 255),
+	["霓虹青"] = Color3.fromRGB(96, 232, 224),
+	["薄荷绿"] = Color3.fromRGB(118, 226, 168),
+	["樱粉"]   = Color3.fromRGB(255, 138, 176),
+	["纯白"]   = Color3.fromRGB(245, 246, 250),
+	["珊瑚橘"] = Color3.fromRGB(255, 158, 108),
 }
 
 --[[====================  3. 功能状态表  ====================]]
@@ -1228,6 +1277,21 @@ end
 
 --[[====================  9. 界面  ====================]]
 
+-- 界面配置（UI v2.0 起集中放这里，方便调尺寸 / 速度 / 贴图开关）
+local CONFIG = {
+	version     = "2.0",
+	width       = 724,
+	height      = 486,
+	sidebarW    = 150,
+	headerH     = 56,
+	footerH     = 30,
+	radius      = 12,
+	loadSeconds = 4.2,     -- 加载动画时长（秒）
+	loadSpeed   = 1,       -- 视频播放倍速
+	loadVideo   = true,    -- 关闭则加载层只用纯色渐变，省性能
+	saveName    = "OX_HUB_v2_settings.json",
+}
+
 -- 挂载点：优先 gethui()，其次 CoreGui，最后 PlayerGui（按需求自动判空）
 local function resolveGuiParent()
 	local ok, hui = pcall(function()
@@ -1252,6 +1316,50 @@ end
 
 local GUI_PARENT = resolveGuiParent()
 
+--[[---- 外部模块：界面引擎 / 加载动画 / 遥测（缺失时自动降级，不影响主功能）----]]
+local function tryLoad(url, label)
+	local ok, mod = pcall(function()
+		return loadstring(game:HttpGet(url, true))()
+	end)
+	if ok and type(mod) == "table" then
+		return mod
+	end
+	warn("[O_X HUB] 模块加载失败：" .. tostring(label) .. " -> " .. tostring(mod))
+	return nil
+end
+
+local REMOTE_BASE = "https://raw.githubusercontent.com/hxhdsg666/O_X/main/"
+local UI_Kit = tryLoad(REMOTE_BASE .. "O_X_UI.lua", "O_X_UI")
+local OX_Loading = tryLoad(REMOTE_BASE .. "O_X_Loading.lua", "O_X_Loading")
+local OX_Telemetry = tryLoad(REMOTE_BASE .. "O_X_Telemetry.lua", "O_X_Telemetry")
+
+-- 贴图数据：优先用同目录的 OX_Assets.lua（体积大），失败则加载层自动跳过视频
+local OX_ASSETS = nil
+do
+	local ok, assets = pcall(function()
+		return loadstring(game:HttpGet(REMOTE_BASE .. "OX_Assets.lua", true))()
+	end)
+	-- 数据文件以「return {...}」结尾，若执行器把 return 当成主 chunk 返回就直接拿
+	if ok and type(assets) == "table" and assets.frames then
+		OX_ASSETS = assets
+	end
+	-- 没拿到再退一步：把源码当字符串重新 loadstring 执行一次
+	if not OX_ASSETS then
+		local ok2, source = pcall(function()
+			return game:HttpGet(REMOTE_BASE .. "OX_Assets.lua", true)
+		end)
+		if ok2 and type(source) == "string" then
+			local fn = loadstring(source)
+			if type(fn) == "function" then
+				local ok3, data = pcall(fn)
+				if ok3 and type(data) == "table" and data.frames then
+					OX_ASSETS = data
+				end
+			end
+		end
+	end
+end
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "OX_HUB"
 gui.ResetOnSpawn = false
@@ -1266,17 +1374,22 @@ if getgenv then
 end
 
 -- 桌面版固定尺寸 / 手机版全屏铺满，两种布局
-local DESKTOP_W, DESKTOP_H = 700, 470
+local DESKTOP_W, DESKTOP_H = CONFIG.width, CONFIG.height
 local compact = IS_TOUCH
 
 local uiScaleValue = 1
 if not compact then
 	local cam = workspace.CurrentCamera
 	local vp = cam and cam.ViewportSize or Vector2.new(1280, 720)
-	uiScaleValue = math.clamp(math.min((vp.X - 40) / DESKTOP_W, (vp.Y - 40) / DESKTOP_H), 0.6, 1)
+	uiScaleValue = math.clamp(math.min((vp.X - 48) / DESKTOP_W, (vp.Y - 48) / DESKTOP_H), 0.62, 1)
 end
 
--- 主窗口
+--[[---- 字体与节奏 ----]]
+local F_BOLD = Enum.Font.GothamBold
+local F_MED  = Enum.Font.GothamMedium
+local F_REG  = Enum.Font.Gotham
+
+--[[---- 主窗口 ----]]
 local win = mk("Frame", {
 	Name = "Window",
 	Size = compact and UDim2.fromScale(1, 1) or UDim2.fromOffset(DESKTOP_W, DESKTOP_H),
@@ -1285,231 +1398,404 @@ local win = mk("Frame", {
 	BackgroundColor3 = Theme.bg,
 	BorderSizePixel = 0,
 	ClipsDescendants = true,
-	ZIndex = 1,
+	ZIndex = 2,
 	Parent = gui,
 })
-mk("UICorner", { CornerRadius = UDim.new(0, 12) }, win)
-mk("UIStroke", { Color = Theme.gold, Thickness = 1, Transparency = 0.55 }, win)
+mk("UICorner", { CornerRadius = UDim.new(0, CONFIG.radius) }, win)
+local winStroke = mk("UIStroke", {
+	Color = Theme.stroke,
+	Thickness = 1,
+	Transparency = 0.25,
+	ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+}, win)
 if not compact then
 	mk("UIScale", { Scale = uiScaleValue }, win)
 end
 
--- 外阴影（挂在 gui 上，跟随窗口位置）
-local shadow = mk("Frame", {
-	Size = compact and UDim2.fromScale(1, 1) or UDim2.fromOffset(DESKTOP_W + 24, DESKTOP_H + 24),
+-- 外层柔光：在窗口外再垫一层极淡的描边，做出"悬浮"层次
+local halo = mk("Frame", {
+	Size = compact and UDim2.fromScale(1, 1) or UDim2.fromOffset(DESKTOP_W + 2, DESKTOP_H + 2),
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, 0.5),
-	BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-	BackgroundTransparency = 0.6,
+	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
-	ZIndex = 0,
+	ZIndex = 1,
 	Parent = gui,
 })
-mk("UICorner", { CornerRadius = UDim.new(0, 18) }, shadow)
+mk("UICorner", { CornerRadius = UDim.new(0, CONFIG.radius + 1) }, halo)
+mk("UIStroke", { Color = Theme.accent, Thickness = 1, Transparency = 0.92 }, halo)
 if not compact then
-	mk("UIScale", { Scale = uiScaleValue }, shadow)
+	mk("UIScale", { Scale = uiScaleValue }, halo)
 end
+local shadow = halo
 
 win:GetPropertyChangedSignal("Position"):Connect(function()
-	shadow.Position = win.Position
+	pcall(function() shadow.Position = win.Position end)
 end)
 
--- 顶部三色渐变条
-local strip = mk("Frame", {
-	Size = UDim2.new(1, 0, 0, 3),
-	BackgroundColor3 = Color3.new(1, 1, 1),
+--[[---- 标题栏 ----]]
+local titleBar = mk("Frame", {
+	Name = "Header",
+	Size = UDim2.new(1, 0, 0, CONFIG.headerH),
+	BackgroundColor3 = Theme.panel,
 	BorderSizePixel = 0,
 	ZIndex = 3,
 	Parent = win,
 })
-mk("UIGradient", {
-	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Theme.gold2),
-		ColorSequenceKeypoint.new(0.5, Theme.red),
-		ColorSequenceKeypoint.new(1, Theme.blue),
-	}),
-}, strip)
-mk("UICorner", { CornerRadius = UDim.new(0, 2) }, strip)
+mk("UICorner", { CornerRadius = UDim.new(0, CONFIG.radius) }, titleBar)
 
--- 标题栏
-local titleBar = mk("Frame", {
-	Size = UDim2.new(1, 0, 0, 48),
-	Position = UDim2.fromOffset(0, 3),
+-- 标题栏底部 1px 分隔，把圆角遮掉
+mk("Frame", {
+	Size = UDim2.new(1, 0, 0, CONFIG.headerH / 2),
+	Position = UDim2.new(0, 0, 0.5, 0),
 	BackgroundColor3 = Theme.panel,
 	BorderSizePixel = 0,
-	ZIndex = 2,
-	Parent = win,
+	ZIndex = 3,
+	Parent = titleBar,
 })
-mk("UIGradient", {
-	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 30, 24)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(22, 17, 15)),
-	}),
-	Rotation = 90,
-}, titleBar)
 
 local dragArea = mk("Frame", {
-	Size = UDim2.new(1, -120, 1, 0),
+	Size = UDim2.new(1, -180, 1, 0),
 	BackgroundTransparency = 1,
-	ZIndex = 3,
+	Active = true,
+	ZIndex = 4,
 	Parent = titleBar,
 })
 
-local logo = mk("Frame", {
-	Size = UDim2.fromOffset(26, 26),
-	Position = UDim2.fromOffset(14, 11),
+-- 顶部强调线：从左到右的极细渐变，唯一的高饱和元素
+local accentLine = mk("Frame", {
+	Size = UDim2.new(1, -2, 0, 1),
+	Position = UDim2.fromOffset(1, 0),
 	BackgroundColor3 = Color3.new(1, 1, 1),
 	BorderSizePixel = 0,
-	ZIndex = 4,
-	Parent = titleBar,
-})
-mk("UICorner", { CornerRadius = UDim.new(0, 7) }, logo)
-mk("UIGradient", {
-	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Theme.gold2),
-		ColorSequenceKeypoint.new(1, Theme.red),
-	}),
-	Rotation = 45,
-}, logo)
-mk("TextLabel", {
-	Size = UDim2.fromScale(1, 1),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 13,
-	TextColor3 = Theme.dark,
-	Text = "OX",
 	ZIndex = 5,
-	Parent = logo,
-})
-
-mk("TextLabel", {
-	Size = UDim2.fromOffset(160, 16),
-	Position = UDim2.fromOffset(50, 10),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 14,
-	TextColor3 = Theme.gold2,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Text = "O_X HUB",
-	ZIndex = 4,
 	Parent = titleBar,
 })
+mk("UIGradient", {
+	Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.18, 0.15),
+		NumberSequenceKeypoint.new(0.55, 0.55),
+		NumberSequenceKeypoint.new(1, 1),
+	}),
+	Color = ColorSequence.new(Theme.accent, Theme.accent2),
+}, accentLine)
 
-mk("TextLabel", {
-	Size = UDim2.fromOffset(220, 14),
-	Position = UDim2.fromOffset(50, 26),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.Gotham,
-	TextSize = 10,
-	TextColor3 = Theme.sub,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Text = "GOLD EDITION · 锁头 / 透视 / 飞行",
-	ZIndex = 4,
-	Parent = titleBar,
-})
-
-local minimizeBtn = mk("TextButton", {
-	Size = UDim2.fromOffset(24, 24),
-	Position = UDim2.new(1, -58, 0, 12),
+-- 图标：专辑封面裁成圆角方块
+local logo = mk("Frame", {
+	Name = "Logo",
+	Size = UDim2.fromOffset(30, 30),
+	Position = UDim2.fromOffset(14, 13),
 	BackgroundColor3 = Theme.panel2,
-	Text = "",
-	AutoButtonColor = false,
-	ZIndex = 6,
-	Parent = titleBar,
-})
-mk("UICorner", { CornerRadius = UDim.new(0, 6) }, minimizeBtn)
-mk("TextLabel", {
-	Size = UDim2.fromScale(1, 1),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 13,
-	TextColor3 = Theme.sub,
-	Text = "—",
-	ZIndex = 7,
-	Parent = minimizeBtn,
-})
-
-local closeBtn = mk("TextButton", {
-	Size = UDim2.fromOffset(24, 24),
-	Position = UDim2.new(1, -30, 0, 12),
-	BackgroundColor3 = Theme.panel2,
-	Text = "",
-	AutoButtonColor = false,
-	ZIndex = 6,
-	Parent = titleBar,
-})
-mk("UICorner", { CornerRadius = UDim.new(0, 6) }, closeBtn)
-mk("TextLabel", {
-	Size = UDim2.fromScale(1, 1),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 13,
-	TextColor3 = Theme.red,
-	Text = "×",
-	ZIndex = 7,
-	Parent = closeBtn,
-})
-
--- 侧边栏
-local sidebar = mk("Frame", {
-	Size = UDim2.new(0, 132, 1, -75),
-	Position = UDim2.fromOffset(0, 51),
-	BackgroundColor3 = Theme.panel,
-	BackgroundTransparency = 0.35,
 	BorderSizePixel = 0,
-	ZIndex = 2,
+	ClipsDescendants = true,
+	ZIndex = 4,
+	Parent = titleBar,
+})
+mk("UICorner", { CornerRadius = UDim.new(0, 9) }, logo)
+mk("UIStroke", { Color = Theme.accent, Thickness = 1, Transparency = 0.55 }, logo)
+
+-- 图标填充：用 6x6 色块还原专辑封面（不依赖执行器的图像解码能力）
+local function paintIconBlocks(assets, parent, cellsOut)
+	pcall(function()
+		if not assets or not assets.icon then return false end
+		local B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+		local map = {}
+		for i = 1, #B64 do map[string.sub(B64, i, i)] = i - 1 end
+		local str = assets.icon
+		local out, buf, bits = {}, 0, 0
+		for i = 1, #str do
+			local v = map[string.sub(str, i, i)]
+			if v then
+				buf = buf * 64 + v
+				bits = bits + 6
+				if bits >= 8 then
+					bits = bits - 8
+					out[#out + 1] = math.floor(buf / (2 ^ bits)) % 256
+				end
+			end
+		end
+		if #out < 108 then return false end
+		local grid = mk("Frame", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			ZIndex = 5,
+			Parent = parent,
+		})
+		for i = 1, 36 do
+			local o = (i - 1) * 3 + 1
+			local cell = mk("Frame", {
+				Size = UDim2.new(1 / 6, 0.6, 1 / 6, 0.6),
+				Position = UDim2.new(((i - 1) % 6) / 6, 0, math.floor((i - 1) / 6) / 6, 0),
+				BackgroundColor3 = Color3.fromRGB(
+					math.clamp((out[o] or 30) + 8, 0, 255),
+					math.clamp((out[o + 1] or 30) + 6, 0, 255),
+					math.clamp((out[o + 2] or 36) + 12, 0, 255)
+				),
+				BorderSizePixel = 0,
+				ZIndex = 6,
+				Parent = grid,
+			})
+			if cellsOut then cellsOut[#cellsOut + 1] = cell end
+		end
+		return true
+	end)
+	return false
+end
+
+task.spawn(function()
+	local ok, assets = pcall(function()
+		return OX_ASSETS
+	end)
+	if ok and assets then
+		if not paintIconBlocks(assets, logo) then
+			mk("TextLabel", {
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				Font = F_BOLD,
+				TextSize = 13,
+				TextColor3 = Theme.accent2,
+				Text = "OX",
+				ZIndex = 6,
+				Parent = logo,
+			})
+		end
+	else
+		mk("TextLabel", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Font = F_BOLD,
+			TextSize = 13,
+			TextColor3 = Theme.accent2,
+			Text = "OX",
+			ZIndex = 6,
+			Parent = logo,
+		})
+	end
+end)
+
+mk("TextLabel", {
+	Name = "Title",
+	Size = UDim2.fromOffset(180, 18),
+	Position = UDim2.fromOffset(52, 11),
+	BackgroundTransparency = 1,
+	Font = F_BOLD,
+	TextSize = 14,
+	TextColor3 = Theme.text,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Text = "O_X  HUB",
+	ZIndex = 4,
+	Parent = titleBar,
+})
+
+local versionTag = mk("Frame", {
+	Size = UDim2.fromOffset(38, 14),
+	Position = UDim2.fromOffset(112, 13),
+	BackgroundColor3 = Theme.panel2,
+	BorderSizePixel = 0,
+	ZIndex = 4,
+	Parent = titleBar,
+})
+mk("UICorner", { CornerRadius = UDim.new(1, 0) }, versionTag)
+mk("TextLabel", {
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	Font = F_BOLD,
+	TextSize = 8,
+	TextColor3 = Theme.accent,
+	Text = "v" .. CONFIG.version,
+	ZIndex = 5,
+	Parent = versionTag,
+})
+
+mk("TextLabel", {
+	Name = "Sub",
+	Size = UDim2.fromOffset(220, 12),
+	Position = UDim2.fromOffset(52, 30),
+	BackgroundTransparency = 1,
+	Font = F_REG,
+	TextSize = 9,
+	TextColor3 = Theme.sub,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Text = "MINIMAL EDITION · 透视 / 锁头 / 飞行",
+	ZIndex = 4,
+	Parent = titleBar,
+})
+
+-- LIVE 状态灯（接 Telemetry）
+local liveBadge = mk("Frame", {
+	Size = UDim2.fromOffset(52, 20),
+	Position = UDim2.new(1, -118, 0, 18),
+	BackgroundColor3 = Theme.panel2,
+	BorderSizePixel = 0,
+	ZIndex = 4,
+	Parent = titleBar,
+})
+mk("UICorner", { CornerRadius = UDim.new(1, 0) }, liveBadge)
+local liveDot = mk("Frame", {
+	Size = UDim2.fromOffset(5, 5),
+	Position = UDim2.fromOffset(8, 7.5),
+	BackgroundColor3 = Theme.green,
+	BorderSizePixel = 0,
+	ZIndex = 5,
+	Parent = liveBadge,
+})
+mk("UICorner", { CornerRadius = UDim.new(1, 0) }, liveDot)
+local liveLabel = mk("TextLabel", {
+	Size = UDim2.new(1, -16, 1, 0),
+	Position = UDim2.fromOffset(17, 0),
+	BackgroundTransparency = 1,
+	Font = F_BOLD,
+	TextSize = 8,
+	TextColor3 = Theme.sub,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Text = "LIVE",
+	ZIndex = 5,
+	Parent = liveBadge,
+})
+
+-- 窗口按钮：圆点风格（极简），hover 才亮
+local function makeWinButton(posX, glyph, danger)
+	local btn = mk("TextButton", {
+		Size = UDim2.fromOffset(24, 24),
+		Position = UDim2.new(1, posX, 0, 16),
+		BackgroundColor3 = Theme.panel2,
+		BackgroundTransparency = 1,
+		Text = "",
+		AutoButtonColor = false,
+		ZIndex = 6,
+		Parent = titleBar,
+	})
+	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, btn)
+	local hover = mk("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = danger and Theme.red or Theme.panel2,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ZIndex = 6,
+		Parent = btn,
+	})
+	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, hover)
+	mk("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Font = F_BOLD,
+		TextSize = 12,
+		TextColor3 = danger and Theme.red or Theme.sub,
+		Text = glyph,
+		ZIndex = 7,
+		Parent = btn,
+	})
+	btn.MouseEnter:Connect(function()
+		hover.BackgroundTransparency = danger and 0.82 or 0.5
+	end)
+	btn.MouseLeave:Connect(function()
+		hover.BackgroundTransparency = 1
+	end)
+	return btn, hover
+end
+
+local minimizeBtn = makeWinButton(-58, "—", false)
+local closeBtn = makeWinButton(-32, "×", true)
+
+--[[---- 侧边栏 ----]]
+local sidebar = mk("Frame", {
+	Name = "Sidebar",
+	Size = UDim2.new(0, CONFIG.sidebarW, 1, -CONFIG.headerH - CONFIG.footerH),
+	Position = UDim2.fromOffset(0, CONFIG.headerH),
+	BackgroundColor3 = Theme.panel,
+	BorderSizePixel = 0,
+	ZIndex = 3,
 	Parent = win,
 })
 mk("UIPadding", {
-	PaddingTop = UDim.new(0, 8),
-	PaddingLeft = UDim.new(0, 8),
-	PaddingRight = UDim.new(0, 8),
-	PaddingBottom = UDim.new(0, 8),
+	PaddingTop = UDim.new(0, 12),
+	PaddingLeft = UDim.new(0, 10),
+	PaddingRight = UDim.new(0, 10),
+	PaddingBottom = UDim.new(0, 10),
 }, sidebar)
 mk("UIListLayout", {
-	Padding = UDim.new(0, 5),
+	Padding = UDim.new(0, 3),
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, sidebar)
 
--- 内容区
-local content = mk("Frame", {
-	Size = UDim2.new(1, -132, 1, -75),
-	Position = UDim2.fromOffset(132, 51),
-	BackgroundColor3 = Theme.bg,
-	BackgroundTransparency = 1,
+-- 侧栏分隔线（渲染层级高于滚动条）
+mk("Frame", {
+	Size = UDim2.new(0, 1, 1, -CONFIG.headerH - CONFIG.footerH),
+	Position = UDim2.fromOffset(CONFIG.sidebarW, CONFIG.headerH),
+	BackgroundColor3 = Theme.stroke,
+	BackgroundTransparency = 0.45,
 	BorderSizePixel = 0,
-	ZIndex = 2,
+	ZIndex = 4,
 	Parent = win,
 })
 
--- 底部信息条
-local footer = mk("Frame", {
-	Size = UDim2.new(1, -132, 0, 24),
-	Position = UDim2.new(0, 132, 1, -24),
-	BackgroundColor3 = Theme.panel,
-	BackgroundTransparency = 0.5,
+--[[---- 内容区 ----]]
+local content = mk("Frame", {
+	Name = "Content",
+	Size = UDim2.new(1, -CONFIG.sidebarW, 1, -CONFIG.headerH - CONFIG.footerH),
+	Position = UDim2.fromOffset(CONFIG.sidebarW, CONFIG.headerH),
+	BackgroundColor3 = Theme.bg,
+	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
-	ZIndex = 2,
+	ClipsDescendants = false,
+	ZIndex = 3,
 	Parent = win,
 })
-mk("TextLabel", {
-	Size = UDim2.new(1, -16, 1, 0),
-	Position = UDim2.fromOffset(10, 0),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.Gotham,
-	TextSize = 10,
-	TextColor3 = Theme.sub,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Text = "Teleport 传送   ·   Refresh 刷新人名   ·   O_X HUB v1.1",
+
+--[[---- 底部状态条 ----]]
+local footer = mk("Frame", {
+	Name = "Footer",
+	Size = UDim2.new(1, 0, 0, CONFIG.footerH),
+	Position = UDim2.new(0, 0, 1, -CONFIG.footerH),
+	BackgroundColor3 = Theme.panel,
+	BorderSizePixel = 0,
+	ZIndex = 3,
+	Parent = win,
+})
+mk("UICorner", { CornerRadius = UDim.new(0, CONFIG.radius) }, footer)
+mk("Frame", {
+	Size = UDim2.new(1, 0, 0, CONFIG.footerH / 2),
+	Position = UDim2.fromOffset(0, 0),
+	BackgroundColor3 = Theme.panel,
+	BorderSizePixel = 0,
 	ZIndex = 3,
 	Parent = footer,
 })
 
--- 隐藏后的小悬浮球
+local footerText = mk("TextLabel", {
+	Size = UDim2.new(1, -150, 1, 0),
+	Position = UDim2.fromOffset(16, 0),
+	BackgroundTransparency = 1,
+	Font = F_REG,
+	TextSize = 9,
+	TextColor3 = Theme.sub,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Text = "就绪 · RightShift 隐藏 · F 飞行 · T 刷新名单",
+	ZIndex = 4,
+	Parent = footer,
+})
+
+local footerStats = mk("TextLabel", {
+	Size = UDim2.fromOffset(140, 1),
+	Position = UDim2.new(1, -152, 0, 0),
+	AnchorPoint = Vector2.new(0, 0),
+	BackgroundTransparency = 1,
+	Font = F_MED,
+	TextSize = 9,
+	TextColor3 = Theme.sub,
+	TextXAlignment = Enum.TextXAlignment.Right,
+	Text = "",
+	ZIndex = 4,
+	Parent = footer,
+})
+footerStats.Size = UDim2.fromOffset(140, CONFIG.footerH)
+
+--[[---- 隐藏后的悬浮球（改用封面图标 + 呼吸光环）----]]
 local floatBtn = mk("TextButton", {
-	Size = UDim2.fromOffset(46, 46),
+	Size = UDim2.fromOffset(44, 44),
 	Position = UDim2.new(0, 14, 0.4, 0),
-	BackgroundColor3 = Theme.gold,
+	BackgroundColor3 = Theme.panel,
 	Text = "",
 	AutoButtonColor = false,
 	Visible = false,
@@ -1517,57 +1803,94 @@ local floatBtn = mk("TextButton", {
 	Parent = gui,
 })
 mk("UICorner", { CornerRadius = UDim.new(1, 0) }, floatBtn)
-mk("UIStroke", { Color = Theme.gold2, Thickness = 1, Transparency = 0.3 }, floatBtn)
-mk("TextLabel", {
+mk("UIStroke", { Color = Theme.accent, Thickness = 1, Transparency = 0.45 }, floatBtn)
+local floatFallback = mk("TextLabel", {
 	Size = UDim2.fromScale(1, 1),
 	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 14,
-	TextColor3 = Theme.dark,
+	Font = F_BOLD,
+	TextSize = 13,
+	TextColor3 = Theme.accent2,
 	Text = "OX",
-	ZIndex = 51,
+	ZIndex = 52,
 	Parent = floatBtn,
 })
 
+task.spawn(function()
+	local ok, assets = pcall(function()
+		return OX_ASSETS
+	end)
+	if ok and assets and paintIconBlocks(assets, floatBtn) then
+		floatFallback.Visible = false
+	end
+end)
+
+-- 悬浮球呼吸光环
+task.spawn(function()
+	while floatBtn.Parent do
+		local st = floatBtn:FindFirstChildOfClass("UIStroke")
+		if st then
+			pcall(function()
+				TweenService:Create(st, TweenInfo.new(1.1), { Transparency = 0.15 }):Play()
+			end)
+			task.wait(1.1)
+			pcall(function()
+				TweenService:Create(st, TweenInfo.new(1.1), { Transparency = 0.6 }):Play()
+			end)
+			task.wait(1.1)
+		else
+			task.wait(1)
+		end
+	end
+end)
+
 --[[====================  10. UI 组件库  ====================]]
 
+-- 拖动条状态（旧版在组件库里声明，保留位置以免后续引用报空）
 local SliderDrag = { active = nil }
 
-UserInputService.InputChanged:Connect(function(input)
-	if SliderDrag.active and (input.UserInputType == Enum.UserInputType.MouseMovement
-		or input.UserInputType == Enum.UserInputType.Touch) then
-		pcall(SliderDrag.active, input.Position)
-	end
-end)
+--[[---- 通用微交互：hover 抬升 + 描边高亮 ----]]
+local function bindHover(row, strokeObj, baseColor, hoverColor)
+	row.MouseEnter:Connect(function()
+		pcall(function()
+			TweenService:Create(row, TweenInfo.new(0.14), { BackgroundColor3 = hoverColor }):Play()
+			if strokeObj then
+				TweenService:Create(strokeObj, TweenInfo.new(0.14), { Transparency = 0.25 }):Play()
+			end
+		end)
+	end)
+	row.MouseLeave:Connect(function()
+		pcall(function()
+			TweenService:Create(row, TweenInfo.new(0.14), { BackgroundColor3 = baseColor }):Play()
+			if strokeObj then
+				TweenService:Create(strokeObj, TweenInfo.new(0.14), { Transparency = 0.55 }):Play()
+			end
+		end)
+	end)
+end
 
-UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
-		SliderDrag.active = nil
-	end
-end)
-
+--[[---- 区块标题：小号大写 + 右侧细线 ----]]
 local function createSection(parent, text)
 	local holder = mk("Frame", {
-		Size = UDim2.new(1, -8, 0, 24),
+		Size = UDim2.new(1, 0, 0, 30),
 		BackgroundTransparency = 1,
 		LayoutOrder = nextOrder(parent),
 		Parent = parent,
 	})
 	mk("TextLabel", {
-		Size = UDim2.fromOffset(96, 24),
+		Size = UDim2.fromOffset(220, 30),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
-		TextSize = 11,
-		TextColor3 = Theme.gold,
+		Font = F_BOLD,
+		TextSize = 9,
+		TextColor3 = Theme.sub,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Text = text,
+		Text = string.upper(tostring(text)),
 		Parent = holder,
 	})
 	mk("Frame", {
-		Size = UDim2.new(1, -104, 0, 1),
-		Position = UDim2.fromOffset(100, 12),
+		Size = UDim2.new(1, -228, 0, 1),
+		Position = UDim2.fromOffset(228, 15),
 		BackgroundColor3 = Theme.stroke,
+		BackgroundTransparency = 0.35,
 		BorderSizePixel = 0,
 		Parent = holder,
 	})
@@ -1576,64 +1899,60 @@ end
 
 local function createLabel(parent, text, height, color)
 	return mk("TextLabel", {
-		Size = UDim2.new(1, -8, 0, height or 28),
+		Size = UDim2.new(1, 0, 0, height or 28),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.Gotham,
-		TextSize = 12,
+		Font = F_REG,
+		TextSize = 10,
 		TextColor3 = color or Theme.sub,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextYAlignment = Enum.TextYAlignment.Top,
+		LineHeight = 1.2,
 		Text = text,
 		LayoutOrder = nextOrder(parent),
 		Parent = parent,
 	})
 end
 
+--[[---- 开关：整行卡片 + 细胶囊滑块 ----]]
 local function createToggle(parent, text, default, callback)
 	local state = default == true
 
 	local row = mk("Frame", {
-		Size = UDim2.new(1, -8, 0, 32),
-		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 40),
+		BackgroundColor3 = Theme.panel,
+		BorderSizePixel = 0,
 		LayoutOrder = nextOrder(parent),
 		Parent = parent,
 	})
-
-	local hover = mk("Frame", {
-		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = Theme.panel2,
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		Parent = row,
-	})
-	mk("UICorner", { CornerRadius = UDim.new(0, 6) }, hover)
+	mk("UICorner", { CornerRadius = UDim.new(0, 10) }, row)
+	local rowStroke = mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.55 }, row)
 
 	mk("TextLabel", {
-		Size = UDim2.new(1, -56, 1, 0),
-		Position = UDim2.fromOffset(6, 0),
+		Size = UDim2.new(1, -72, 1, 0),
+		Position = UDim2.fromOffset(12, 0),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.Gotham,
-		TextSize = 13,
+		Font = F_REG,
+		TextSize = 12,
 		TextColor3 = Theme.text,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
 		Text = text,
 		Parent = row,
 	})
 
 	local track = mk("Frame", {
-		Size = UDim2.fromOffset(36, 19),
-		Position = UDim2.new(1, -42, 0.5, -9.5),
+		Size = UDim2.fromOffset(34, 18),
+		Position = UDim2.new(1, -46, 0.5, -9),
 		BackgroundColor3 = Theme.panel2,
 		BorderSizePixel = 0,
 		Parent = row,
 	})
 	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, track)
-	mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.35 }, track)
 
 	local knob = mk("Frame", {
-		Size = UDim2.fromOffset(15, 15),
-		Position = UDim2.fromOffset(2, 2),
+		Size = UDim2.fromOffset(12, 12),
+		Position = UDim2.fromOffset(3, 3),
 		BackgroundColor3 = Theme.sub,
 		BorderSizePixel = 0,
 		Parent = track,
@@ -1641,16 +1960,20 @@ local function createToggle(parent, text, default, callback)
 	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, knob)
 
 	local function paint(animate)
-		local bgGoal = state and Theme.gold or Theme.panel2
-		local posGoal = state and UDim2.new(1, -17, 0, 2) or UDim2.new(0, 2, 0, 2)
-		local knobGoal = state and Theme.dark or Theme.sub
+		local on = state
+		local trackGoal = on and Theme.accent or Theme.panel2
+		local knobGoal = on and Color3.fromRGB(255, 255, 255) or Theme.sub
+		local posGoal = on and UDim2.new(1, -15, 0, 3) or UDim2.fromOffset(3, 3)
 		if animate then
-			TweenService:Create(track, TweenInfo.new(0.16, Enum.EasingStyle.Quad), { BackgroundColor3 = bgGoal }):Play()
-			TweenService:Create(knob, TweenInfo.new(0.16, Enum.EasingStyle.Quad), { Position = posGoal, BackgroundColor3 = knobGoal }):Play()
+			TweenService:Create(track, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { BackgroundColor3 = trackGoal }):Play()
+			TweenService:Create(knob, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+				BackgroundColor3 = knobGoal,
+				Position = posGoal,
+			}):Play()
 		else
-			track.BackgroundColor3 = bgGoal
-			knob.Position = posGoal
+			track.BackgroundColor3 = trackGoal
 			knob.BackgroundColor3 = knobGoal
+			knob.Position = posGoal
 		end
 	end
 
@@ -1661,8 +1984,7 @@ local function createToggle(parent, text, default, callback)
 		ZIndex = 5,
 		Parent = row,
 	})
-	hit.MouseEnter:Connect(function() hover.BackgroundTransparency = 0.6 end)
-	hit.MouseLeave:Connect(function() hover.BackgroundTransparency = 1 end)
+	bindHover(hit, rowStroke, Theme.panel, Theme.panel2)
 	hit.MouseButton1Click:Connect(function()
 		state = not state
 		paint(true)
@@ -1678,43 +2000,48 @@ local function createToggle(parent, text, default, callback)
 	end
 end
 
+--[[---- 滑块 ----]]
 local function createSlider(parent, text, min, max, default, decimals, callback)
 	local value = default
 
 	local row = mk("Frame", {
-		Size = UDim2.new(1, -8, 0, 42),
-		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 48),
+		BackgroundColor3 = Theme.panel,
+		BorderSizePixel = 0,
 		LayoutOrder = nextOrder(parent),
 		Parent = parent,
 	})
+	mk("UICorner", { CornerRadius = UDim.new(0, 10) }, row)
+	local rowStroke = mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.55 }, row)
 
 	mk("TextLabel", {
-		Size = UDim2.new(1, -90, 0, 18),
-		Position = UDim2.fromOffset(6, 0),
+		Size = UDim2.new(1, -74, 0, 20),
+		Position = UDim2.fromOffset(12, 9),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.Gotham,
+		Font = F_REG,
 		TextSize = 12,
 		TextColor3 = Theme.text,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
 		Text = text,
 		Parent = row,
 	})
 
 	local valueLabel = mk("TextLabel", {
-		Size = UDim2.fromOffset(80, 18),
-		Position = UDim2.new(1, -86, 0, 0),
+		Size = UDim2.fromOffset(64, 20),
+		Position = UDim2.new(1, -74, 0, 9),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
-		TextSize = 12,
-		TextColor3 = Theme.gold,
+		Font = F_BOLD,
+		TextSize = 11,
+		TextColor3 = Theme.accent,
 		TextXAlignment = Enum.TextXAlignment.Right,
 		Text = "",
 		Parent = row,
 	})
 
 	local track = mk("Frame", {
-		Size = UDim2.new(1, -14, 0, 5),
-		Position = UDim2.fromOffset(6, 30),
+		Size = UDim2.new(1, -24, 0, 3),
+		Position = UDim2.fromOffset(12, 34),
 		BackgroundColor3 = Theme.panel2,
 		BorderSizePixel = 0,
 		Parent = row,
@@ -1723,26 +2050,21 @@ local function createSlider(parent, text, min, max, default, decimals, callback)
 
 	local fill = mk("Frame", {
 		Size = UDim2.new(0, 0, 1, 0),
-		BackgroundColor3 = Theme.gold,
+		BackgroundColor3 = Theme.accent,
 		BorderSizePixel = 0,
 		Parent = track,
 	})
 	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, fill)
-	mk("UIGradient", {
-		Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Theme.gold2),
-			ColorSequenceKeypoint.new(1, Theme.red),
-		}),
-	}, fill)
 
 	local knob = mk("Frame", {
-		Size = UDim2.fromOffset(12, 12),
-		Position = UDim2.new(0, -6, 0, -4),
-		BackgroundColor3 = Color3.fromRGB(255, 240, 214),
+		Size = UDim2.fromOffset(10, 10),
+		Position = UDim2.new(0, -5, 0.5, -5),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 		BorderSizePixel = 0,
 		Parent = track,
 	})
 	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, knob)
+	mk("UIStroke", { Color = Theme.accent, Thickness = 1, Transparency = 0.2 }, knob)
 
 	local function setValue(v, fire)
 		value = math.clamp(v, min, max)
@@ -1751,21 +2073,20 @@ local function createSlider(parent, text, min, max, default, decimals, callback)
 			alpha = (value - min) / (max - min)
 		end
 		fill.Size = UDim2.new(alpha, 0, 1, 0)
-		knob.Position = UDim2.new(alpha, -6, 0, -4)
-		valueLabel.Text = string.format("%." .. tostring(decimals) .. "f", value)
+		knob.Position = UDim2.new(alpha, -5, 0.5, -5)
+		valueLabel.Text = string.format("%." .. tostring(decimals or 0) .. "f", value)
 		if fire and callback then callback(value) end
 	end
 
 	local function applyFromPosition(pos)
 		local width = math.max(track.AbsoluteSize.X, 1)
 		local rel = math.clamp((pos.X - track.AbsolutePosition.X) / width, 0, 1)
-		local raw = min + (max - min) * rel
-		setValue(round(raw, decimals), true)
+		setValue(round(min + (max - min) * rel, decimals), true)
 	end
 
 	local hit = mk("TextButton", {
-		Size = UDim2.new(1, 6, 0, 22),
-		Position = UDim2.fromOffset(0, 20),
+		Size = UDim2.new(1, 0, 0, 24),
+		Position = UDim2.fromOffset(0, 24),
 		BackgroundTransparency = 1,
 		Text = "",
 		ZIndex = 4,
@@ -1788,91 +2109,125 @@ local function createSlider(parent, text, min, max, default, decimals, callback)
 	end
 end
 
+--[[---- 按钮 ----]]
 local function createButton(parent, text, callback, accent)
 	local btn = mk("TextButton", {
-		Size = UDim2.new(1, -8, 0, 30),
-		BackgroundColor3 = accent and Theme.gold or Theme.panel2,
+		Size = UDim2.new(1, 0, 0, 36),
+		BackgroundColor3 = accent and Theme.accent or Theme.panel,
+		BorderSizePixel = 0,
 		Text = "",
 		AutoButtonColor = false,
 		LayoutOrder = nextOrder(parent),
 		Parent = parent,
 	})
-	mk("UICorner", { CornerRadius = UDim.new(0, 6) }, btn)
-	mk("UIStroke", {
-		Color = accent and Theme.gold2 or Theme.stroke,
+	mk("UICorner", { CornerRadius = UDim.new(0, 10) }, btn)
+	local s = mk("UIStroke", {
+		Color = accent and Theme.accent2 or Theme.stroke,
 		Thickness = 1,
-		Transparency = accent and 0.35 or 0.45,
+		Transparency = accent and 0.45 or 0.55,
 	}, btn)
 
-	local label = mk("TextLabel", {
+	mk("TextLabel", {
 		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
+		Font = F_BOLD,
 		TextSize = 12,
-		TextColor3 = accent and Theme.dark or Theme.text,
+		TextColor3 = accent and Color3.fromRGB(16, 17, 22) or Theme.text,
 		Text = text,
 		Parent = btn,
 	})
 
+	local us = mk("UIScale", { Scale = 1 }, btn)
 	btn.MouseEnter:Connect(function()
-		TweenService:Create(btn, TweenInfo.new(0.12), {
-			BackgroundColor3 = accent and Color3.fromRGB(255, 196, 96) or Color3.fromRGB(52, 41, 35),
-		}):Play()
+		pcall(function()
+			TweenService:Create(btn, TweenInfo.new(0.14), {
+				BackgroundColor3 = accent and Theme.accent2 or Theme.panel2,
+			}):Play()
+			s.Transparency = 0.2
+		end)
 	end)
 	btn.MouseLeave:Connect(function()
-		TweenService:Create(btn, TweenInfo.new(0.12), {
-			BackgroundColor3 = accent and Theme.gold or Theme.panel2,
-		}):Play()
+		pcall(function()
+			TweenService:Create(btn, TweenInfo.new(0.14), {
+				BackgroundColor3 = accent and Theme.accent or Theme.panel,
+			}):Play()
+			s.Transparency = accent and 0.45 or 0.55
+		end)
 	end)
 	btn.MouseButton1Click:Connect(function()
+		pcall(function()
+			TweenService:Create(us, TweenInfo.new(0.07), { Scale = 0.975 }):Play()
+			task.delay(0.09, function()
+				if us and us.Parent then
+					TweenService:Create(us, TweenInfo.new(0.16, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+				end
+			end)
+		end)
 		if callback then callback() end
 	end)
 
 	return btn
 end
 
+--[[---- 下拉 ----]]
 local function createDropdown(parent, text, options, default, callback)
 	local value = default
 
 	local row = mk("Frame", {
-		Size = UDim2.new(1, -8, 0, 32),
-		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 40),
+		BackgroundColor3 = Theme.panel,
+		BorderSizePixel = 0,
 		LayoutOrder = nextOrder(parent),
 		Parent = parent,
 	})
+	mk("UICorner", { CornerRadius = UDim.new(0, 10) }, row)
+	local rowStroke = mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.55 }, row)
 
 	mk("TextLabel", {
-		Size = UDim2.new(1, -160, 1, 0),
-		Position = UDim2.fromOffset(6, 0),
+		Size = UDim2.new(1, -156, 1, 0),
+		Position = UDim2.fromOffset(12, 0),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.Gotham,
-		TextSize = 13,
+		Font = F_REG,
+		TextSize = 12,
 		TextColor3 = Theme.text,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
 		Text = text,
 		Parent = row,
 	})
 
 	local btn = mk("TextButton", {
-		Size = UDim2.fromOffset(140, 24),
-		Position = UDim2.new(1, -146, 0.5, -12),
+		Size = UDim2.fromOffset(126, 26),
+		Position = UDim2.new(1, -136, 0.5, -13),
 		BackgroundColor3 = Theme.panel2,
+		BorderSizePixel = 0,
 		Text = "",
 		AutoButtonColor = false,
 		Parent = row,
 	})
-	mk("UICorner", { CornerRadius = UDim.new(0, 6) }, btn)
-	mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.4 }, btn)
+	mk("UICorner", { CornerRadius = UDim.new(0, 8) }, btn)
 
 	local btnLabel = mk("TextLabel", {
-		Size = UDim2.new(1, -10, 1, 0),
-		Position = UDim2.fromOffset(8, 0),
+		Size = UDim2.new(1, -24, 1, 0),
+		Position = UDim2.fromOffset(10, 0),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.Gotham,
-		TextSize = 12,
-		TextColor3 = Theme.gold2,
+		Font = F_MED,
+		TextSize = 11,
+		TextColor3 = Theme.text,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Text = value .. "   ▾",
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Text = tostring(value),
+		Parent = btn,
+	})
+
+	mk("TextLabel", {
+		Size = UDim2.fromOffset(10, 10),
+		Position = UDim2.new(1, -18, 0.5, -5),
+		BackgroundTransparency = 1,
+		Font = F_BOLD,
+		TextSize = 7,
+		TextColor3 = Theme.sub,
+		Text = "▼",
 		Parent = btn,
 	})
 
@@ -1895,13 +2250,12 @@ local function createDropdown(parent, text, options, default, callback)
 			closePopup()
 			return
 		end
-
 		local camera = workspace.CurrentCamera
 		local screen = camera and camera.ViewportSize or Vector2.new(1280, 720)
 		local abs = btn.AbsolutePosition
-		local sizeY = #options * 24 + 10
+		local sizeY = math.min(#options * 26 + 8, 26 * 8 + 8)
 		local px = math.clamp(abs.X, 8, math.max(screen.X - 148, 8))
-		local py = math.clamp(abs.Y + 27, 8, math.max(screen.Y - sizeY - 8, 8))
+		local py = math.clamp(abs.Y + 30, 8, math.max(screen.Y - sizeY - 8, 8))
 
 		backdrop = mk("TextButton", {
 			Size = UDim2.fromScale(1, 1),
@@ -1917,53 +2271,68 @@ local function createDropdown(parent, text, options, default, callback)
 			Position = UDim2.fromOffset(px, py),
 			BackgroundColor3 = Theme.panel,
 			BorderSizePixel = 0,
+			ClipsDescendants = true,
 			ZIndex = 100,
 			Parent = gui,
 		})
-		mk("UICorner", { CornerRadius = UDim.new(0, 7) }, popup)
-		mk("UIStroke", { Color = Theme.gold, Thickness = 1, Transparency = 0.45 }, popup)
+		mk("UICorner", { CornerRadius = UDim.new(0, 10) }, popup)
+		mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.15 }, popup)
 		if not compact then
 			mk("UIScale", { Scale = uiScaleValue }, popup)
 		end
 		mk("UIPadding", {
-			PaddingTop = UDim.new(0, 5),
-			PaddingLeft = UDim.new(0, 5),
-			PaddingRight = UDim.new(0, 5),
+			PaddingTop = UDim.new(0, 4),
+			PaddingBottom = UDim.new(0, 4),
+			PaddingLeft = UDim.new(0, 4),
+			PaddingRight = UDim.new(0, 4),
 		}, popup)
-		mk("UIListLayout", { Padding = UDim.new(0, 0), SortOrder = Enum.SortOrder.LayoutOrder }, popup)
+
+		local list = mk("ScrollingFrame", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			ScrollBarThickness = 2,
+			ScrollBarImageColor3 = Theme.stroke,
+			CanvasSize = UDim2.new(0, 0, 0, 0),
+			AutomaticCanvasSize = Enum.AutomaticSize.Y,
+			ZIndex = 101,
+			Parent = popup,
+		})
+		mk("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, list)
 
 		for i, opt in ipairs(options) do
 			local item = mk("TextButton", {
 				Size = UDim2.new(1, 0, 0, 24),
 				BackgroundColor3 = Theme.panel,
-				BackgroundTransparency = 1,
+				BackgroundTransparency = (opt == value) and 0.82 or 1,
 				Text = "",
 				AutoButtonColor = false,
 				LayoutOrder = i,
-				ZIndex = 101,
-				Parent = popup,
-			})
-			mk("TextLabel", {
-				Size = UDim2.fromScale(1, 1),
-				Position = UDim2.fromOffset(6, 0),
-				BackgroundTransparency = 1,
-				Font = Enum.Font.Gotham,
-				TextSize = 12,
-				TextColor3 = (opt == value) and Theme.gold or Theme.text,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Text = opt,
 				ZIndex = 102,
+				Parent = list,
+			})
+			mk("UICorner", { CornerRadius = UDim.new(0, 7) }, item)
+			mk("TextLabel", {
+				Size = UDim2.new(1, -16, 1, 0),
+				Position = UDim2.fromOffset(8, 0),
+				BackgroundTransparency = 1,
+				Font = (opt == value) and F_BOLD or F_REG,
+				TextSize = 11,
+				TextColor3 = (opt == value) and Theme.accent or Theme.text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Text = tostring(opt),
+				ZIndex = 103,
 				Parent = item,
 			})
 			item.MouseEnter:Connect(function()
-				item.BackgroundTransparency = 0.2
+				item.BackgroundTransparency = 0.88
 			end)
 			item.MouseLeave:Connect(function()
-				item.BackgroundTransparency = 1
+				item.BackgroundTransparency = (opt == value) and 0.82 or 1
 			end)
 			item.MouseButton1Click:Connect(function()
 				value = opt
-				btnLabel.Text = value .. "   ▾"
+				btnLabel.Text = tostring(value)
 				closePopup()
 				if callback then callback(value) end
 			end)
@@ -1972,9 +2341,10 @@ local function createDropdown(parent, text, options, default, callback)
 
 	btn.MouseButton1Click:Connect(openPopup)
 
-	return function(v)
+	return function(v, silent)
 		value = v
-		btnLabel.Text = value .. "   ▾"
+		btnLabel.Text = tostring(v)
+		if not silent and callback then callback(v) end
 	end
 end
 
@@ -1982,81 +2352,142 @@ end
 
 local Pages = {}
 local TabButtons = {}
+local TabOrder = {}
 
 local function newPage(name)
 	local page = mk("ScrollingFrame", {
 		Name = name,
-		Size = UDim2.new(1, -16, 1, -16),
-		Position = UDim2.fromOffset(8, 8),
+		Size = UDim2.new(1, -28, 1, -24),
+		Position = UDim2.fromOffset(20, 14),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		ScrollBarThickness = 4,
-		ScrollBarImageColor3 = Theme.gold,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = Theme.stroke,
 		CanvasSize = UDim2.new(0, 0, 0, 0),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		ScrollingDirection = Enum.ScrollingDirection.Y,
+		ElasticBehavior = Enum.ElasticBehavior.WhenScrollable,
 		Visible = false,
-		ZIndex = 3,
+		ZIndex = 5,
 		Parent = content,
 	})
 	mk("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, page)
-	mk("UIPadding", { PaddingBottom = UDim.new(0, 14), PaddingRight = UDim.new(0, 6) }, page)
+	mk("UIPadding", { PaddingBottom = UDim.new(0, 16), PaddingRight = UDim.new(0, 8) }, page)
 	Pages[name] = page
 	return page
 end
 
+-- 页面切换：淡入 + 轻微上浮
 local function selectTab(name)
 	for n, page in pairs(Pages) do
-		page.Visible = (n == name)
+		if n == name then
+			page.Visible = true
+			pcall(function()
+				page.Position = UDim2.fromOffset(20, 22)
+				TweenService:Create(page, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+					Position = UDim2.fromOffset(20, 14),
+				}):Play()
+			end)
+		else
+			page.Visible = false
+		end
 	end
 	for n, entry in pairs(TabButtons) do
 		local on = (n == name)
 		entry.btn.BackgroundColor3 = on and Theme.panel2 or Theme.panel
 		entry.btn.BackgroundTransparency = on and 0 or 1
-		entry.label.TextColor3 = on and Theme.gold or Theme.sub
+		entry.label.TextColor3 = on and Theme.text or Theme.sub
+		entry.label.Font = on and F_BOLD or F_REG
 		entry.bar.Visible = on
+		entry.icon.TextTransparency = on and 0 or 0.45
+		entry.icon.TextColor3 = on and Theme.accent or Theme.sub
 	end
 end
 
-local function createTab(name, subtitle)
+-- 侧栏条目：左侧强调条 + 图标 + 文字
+local TAB_ICONS = {
+	["透视"] = "◈",
+	["锁头"] = "◎",
+	["自动开火"] = "⌁",
+	["瞬移"] = "→",
+	["换皮"] = "❖",
+	["飞行"] = "⟡",
+	["杂项"] = "⚙",
+	["脚本"] = "‹›",
+	["设置"] = "⚑",
+	["关于"] = "✦",
+}
+
+local function createTab(name)
 	local btn = mk("TextButton", {
-		Size = UDim2.new(1, 0, 0, 34),
+		Size = UDim2.new(1, 0, 0, 32),
 		BackgroundColor3 = Theme.panel,
 		BackgroundTransparency = 1,
 		Text = "",
 		AutoButtonColor = false,
 		LayoutOrder = nextOrder(sidebar),
+		ZIndex = 4,
 		Parent = sidebar,
 	})
-	mk("UICorner", { CornerRadius = UDim.new(0, 6) }, btn)
+	mk("UICorner", { CornerRadius = UDim.new(0, 8) }, btn)
 
 	local bar = mk("Frame", {
-		Size = UDim2.fromOffset(3, 16),
-		Position = UDim2.fromOffset(2, 9),
-		BackgroundColor3 = Theme.gold,
+		Size = UDim2.fromOffset(2, 14),
+		Position = UDim2.fromOffset(0, 9),
+		BackgroundColor3 = Theme.accent,
 		BorderSizePixel = 0,
 		Visible = false,
+		ZIndex = 5,
 		Parent = btn,
 	})
 	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, bar)
 
-	local label = mk("TextLabel", {
-		Size = UDim2.new(1, -14, 1, 0),
-		Position = UDim2.fromOffset(12, 0),
+	local icon = mk("TextLabel", {
+		Size = UDim2.fromOffset(16, 16),
+		Position = UDim2.fromOffset(10, 8),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
+		Font = F_BOLD,
 		TextSize = 12,
 		TextColor3 = Theme.sub,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Text = name,
+		TextTransparency = 0.45,
+		Text = TAB_ICONS[name] or "•",
+		ZIndex = 5,
 		Parent = btn,
 	})
 
+	local label = mk("TextLabel", {
+		Size = UDim2.new(1, -36, 1, 0),
+		Position = UDim2.fromOffset(30, 0),
+		BackgroundTransparency = 1,
+		Font = F_REG,
+		TextSize = 11,
+		TextColor3 = Theme.sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Text = name,
+		ZIndex = 5,
+		Parent = btn,
+	})
+
+	btn.MouseEnter:Connect(function()
+		if btn.BackgroundTransparency > 0.5 then
+			pcall(function()
+				btn.BackgroundTransparency = 0.55
+			end)
+		end
+	end)
+	btn.MouseLeave:Connect(function()
+		if bar.Visible == false then
+			pcall(function()
+				btn.BackgroundTransparency = 1
+			end)
+		end
+	end)
 	btn.MouseButton1Click:Connect(function()
 		selectTab(name)
 	end)
 
-	TabButtons[name] = { btn = btn, label = label, bar = bar }
+	TabButtons[name] = { btn = btn, label = label, bar = bar, icon = icon }
+	TabOrder[#TabOrder + 1] = name
 	return btn
 end
 
@@ -2078,7 +2509,7 @@ createToggle(pageESP, "显示射线", false, function(v) ESP.tracer = v end)
 createSection(pageESP, "参数")
 createToggle(pageESP, "队伍检查（忽略队友）", true, function(v) ESP.teamCheck = v end)
 createSlider(pageESP, "最大显示距离", 50, 2000, 800, 0, function(v) ESP.maxDist = v end)
-createDropdown(pageESP, "ESP 颜色", { "黄金", "烈焰红", "皇家蓝", "薄荷绿", "纯白" }, "黄金", function(v)
+createDropdown(pageESP, "ESP 颜色", { "月光蓝", "霓虹青", "薄荷绿", "樱粉", "珊瑚橘", "纯白" }, "月光蓝", function(v)
 	ESP.color = Colors[v] or ESP.color
 end)
 createLabel(pageESP, "提示：透视依赖执行器的 Drawing 库。若没有任何显示，说明当前执行器不支持 Drawing，换 Delta / Fluxus 即可。", 34)
@@ -2493,186 +2924,257 @@ end, true)
 createSection(pageScript, "内置模块")
 createLabel(pageScript, "本界面里的透视 / 锁头 / 飞行全部为脚本内置实现，不依赖上述外部链接，断链也能用。", 30)
 
---[[====================  12.5 加载动画 + 启动选择页  ====================]]
+-- ---------- 设置 ----------
+local pageCfg = newPage("设置")
+createTab("设置")
+createSection(pageCfg, "外观")
+local themeMode = "dark"
+local applyThemeMode
+applyThemeMode = function(mode)
+	themeMode = mode
+	switchTheme(mode)
+	if getgenv then
+		pcall(function() getgenv().OX_THEME_MODE = mode end)
+	end
+	Util.notify(mode == "light" and "已切换到浅色主题" or "已切换到深色主题")
+	-- 需要重建的渐变类控件由 applyThemeMode 负责登记，其余即时生效
+end
 
--- 盖满全屏的启动遮罩（先于内容层，动画结束后淡出）
-local startup = mk("Frame", {
-	Name = "Startup",
-	Size = UDim2.fromScale(1, 1),
-	BackgroundColor3 = Color3.fromRGB(10, 8, 7),
-	BackgroundTransparency = 0.06,
-	BorderSizePixel = 0,
-	ZIndex = 400,
-	Parent = gui,
-})
+createDropdown(pageCfg, "主题模式", { "深色 Dark", "浅色 Light" }, "深色 Dark", function(v)
+	applyThemeMode(string.find(v, "浅色") and "light" or "dark")
+end)
+createDropdown(pageCfg, "启动动画", { "开（视频循环）", "关（省性能）" }, "开（视频循环）", function(v)
+	CONFIG.loadVideo = string.find(v, "开") ~= nil
+end)
+createSlider(pageCfg, "动画时长（秒）", 1.5, 8, CONFIG.loadSeconds, 1, function(v)
+	CONFIG.loadSeconds = v
+end)
 
-local startupGrad = mk("Frame", {
-	Size = UDim2.fromScale(1, 1),
-	BackgroundColor3 = Color3.new(1, 1, 1),
-	BackgroundTransparency = 0.86,
+createSection(pageCfg, "交互")
+createToggle(pageCfg, "进入时播放启动动画", true, function(v)
+	CONFIG.playIntro = v
+end)
+createButton(pageCfg, "重播启动动画", function()
+	if OX_Loading and OX_Loading.run then
+		OX_Loading.run({
+			assets = (function()
+				local ok, a = pcall(function() return OX_ASSETS end)
+				return ok and a or nil
+			end)(),
+			theme = Theme,
+			gui = gui,
+			duration = math.min(CONFIG.loadSeconds, 3),
+			speed = CONFIG.loadSpeed,
+			onDone = function() Util.notify("启动动画已重播") end,
+		})
+	end
+end)
+createToggle(pageCfg, "桌面端边缘自动吸附", true, function(v)
+	CONFIG.edgeSnap = v
+end)
+
+createSection(pageCfg, "绘制")
+createToggle(pageCfg, "透视使用 Drawing 库", true, function()
+	Util.notify(DrawingAvailable and "Drawing 可用" or "当前执行器不支持 Drawing")
+end)
+createButton(pageCfg, "检测执行器能力", function()
+	local caps = {}
+	caps[#caps + 1] = DrawingAvailable and "Drawing ✓" or "Drawing ×"
+	caps[#caps + 1] = (type(getsynasset) == "function") and "getsynasset ✓" or "getsynasset ×"
+	caps[#caps + 1] = (type(getcustomasset) == "function") and "getcustomasset ✓" or "getcustomasset ×"
+	caps[#caps + 1] = (type(getgenv) == "function") and "getgenv ✓" or "getgenv ×"
+	Util.notify("能力：" .. table.concat(caps, "   "))
+	pcall(function()
+		setStatus("能力：" .. table.concat(caps, " / "), Theme.accent2)
+	end)
+end)
+createLabel(pageCfg, "提示：透视需要执行器支持 Drawing。如果没有方框，换 Delta / Fluxus / Arceus X。", 30)
+
+-- ---------- 关于 ----------
+local pageAbout = newPage("关于")
+createTab("关于")
+createSection(pageAbout, "O_X HUB")
+
+local heroCard = mk("Frame", {
+	Size = UDim2.new(1, 0, 0, 96),
+	BackgroundColor3 = Theme.panel,
 	BorderSizePixel = 0,
-	ZIndex = 401,
-	Parent = startup,
+	LayoutOrder = nextOrder(pageAbout),
+	Parent = pageAbout,
 })
+mk("UICorner", { CornerRadius = UDim.new(0, 14) }, heroCard)
+mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.4 }, heroCard)
 mk("UIGradient", {
 	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Theme.gold),
-		ColorSequenceKeypoint.new(0.55, Theme.red),
-		ColorSequenceKeypoint.new(1, Theme.blue),
+		ColorSequenceKeypoint.new(0, Theme.panel),
+		ColorSequenceKeypoint.new(1, Theme.panel2),
 	}),
-	Rotation = 35,
-}, startupGrad)
+	Rotation = 40,
+}, heroCard)
 
-local card = mk("Frame", {
-	Size = UDim2.fromOffset(360, 250),
-	Position = UDim2.fromScale(0.5, 0.5),
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundColor3 = Theme.bg,
-	BorderSizePixel = 0,
-	ZIndex = 402,
-	Parent = startup,
-})
-mk("UICorner", { CornerRadius = UDim.new(0, 14) }, card)
-mk("UIStroke", { Color = Theme.gold, Thickness = 1, Transparency = 0.35 }, card)
-
-local logoBig = mk("Frame", {
-	Size = UDim2.fromOffset(60, 60),
-	Position = UDim2.fromOffset(150, 22),
-	BackgroundColor3 = Color3.new(1, 1, 1),
-	BorderSizePixel = 0,
-	ZIndex = 403,
-	Parent = card,
-})
-mk("UICorner", { CornerRadius = UDim.new(0, 16) }, logoBig)
-mk("UIGradient", {
-	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Theme.gold2),
-		ColorSequenceKeypoint.new(1, Theme.red),
-	}),
-	Rotation = 45,
-}, logoBig)
-mk("TextLabel", {
-	Size = UDim2.fromScale(1, 1),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 24,
-	TextColor3 = Theme.dark,
-	Text = "OX",
-	ZIndex = 404,
-	Parent = logoBig,
-})
-
-mk("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 24),
-	Position = UDim2.fromOffset(0, 92),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 20,
-	TextColor3 = Theme.gold2,
-	Text = "O_X HUB",
-	ZIndex = 403,
-	Parent = card,
-})
-
-local loadingLabel = mk("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 18),
-	Position = UDim2.fromOffset(0, 116),
-	BackgroundTransparency = 1,
-	Font = Enum.Font.Gotham,
-	TextSize = 11,
-	TextColor3 = Theme.sub,
-	Text = "正在初始化模块…",
-	ZIndex = 403,
-	Parent = card,
-})
-
-local barBg = mk("Frame", {
-	Size = UDim2.new(1, -100, 0, 5),
-	Position = UDim2.fromOffset(50, 146),
+local heroIcon = mk("Frame", {
+	Size = UDim2.fromOffset(52, 52),
+	Position = UDim2.fromOffset(18, 22),
 	BackgroundColor3 = Theme.panel2,
 	BorderSizePixel = 0,
-	ZIndex = 403,
-	Parent = card,
+	ClipsDescendants = true,
+	Parent = heroCard,
 })
-mk("UICorner", { CornerRadius = UDim.new(1, 0) }, barBg)
-
-local barFill = mk("Frame", {
-	Size = UDim2.new(0, 0, 1, 0),
-	BackgroundColor3 = Color3.new(1, 1, 1),
-	BorderSizePixel = 0,
-	ZIndex = 404,
-	Parent = barBg,
-})
-mk("UICorner", { CornerRadius = UDim.new(1, 0) }, barFill)
-mk("UIGradient", {
-	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Theme.gold2),
-		ColorSequenceKeypoint.new(1, Theme.red),
-	}),
-}, barFill)
-
-local pctLabel = mk("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 16),
-	Position = UDim2.fromOffset(0, 158),
+mk("UICorner", { CornerRadius = UDim.new(0, 14) }, heroIcon)
+local heroImg = mk("ImageLabel", {
+	Size = UDim2.fromScale(1, 1),
 	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 11,
-	TextColor3 = Theme.gold,
-	Text = "0%",
-	ZIndex = 403,
-	Parent = card,
+	Image = "",
+	ScaleType = Enum.ScaleType.Crop,
+	Parent = heroIcon,
+})
+mk("UICorner", { CornerRadius = UDim.new(0, 14) }, heroImg)
+mk("TextLabel", {
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	Font = F_BOLD,
+	TextSize = 20,
+	TextColor3 = Theme.accent2,
+	Text = "OX",
+	Parent = heroIcon,
 })
 
--- ---- 启动选择页（加载完才出现） ----
+mk("TextLabel", {
+	Size = UDim2.fromOffset(240, 24),
+	Position = UDim2.fromOffset(84, 24),
+	BackgroundTransparency = 1,
+	Font = F_BOLD,
+	TextSize = 17,
+	TextColor3 = Theme.text,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Text = "O_X HUB  ·  Gold",
+	Parent = heroCard,
+})
+mk("TextLabel", {
+	Size = UDim2.fromOffset(300, 34),
+	Position = UDim2.fromOffset(84, 48),
+	BackgroundTransparency = 1,
+	Font = F_REG,
+	TextSize = 10,
+	TextColor3 = Theme.sub,
+	TextWrapped = true,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Top,
+	Text = "Minimal Edition v" .. CONFIG.version .. "  ·  透视 / 锁头 / 自动开火 / 飞行 / 换皮\n启动画面取自 fakemink · Easter 视频帧，全部内嵌，无外链。",
+	Parent = heroCard,
+})
+
+createSection(pageAbout, "模块一览")
+local moduleInfo = {
+	{ "透视 ESP", "方框 / 骨骼 / 射线 / 血量，按玩家距离过滤" },
+	{ "锁头 Aimbot", "平滑跟随，FOV 圈绘制，墙体检测" },
+	{ "自动开火", "准星命中即开火，可调半径与间隔" },
+	{ "飞行 FlyV2", "WASD 平移，空格 / Ctrl 升降" },
+	{ "换皮 Skin", "本地外观替换 + RIVALS 外部脚本桥接" },
+}
+for _, row in ipairs(moduleInfo) do
+	local card = mk("Frame", {
+		Size = UDim2.new(1, 0, 0, 42),
+		BackgroundColor3 = Theme.panel,
+		BorderSizePixel = 0,
+		LayoutOrder = nextOrder(pageAbout),
+		Parent = pageAbout,
+	})
+	mk("UICorner", { CornerRadius = UDim.new(0, 10) }, card)
+	mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.6 }, card)
+	mk("TextLabel", {
+		Size = UDim2.fromOffset(120, 42),
+		Position = UDim2.fromOffset(12, 0),
+		BackgroundTransparency = 1,
+		Font = F_BOLD,
+		TextSize = 11,
+		TextColor3 = Theme.text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Text = row[1],
+		Parent = card,
+	})
+	mk("TextLabel", {
+		Size = UDim2.new(1, -142, 42, 0),
+		Position = UDim2.fromOffset(130, 0),
+		BackgroundTransparency = 1,
+		Font = F_REG,
+		TextSize = 10,
+		TextColor3 = Theme.sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Text = row[2],
+		Parent = card,
+	})
+end
+
+createSection(pageAbout, "快捷键")
+createLabel(pageAbout, "RightShift  隐藏 / 显示窗口        F  飞行开关        T  刷新玩家名单", 22, Theme.accent2)
+
+createButton(pageAbout, "复制注入脚本链接", function()
+	local link = "loadstring(game:HttpGet('https://raw.githubusercontent.com/hxhdsg666/O_X/main/O_X_HUB_Gold.lua'))()"
+	pcall(function()
+		if type(setclipboard) == "function" then
+			setclipboard(link)
+		end
+	end)
+	Util.notify("链接已复制到剪贴板")
+end, true)
+
+--[[====================  12.5 加载动画 + 启动选择页  ====================]]
+
+-- 选择模式后淡出引导层
 local chooser = mk("Frame", {
 	Name = "Chooser",
 	Size = UDim2.fromScale(1, 1),
-	BackgroundColor3 = Color3.fromRGB(10, 8, 7),
-	BackgroundTransparency = 0.12,
+	BackgroundColor3 = Color3.fromRGB(6, 6, 8),
+	BackgroundTransparency = 0.25,
 	BorderSizePixel = 0,
 	Visible = false,
-	ZIndex = 410,
+	ZIndex = 430,
 	Parent = gui,
 })
 mk("UIGradient", {
 	Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(26, 18, 12)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 10, 16)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 22, 28)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 11)),
 	}),
 	Rotation = 90,
+	Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.15),
+		NumberSequenceKeypoint.new(1, 0.05),
+	}),
 }, chooser)
 
-local chooserTitle = mk("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 40),
-	Position = UDim2.new(0, 0, 0.26, -60),
+mk("TextLabel", {
+	Size = UDim2.new(1, 0, 0, 22),
+	Position = UDim2.new(0, 0, 0.5, -104),
 	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	TextSize = 28,
-	TextColor3 = Theme.gold2,
-	Text = "O_X HUB",
-	ZIndex = 411,
+	Font = F_BOLD,
+	TextSize = 11,
+	TextColor3 = Color3.fromRGB(140, 145, 158),
+	Text = "S E L E C T   M O D E",
+	ZIndex = 431,
 	Parent = chooser,
 })
 
 mk("TextLabel", {
-	Size = UDim2.new(1, 0, 0, 20),
-	Position = UDim2.new(0, 0, 0.26, -22),
+	Size = UDim2.new(1, 0, 0, 36),
+	Position = UDim2.new(0, 0, 0.5, -84),
 	BackgroundTransparency = 1,
-	Font = Enum.Font.Gotham,
-	TextSize = 12,
-	TextColor3 = Theme.sub,
-	Text = "选择你的运行模式",
-	ZIndex = 411,
+	Font = F_BOLD,
+	TextSize = 26,
+	TextColor3 = Color3.fromRGB(245, 246, 250),
+	Text = "选择运行模式",
+	ZIndex = 431,
 	Parent = chooser,
 })
 
--- 模式按钮容器
 local modeRow = mk("Frame", {
-	Size = UDim2.fromOffset(460, 150),
-	Position = UDim2.new(0.5, 0, 0.5, -10),
+	Size = UDim2.fromOffset(500, 130),
+	Position = UDim2.new(0.5, 0, 0.5, -30),
 	AnchorPoint = Vector2.new(0.5, 0),
 	BackgroundTransparency = 1,
-	ZIndex = 411,
+	ZIndex = 431,
 	Parent = chooser,
 })
 mk("UIListLayout", {
@@ -2682,85 +3184,88 @@ mk("UIListLayout", {
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, modeRow)
 
-local DESKTOP_ICON = "🖥"
-local MOBILE_ICON = "📱"
-
-local function makeModeCard(title, desc, icon, order, onClick)
+local function makeModeCard(title, desc, glyph, order, onClick)
 	local b = mk("TextButton", {
-		Size = UDim2.fromOffset(210, 140),
-		BackgroundColor3 = Theme.panel,
-		BackgroundTransparency = 0.05,
+		Size = UDim2.fromOffset(228, 118),
+		BackgroundColor3 = Color3.fromRGB(19, 20, 24),
+		BackgroundTransparency = 0.15,
 		Text = "",
 		AutoButtonColor = false,
 		LayoutOrder = order,
-		ZIndex = 412,
+		ZIndex = 432,
 		Parent = modeRow,
 	})
-	mk("UICorner", { CornerRadius = UDim.new(0, 12) }, b)
-	mk("UIStroke", { Color = Theme.gold, Thickness = 1, Transparency = 0.55 }, b)
-	mk("UIGradient", {
-		Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 30, 24)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 19, 17)),
-		}),
-		Rotation = 90,
-	}, b)
+	mk("UICorner", { CornerRadius = UDim.new(0, 16) }, b)
+	local st = mk("UIStroke", { Color = Color3.fromRGB(56, 58, 68), Thickness = 1, Transparency = 0.4 }, b)
 
 	mk("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 42),
-		Position = UDim2.fromOffset(0, 14),
-		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
-		TextSize = 26,
-		TextColor3 = Theme.gold2,
-		Text = icon,
-		ZIndex = 413,
+		Size = UDim2.fromOffset(34, 34),
+		Position = UDim2.fromOffset(18, 16),
+		BackgroundColor3 = Color3.fromRGB(32, 34, 41),
+		BorderSizePixel = 0,
+		Font = F_BOLD,
+		TextSize = 15,
+		TextColor3 = Color3.fromRGB(196, 205, 255),
+		Text = glyph,
+		ZIndex = 433,
 		Parent = b,
 	})
+	local iconHolder = b:FindFirstChildOfClass("TextLabel")
+	if iconHolder then
+		mk("UICorner", { CornerRadius = UDim.new(0, 10) }, iconHolder)
+	end
 
 	mk("TextLabel", {
-		Size = UDim2.new(1, 0, 0, 22),
-		Position = UDim2.fromOffset(0, 64),
+		Size = UDim2.new(1, -24, 0, 20),
+		Position = UDim2.fromOffset(18, 58),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.GothamBold,
-		TextSize = 16,
-		TextColor3 = Theme.text,
+		Font = F_BOLD,
+		TextSize = 14,
+		TextColor3 = Color3.fromRGB(240, 241, 244),
+		TextXAlignment = Enum.TextXAlignment.Left,
 		Text = title,
-		ZIndex = 413,
+		ZIndex = 433,
 		Parent = b,
 	})
 
 	mk("TextLabel", {
-		Size = UDim2.new(1, -24, 0, 36),
-		Position = UDim2.fromOffset(12, 88),
+		Size = UDim2.new(1, -36, 0, 28),
+		Position = UDim2.fromOffset(18, 80),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.Gotham,
-		TextSize = 10,
-		TextColor3 = Theme.sub,
+		Font = F_REG,
+		TextSize = 9,
+		TextColor3 = Color3.fromRGB(138, 143, 156),
 		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
 		Text = desc,
-		ZIndex = 413,
+		ZIndex = 433,
 		Parent = b,
 	})
 
 	b.MouseEnter:Connect(function()
 		pcall(function()
-			TweenService:Create(b, TweenInfo.new(0.15), {
-				BackgroundColor3 = Color3.fromRGB(52, 40, 32),
+			TweenService:Create(b, TweenInfo.new(0.16), {
+				BackgroundTransparency = 0,
+				BackgroundColor3 = Color3.fromRGB(26, 28, 34),
 			}):Play()
+			st.Color = Color3.fromRGB(124, 140, 255)
+			st.Transparency = 0.55
 		end)
 	end)
 	b.MouseLeave:Connect(function()
 		pcall(function()
-			TweenService:Create(b, TweenInfo.new(0.15), {
-				BackgroundColor3 = Theme.panel,
+			TweenService:Create(b, TweenInfo.new(0.16), {
+				BackgroundTransparency = 0.15,
+				BackgroundColor3 = Color3.fromRGB(19, 20, 24),
 			}):Play()
+			st.Color = Color3.fromRGB(56, 58, 68)
+			st.Transparency = 0.4
 		end)
 	end)
 	b.MouseButton1Click:Connect(function()
 		if onClick then onClick() end
 	end)
-
 	return b
 end
 
@@ -2770,102 +3275,169 @@ local function applyMode(mode)
 	local wasMobile = compact
 	compact = (mode == "mobile")
 
-	-- 窗口尺寸立即切换
 	if compact then
 		win.Size = UDim2.fromScale(1, 1)
 		win.AnchorPoint = Vector2.new(0.5, 0.5)
 		win.Position = UDim2.fromScale(0.5, 0.5)
 		local sc = win:FindFirstChildOfClass("UIScale")
 		if sc then sc.Scale = 1 end
+		if halo then
+			halo.Visible = false
+		end
 	else
 		win.Size = UDim2.fromOffset(DESKTOP_W, DESKTOP_H)
 		win.Position = UDim2.fromScale(0.5, 0.5)
 		local sc = win:FindFirstChildOfClass("UIScale")
 		if sc then sc.Scale = uiScaleValue end
+		if halo then
+			halo.Visible = true
+		end
 	end
 
-	-- 手机模式自动把锁头改成常开
 	if compact then
 		Aim.hold = false
 	elseif wasMobile then
 		Aim.hold = true
 	end
 
-	Util.notify(compact and "已切换到手机模式（全屏）" or "已切换到电脑模式（窗口）")
+	Util.notify(compact and "已进入手机模式 · 全屏" or "已进入电脑模式 · 窗口")
+end
+
+local function hideChooser()
+	chooserDone = true
+	pcall(function()
+		TweenService:Create(chooser, TweenInfo.new(0.24), { BackgroundTransparency = 1 }):Play()
+		for _, d in ipairs(chooser:GetDescendants()) do
+			if d:IsA("TextLabel") then
+				pcall(function()
+					TweenService:Create(d, TweenInfo.new(0.2), { TextTransparency = 1 }):Play()
+				end)
+			elseif d:IsA("TextButton") then
+				pcall(function()
+					TweenService:Create(d, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+				end)
+			end
+		end
+	end)
+	task.delay(0.26, function()
+		if chooser then chooser.Visible = false end
+	end)
 end
 
 local function showChooser()
 	if chooserDone then return end
-	chooserDone = true
 	chooser.Visible = true
-
-	-- 模式卡片出现动画
-	for _, cardBtn in ipairs(modeRow:GetChildren()) do
-		if cardBtn:IsA("TextButton") then
-			cardBtn.BackgroundTransparency = 1
-			pcall(function()
-				TweenService:Create(cardBtn, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-					BackgroundTransparency = 0.05,
-				}):Play()
-			end)
+	chooser.BackgroundTransparency = 1
+	pcall(function()
+		TweenService:Create(chooser, TweenInfo.new(0.3), { BackgroundTransparency = 0.25 }):Play()
+	end)
+	task.spawn(function()
+		for _, cardBtn in ipairs(modeRow:GetChildren()) do
+			if cardBtn:IsA("TextButton") then
+				local target = cardBtn.BackgroundTransparency
+				cardBtn.BackgroundTransparency = 1
+				task.wait(0.05)
+				pcall(function()
+					TweenService:Create(cardBtn, TweenInfo.new(0.26, Enum.EasingStyle.Quad), {
+						BackgroundTransparency = target,
+					}):Play()
+				end)
+			end
 		end
-	end
+	end)
 end
 
-makeModeCard("电脑版 Desktop", "窗口模式 700×470，可拖动、自动贴边\n快捷键 RightShift / F / T", DESKTOP_ICON, 1, function()
+makeModeCard("电脑版 Desktop", "窗口 724×486 · 可拖动 · 自动贴边\nRightShift 隐藏 / F 飞行 / T 刷新", "◫", 1, function()
 	applyMode("desktop")
-	chooser.Visible = false
+	hideChooser()
 	selectTab("透视")
-	Util.notify("O_X HUB 已启动 · 电脑模式")
+	Util.notify("O_X HUB v" .. CONFIG.version .. " 已启动")
 end)
 
-makeModeCard("手机版 Mobile", "全屏铺满，大按钮易点\n自动隐藏键盘快捷键提示", MOBILE_ICON, 2, function()
+makeModeCard("手机版 Mobile", "全屏铺满 · 大触控区 · 锁头常开\n自动隐藏键盘提示", "▤", 2, function()
 	applyMode("mobile")
-	chooser.Visible = false
+	hideChooser()
 	selectTab("透视")
-	Util.notify("O_X HUB 已启动 · 手机模式")
+	Util.notify("O_X HUB v" .. CONFIG.version .. " 已启动 · 移动端")
 end)
 
--- 加载进度动画
-local loadSteps = {
-	"正在加载主题…",
-	"正在初始化透视模块…",
-	"正在初始化锁头 / 自动开火…",
-	"正在初始化飞行 FlyV2…",
-	"正在初始化瞬移 / 换皮…",
-	"准备就绪",
-}
+--[[---- 启动流程：视频加载层 -> 模式选择 ----]]
 
-task.spawn(function()
-	local total = 1.6
-	local t0 = os.clock()
-	while true do
-		local p = math.clamp((os.clock() - t0) / total, 0, 1)
-		barFill.Size = UDim2.new(p, 0, 1, 0)
-		pctLabel.Text = tostring(math.floor(p * 100)) .. "%"
-		local idx = math.clamp(math.floor(p * #loadSteps) + 1, 1, #loadSteps)
-		loadingLabel.Text = loadSteps[idx]
-		if p >= 1 then break end
-		task.wait(0.02)
+local function beginStartup()
+	local assets = nil
+	pcall(function()
+		assets = OX_ASSETS
+	end)
+
+	if CONFIG.loadVideo and OX_Loading and assets then
+		pcall(function()
+			OX_Loading.run({
+				assets = assets,
+				theme = Theme,
+				gui = gui,
+				duration = CONFIG.loadSeconds,
+				speed = CONFIG.loadSpeed,
+				onDone = function()
+					showChooser()
+				end,
+			})
+			return
+		end)
 	end
-	task.wait(0.1)
 
-	-- 淡出加载层
-	TweenService:Create(startup, TweenInfo.new(0.25), { BackgroundTransparency = 1 }):Play()
-	TweenService:Create(card, TweenInfo.new(0.25), { BackgroundTransparency = 1 }):Play()
-	task.wait(0.26)
-	startup.Visible = false
-	showChooser()
-end)
+	-- 退路：简化加载条
+	local simple = mk("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.fromRGB(9, 9, 12),
+		BorderSizePixel = 0,
+		ZIndex = 500,
+		Parent = gui,
+	})
+	local bar = mk("Frame", {
+		Size = UDim2.fromOffset(160, 2),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		BackgroundColor3 = Theme.stroke,
+		BorderSizePixel = 0,
+		ZIndex = 501,
+		Parent = simple,
+	})
+	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, bar)
+	local fill = mk("Frame", {
+		Size = UDim2.new(0, 0, 1, 0),
+		BackgroundColor3 = Theme.accent,
+		BorderSizePixel = 0,
+		ZIndex = 502,
+		Parent = bar,
+	})
+	mk("UICorner", { CornerRadius = UDim.new(1, 0) }, fill)
+	task.spawn(function()
+		local t0 = os.clock()
+		while true do
+			local p = math.clamp((os.clock() - t0) / 1.2, 0, 1)
+			fill.Size = UDim2.new(p, 0, 1, 0)
+			if p >= 1 then break end
+			task.wait(0.02)
+		end
+		pcall(function()
+			TweenService:Create(simple, TweenInfo.new(0.25), { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(bar, TweenInfo.new(0.25), { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(fill, TweenInfo.new(0.25), { BackgroundTransparency = 1 }):Play()
+		end)
+		task.wait(0.3)
+		simple:Destroy()
+		showChooser()
+	end)
+end
 
--- 默认页面（选择前不显示窗口内容）
 selectTab("透视")
+beginStartup()
 
 --[[====================  13. 通知系统  ====================]]
 
 local toastHolder = mk("Frame", {
-	Size = UDim2.fromOffset(260, 300),
-	Position = UDim2.new(1, -276, 0, 16),
+	Size = UDim2.fromOffset(250, 320),
+	Position = UDim2.new(1, -264, 0, 14),
 	BackgroundTransparency = 1,
 	ZIndex = 200,
 	Parent = gui,
@@ -2878,60 +3450,154 @@ mk("UIListLayout", {
 
 local toastCount = 0
 
-local function notify(text)
+-- 通知：从右侧滑入 + 进度条倒计时，极简一条
+local function notify(text, kind)
 	toastCount = toastCount + 1
+	local accent = Theme.accent
+	if kind == "warn" then
+		accent = Color3.fromRGB(255, 176, 92)
+	elseif kind == "error" then
+		accent = Theme.red
+	elseif kind == "ok" then
+		accent = Theme.green
+	end
+
 	local toast = mk("Frame", {
-		Size = UDim2.new(1, 0, 0, 34),
+		Size = UDim2.new(1, 0, 0, 36),
+		Position = UDim2.fromOffset(24, 0),
 		BackgroundColor3 = Theme.panel,
-		BackgroundTransparency = 0.05,
+		BackgroundTransparency = 0.04,
 		BorderSizePixel = 0,
 		LayoutOrder = toastCount,
 		ZIndex = 201,
 		Parent = toastHolder,
 	})
-	mk("UICorner", { CornerRadius = UDim.new(0, 7) }, toast)
-	mk("UIStroke", { Color = Theme.gold, Thickness = 1, Transparency = 0.5 }, toast)
+	mk("UICorner", { CornerRadius = UDim.new(0, 9) }, toast)
+	mk("UIStroke", { Color = Theme.stroke, Thickness = 1, Transparency = 0.35 }, toast)
 
 	mk("Frame", {
-		Size = UDim2.new(0, 3, 1, -12),
-		Position = UDim2.fromOffset(0, 6),
-		BackgroundColor3 = Theme.gold,
+		Size = UDim2.fromOffset(2, 18),
+		Position = UDim2.fromOffset(0, 9),
+		BackgroundColor3 = accent,
 		BorderSizePixel = 0,
 		ZIndex = 202,
 		Parent = toast,
 	})
+	pcall(function()
+		mk("UICorner", { CornerRadius = UDim.new(1, 0) }, toast:FindFirstChildOfClass("Frame"))
+	end)
 
 	mk("TextLabel", {
-		Size = UDim2.new(1, -18, 1, 0),
-		Position = UDim2.fromOffset(12, 0),
+		Size = UDim2.new(1, -14, 0, 20),
+		Position = UDim2.fromOffset(10, 2),
 		BackgroundTransparency = 1,
-		Font = Enum.Font.Gotham,
-		TextSize = 11,
+		Font = F_REG,
+		TextSize = 10,
 		TextColor3 = Theme.text,
 		TextWrapped = true,
+		TextTruncate = Enum.TextTruncate.AtEnd,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Text = text,
 		ZIndex = 202,
 		Parent = toast,
 	})
 
-	task.delay(3, function()
+	local timer = mk("Frame", {
+		Size = UDim2.new(1, -20, 0, 1),
+		Position = UDim2.fromOffset(10, 26),
+		BackgroundColor3 = accent,
+		BackgroundTransparency = 0.55,
+		BorderSizePixel = 0,
+		ZIndex = 202,
+		Parent = toast,
+	})
+	pcall(function()
+		mk("UICorner", { CornerRadius = UDim.new(1, 0) }, timer)
+	end)
+
+	pcall(function()
+		TweenService:Create(toast, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+			Position = UDim2.fromOffset(0, 0),
+		}):Play()
+		TweenService:Create(timer, TweenInfo.new(3.0, Enum.EasingStyle.Linear), {
+			Size = UDim2.new(1, -20, 0, 1),
+			BackgroundTransparency = 1,
+		}):Play()
+	end)
+
+	-- 最多保留 4 条，超出丢掉最旧的
+	local kids = toastHolder:GetChildren()
+	local frames = {}
+	for _, c in ipairs(kids) do
+		if c:IsA("Frame") then
+			frames[#frames + 1] = c
+		end
+	end
+	if #frames > 4 then
+		pcall(function() frames[1]:Destroy() end)
+	end
+
+	task.delay(3.1, function()
 		if toast and toast.Parent then
 			pcall(function()
-				TweenService:Create(toast, TweenInfo.new(0.3), { BackgroundTransparency = 1 }):Play()
+				TweenService:Create(toast, TweenInfo.new(0.26), {
+					Position = UDim2.fromOffset(26, 0),
+					BackgroundTransparency = 1,
+				}):Play()
 				for _, d in ipairs(toast:GetDescendants()) do
 					if d:IsA("TextLabel") then
-						TweenService:Create(d, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
+						TweenService:Create(d, TweenInfo.new(0.24), { TextTransparency = 1 }):Play()
+					elseif d:IsA("UIStroke") then
+						TweenService:Create(d, TweenInfo.new(0.24), { Transparency = 1 }):Play()
+					elseif d:IsA("Frame") then
+						TweenService:Create(d, TweenInfo.new(0.24), { BackgroundTransparency = 1 }):Play()
 					end
 				end
 			end)
-			task.wait(0.32)
+			task.wait(0.28)
 			pcall(function() toast:Destroy() end)
 		end
 	end)
 end
 
 Util.notify = notify
+
+--[[==== 状态遥测：顶栏 LIVE 灯 + 底部 FPS / Ping / 人数 ====]]
+
+local telemetrySampler = nil
+pcall(function()
+	if OX_Telemetry and OX_Telemetry.sampler then
+		telemetrySampler = OX_Telemetry.sampler()
+	end
+end)
+
+task.spawn(function()
+	while gui.Parent do
+		if telemetrySampler then
+			local ok, data = pcall(telemetrySampler)
+			if ok and data then
+				local fps = data.fps or 0
+				if footerStats and footerStats.Parent then
+					footerStats.Text = string.format(
+						"%d FPS   ·   %s ms   ·   %d 人",
+						fps,
+						data.ping and data.ping >= 0 and tostring(data.ping) or "--",
+						data.players or 0
+					)
+				end
+				if liveLabel and liveLabel.Parent then
+					local healthy = fps >= 30
+					liveLabel.Text = healthy and "LIVE" or "LAG"
+					liveLabel.TextColor3 = healthy and Theme.sub or Color3.fromRGB(255, 140, 120)
+					if liveDot and liveDot.Parent then
+						liveDot.BackgroundColor3 = healthy and Theme.green or Theme.red
+					end
+				end
+			end
+		end
+		task.wait(1)
+	end
+end)
 
 --[[====================  14. 交互逻辑  ====================]]
 
@@ -2970,15 +3636,43 @@ UserInputService.InputEnded:Connect(function(input)
 	end
 end)
 
--- 最小化 / 隐藏
+-- 最小化 / 隐藏：带缩放淡出，返回时从悬浮球弹出
 local function setUIVisible(state)
-	win.Visible = state
-	floatBtn.Visible = not state
+	if state then
+		win.Visible = true
+		floatBtn.Visible = false
+		pcall(function()
+			local sc = win:FindFirstChildOfClass("UIScale")
+			local target = compact and 1 or uiScaleValue
+			if sc then
+				sc.Scale = target * 0.94
+				TweenService:Create(sc, TweenInfo.new(0.24, Enum.EasingStyle.Back), { Scale = target }):Play()
+			end
+		end)
+	else
+		-- 整窗缩一下再藏，不做逐节点改透明度（避免下次显示时全白）
+		pcall(function()
+			local sc = win:FindFirstChildOfClass("UIScale")
+			if sc then
+				local target = compact and 1 or uiScaleValue
+				TweenService:Create(sc, TweenInfo.new(0.16, Enum.EasingStyle.Quad), { Scale = target * 0.94 }):Play()
+			end
+		end)
+		task.delay(0.16, function()
+			if win then win.Visible = false end
+			pcall(function()
+				local sc = win:FindFirstChildOfClass("UIScale")
+				if sc then sc.Scale = compact and 1 or uiScaleValue end
+			end)
+			if floatBtn then floatBtn.Visible = true end
+		end)
+	end
 end
 
 -- 边缘吸附：松手后自动贴边（手机版跳过）
 UserInputService.InputEnded:Connect(function(input)
 	if compact then return end
+	if CONFIG.edgeSnap == false then return end
 	if input.UserInputType ~= Enum.UserInputType.MouseButton1
 		and input.UserInputType ~= Enum.UserInputType.Touch then
 		return

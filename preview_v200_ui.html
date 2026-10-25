@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>O_X HUB · Gold Edition v2.0 · 预览</title>
+<style>
+  :root{
+    --bg:#0a0b0d; --panel:#131418; --panel2:#191a1f; --stroke:#25262c;
+    --text:#f0f1f4; --sub:#8a8f9c; --accent:#7c8cff; --accent2:#5d6ef0;
+    --green:#4ade80; --red:#f87171; --r:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 700px at 50% -10%, #16171d 0%, #0a0b0d 60%);
+    color:var(--text); font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:40px 20px 80px; gap:28px;
+  }
+  h1{font-size:15px;font-weight:600;letter-spacing:.16em;color:var(--sub);text-transform:uppercase}
+  .stage{position:relative;width:724px;height:486px}
+  .glass{
+    position:absolute;inset:0;border-radius:var(--r);overflow:hidden;
+    background:var(--panel);border:1px solid var(--stroke);
+    box-shadow:0 0 0 1px rgba(124,140,255,.06), 0 40px 100px -30px rgba(0,0,0,.9),
+               0 0 90px -20px rgba(124,140,255,.22);
+  }
+  /* ---------- 加载层 ---------- */
+  #loader{position:absolute;inset:0;background:#050507;z-index:60;overflow:hidden}
+  #lcanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #loader .vig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.72) 100%);pointer-events:none}
+  #loader .topdark{position:absolute;left:0;right:0;top:0;height:50%;background:linear-gradient(180deg,rgba(0,0,0,.62),transparent);pointer-events:none}
+  #loader .botdark{position:absolute;left:0;right:0;bottom:0;height:60%;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);pointer-events:none}
+  #scan{position:absolute;left:0;right:0;height:2px;background:rgba(255,255,255,.5);filter:blur(1px);opacity:.5;pointer-events:none}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .07s}
+  .lmid{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:340px;display:flex;flex-direction:column;align-items:center;gap:0;z-index:3;
+  }
+  .icon-ring{position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center}
+  .icon-ring::before{
+    content:'';position:absolute;inset:0;border-radius:50%;
+    border:1px solid rgba(255,255,255,.85);opacity:.35;
+    animation:breathe 2s ease-in-out infinite;
+  }
+  .icon-ring::after{
+    content:'';position:absolute;inset:-5px;border-radius:50%;
+    background:conic-gradient(from -90deg, var(--accent), transparent 45%, transparent);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 2px));
+    mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 2px));
+    opacity:.85;
+  }
+  @keyframes breathe{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:.75;transform:scale(1.03)}}
+  #iconGrid{display:grid;grid-template-columns:repeat(6,1fr);width:56px;height:56px;border-radius:50%;overflow:hidden;position:relative;z-index:2}
+  #iconGrid i{display:block;width:100%;height:100%}
+  .ltitle{font-size:22px;font-weight:700;letter-spacing:.34em;margin-top:16px;text-align:center;text-indent:.34em}
+  .lver{font-size:9px;letter-spacing:.3em;color:var(--sub);margin-top:4px;text-transform:uppercase}
+  #lsub{font-size:11px;color:#9aa0b0;margin-top:16px;height:14px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+  #lsub::after{content:'▌';animation:blink .8s steps(1) infinite;margin-left:1px;opacity:.8}
+  @keyframes blink{50%{opacity:0}}
+  .linewrap{position:relative;width:150px;height:1px;background:rgba(255,255,255,.14);margin-top:13px;border-radius:2px}
+  #lfill{height:100%;width:0%;background:#fff;border-radius:2px;box-shadow:0 0 8px rgba(255,255,255,.7)}
+  #lpct{font-size:9px;color:var(--sub);margin-top:8px;letter-spacing:.18em;font-variant-numeric:tabular-nums}
+
+  /* ---------- 主界面 ---------- */
+  #app{position:absolute;inset:0;z-index:10;opacity:0;pointer-events:none;transition:opacity .35s}
+  #app.on{opacity:1;pointer-events:auto}
+  .glow{position:absolute;inset:-1px;border-radius:var(--r);pointer-events:none;
+        box-shadow:inset 0 0 0 1px rgba(124,140,255,.10), 0 0 40px -12px rgba(124,140,255,.35)}
+  header{
+    position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;
+    padding:0 14px 0 18px;gap:10px;border-bottom:1px solid rgba(255,255,255,.045);
+    background:linear-gradient(180deg,rgba(255,255,255,.018),transparent);
+  }
+  .logo{width:30px;height:30px;border-radius:8px;overflow:hidden;display:grid;grid-template-columns:repeat(6,1fr);flex:0 0 auto}
+  .logo i{display:block;width:100%;height:100%}
+  .brand{display:flex;align-items:baseline;gap:8px}
+  .brand b{font-size:13.5px;letter-spacing:.12em;font-weight:700}
+  .pill{font-size:8.5px;letter-spacing:.1em;padding:2px 6px;border-radius:4px;
+        background:rgba(124,140,255,.14);color:#a8b4ff;border:1px solid rgba(124,140,255,.2)}
+  .live{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:.14em;color:var(--sub)}
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .wbtns{display:flex;gap:6px;margin-left:12px}
+  .wbtn{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.05);
+        display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--sub);
+        cursor:pointer;transition:.18s;border:1px solid transparent}
+  .wbtn:hover{background:rgba(255,255,255,.1);color:#fff}
+  .wbtn.close:hover{background:rgba(248,113,113,.18);color:#f87171;border-color:rgba(248,113,113,.3)}
+  /* 侧栏 */
+  nav{position:absolute;left:0;top:56px;bottom:30px;width:150px;padding:8px 8px 8px 0;
+      border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;gap:1px}
+  .tab{position:relative;height:32px;display:flex;align-items:center;gap:9px;padding-left:18px;
+       border-radius:0 8px 8px 0;cursor:pointer;color:var(--sub);font-size:11.5px;
+       transition:background .16s,color .16s}
+  .tab i{font-style:normal;font-size:12px;width:15px;text-align:center;opacity:.55;transition:.16s}
+  .tab:hover{color:#cfd3dd;background:rgba(255,255,255,.028)}
+  .tab.on{background:rgba(255,255,255,.045);color:var(--text);font-weight:600}
+  .tab.on i{color:var(--accent);opacity:1}
+  .tab.on::before{content:'';position:absolute;left:0;top:9px;width:2px;height:14px;
+                  border-radius:2px;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  /* 内容 */
+  main{position:absolute;left:150px;right:0;top:56px;bottom:30px;overflow:hidden}
+  .page{position:absolute;inset:0;padding:20px 22px;overflow-y:auto;display:none;animation:up .26s ease-out}
+  .page.on{display:block}
+  @keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .page::-webkit-scrollbar{width:3px}
+  .page::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px}
+  .sec{font-size:9px;letter-spacing:.2em;color:#6b7080;text-transform:uppercase;
+       display:flex;align-items:center;gap:10px;margin:18px 0 9px}
+  .sec:first-child{margin-top:0}
+  .sec::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.05)}
+  .row{height:40px;display:flex;align-items:center;padding:0 12px;border-radius:9px;
+       background:rgba(255,255,255,.022);margin-bottom:5px;border:1px solid transparent;
+       transition:.16s}
+  .row:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.05)}
+  .row .t{font-size:11.5px;color:#d5d8e0}
+  .row .d{font-size:9.5px;color:#6b7080;margin-top:2px}
+  .sw{margin-left:auto;width:34px;height:19px;border-radius:19px;background:#2a2b33;
+      position:relative;cursor:pointer;transition:.2s;flex:0 0 auto}
+  .sw::after{content:'';position:absolute;left:2px;top:2px;width:15px;height:15px;
+             border-radius:50%;background:#8a8f9c;transition:.2s}
+  .sw.on{background:var(--accent)}
+  .sw.on::after{left:17px;background:#fff}
+  .slider{height:48px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.022);
+          margin-bottom:5px;display:flex;flex-direction:column;justify-content:center;gap:7px}
+  .slider .top{display:flex;align-items:center}
+  .slider .t{font-size:11.5px;color:#d5d8e0}
+  .slider .v{margin-left:auto;font-size:10px;color:var(--accent);font-variant-numeric:tabular-nums}
+  .track{position:relative;height:3px;border-radius:3px;background:#26272e;cursor:pointer}
+  .track .fill{position:absolute;left:0;top:0;height:100%;border-radius:3px;
+               background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  .track .knob{position:absolute;top:50%;width:9px;height:9px;border-radius:50%;background:#fff;
+               transform:translate(-50%,-50%);box-shadow:0 0 0 3px rgba(124,140,255,.2)}
+  .btnrow{display:flex;gap:6px;margin-top:10px}
+  .btn{height:32px;padding:0 14px;border-radius:8px;background:rgba(255,255,255,.045);
+       color:#d5d8e0;font-size:11px;display:flex;align-items:center;justify-content:center;
+       cursor:pointer;transition:.16s;border:1px solid rgba(255,255,255,.04);flex:1}
+  .btn:hover{background:rgba(255,255,255,.08);color:#fff}
+  .btn.pri{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;
+           border-color:transparent;font-weight:600;box-shadow:0 6px 18px -8px var(--accent)}
+  .btn.pri:hover{filter:brightness(1.08)}
+  /* 底栏 */
+  footer{position:absolute;left:0;right:0;bottom:0;height:30px;display:flex;align-items:center;
+         padding:0 16px;border-top:1px solid rgba(255,255,255,.04);font-size:9.5px;color:#6b7080;
+         gap:8px;background:rgba(0,0,0,.14)}
+  footer .right{margin-left:auto;display:flex;gap:12px;font-variant-numeric:tabular-nums}
+  footer b{color:#9aa0b0;font-weight:500}
+  /* 悬浮球 */
+  #ball{position:absolute;right:14px;bottom:44px;width:44px;height:44px;border-radius:50%;
+        background:linear-gradient(145deg,#1d1f27,#14151a);border:1px solid rgba(124,140,255,.28);
+        display:none;align-items:center;justify-content:center;cursor:pointer;z-index:20;
+        box-shadow:0 0 0 0 rgba(124,140,255,.4);animation:halo 2.4s ease-out infinite}
+  @keyframes halo{0%{box-shadow:0 0 0 0 rgba(124,140,255,.35)}70%{box-shadow:0 0 0 12px rgba(124,140,255,0)}100%{box-shadow:0 0 0 0 rgba(124,140,255,0)}}
+  #ball span{font-size:11px;font-weight:700;letter-spacing:.06em;color:#a8b4ff}
+  /* 选择模式 */
+  #chooser{position:absolute;inset:0;z-index:50;display:none;flex-direction:column;
+           align-items:center;justify-content:center;gap:0;
+           background:linear-gradient(145deg,#16161c,#08080b)}
+  #chooser.on{display:flex}
+  .csmall{font-size:9px;letter-spacing:.32em;color:#8c919e;text-transform:uppercase}
+  .cbold{font-size:26px;font-weight:700;margin-top:10px;letter-spacing:.02em}
+  .cards{display:flex;gap:14px;margin-top:26px}
+  .card{width:228px;height:118px;border-radius:16px;background:rgba(19,20,24,.85);
+        border:1px solid rgba(86,88,100,.42);padding:16px 18px;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+  .card:hover{border-color:rgba(124,140,255,.55);transform:translateY(-2px);
+              box-shadow:0 16px 40px -20px rgba(124,140,255,.6)}
+  .card .g{width:34px;height:34px;border-radius:9px;background:#20222a;display:flex;
+           align-items:center;justify-content:center;color:#c4cdff;font-size:15px}
+  .card .ct{font-size:12px;font-weight:600;margin-top:10px}
+  .card .cd{font-size:9px;color:#7c8290;margin-top:5px;line-height:1.55;white-space:pre-line}
+  /* 重放 */
+  .replay{margin-top:6px;padding:8px 18px;border-radius:8px;background:rgba(255,255,255,.05);
+          border:1px solid rgba(255,255,255,.07);font-size:11px;color:#c9cdd8;cursor:pointer;transition:.16s}
+  .replay:hover{background:rgba(124,140,255,.14);color:#fff;border-color:rgba(124,140,255,.3)}
+  .tips{font-size:10.5px;color:var(--sub);letter-spacing:.04em;text-align:center;max-width:640px;line-height:1.8}
+  .tips code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px;color:#a8b4ff;font-size:10px}
+</style>
+</head>
+<body>
+<h1>O_X HUB · Gold Edition v2.0</h1>
+
+<div class="stage">
+  <div class="glass">
+    <div class="glow"></div>
+
+    <!-- ============ 加载层 ============ -->
+    <div id="loader">
+      <canvas id="lcanvas"></canvas>
+      <div class="vig"></div>
+      <div class="topdark"></div>
+      <div class="botdark"></div>
+      <div id="scan"></div>
+      <div id="flash"></div>
+
+      <div class="lmid">
+        <div class="icon-ring"><div id="iconGrid"></div></div>
+        <div class="ltitle">O_X HUB</div>
+        <div class="lver">GOLD EDITION · v2.0</div>
+        <div id="lsub">正在挂载界面引擎…</div>
+        <div class="linewrap"><div id="lfill"></div></div>
+        <div id="lpct">0%</div>
+      </div>
+    </div>
+
+    <!-- ============ 选择模式 ============ -->
+    <div id="chooser">
+      <div class="csmall">S E L E C T &nbsp;&nbsp; M O D E</div>
+      <div class="cbold">选择运行模式</div>
+      <div class="cards">
+        <div class="card" data-mode="desktop">
+          <div class="g">◫</div>
+          <div class="ct">电脑版 Desktop</div>
+          <div class="cd">窗口 724×486 · 可拖动 · 自动贴边
+RightShift 隐藏 / F 飞行 / T 刷新</div>
+        </div>
+        <div class="card" data-mode="mobile">
+          <div class="g">▤</div>
+          <div class="ct">手机版 Mobile</div>
+          <div class="cd">全屏铺满 · 大触控区 · 锁头常开
+自动隐藏键盘提示</div>
+        </div>
+      </div>
+      <div class="replay" id="replay" style="margin-top:22px">↺ 重放加载动画</div>
+    </div>
+
+    <!-- ============ 主界面 ============ -->
+    <div id="app">
+      <header>
+        <div class="logo" id="logo"></div>
+        <div class="brand"><b>O_X HUB</b><span class="pill">v2.0</span></div>
+        <div class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">LIVE</span></div>
+        <div class="wbtns">
+          <div class="wbtn" id="minBtn">–</div>
+          <div class="wbtn close" id="closeBtn">×</div>
+        </div>
+      </header>
+
+      <nav id="nav"></nav>
+      <main id="main"></main>
+
+      <footer>
+        <span>O_X HUB v2.0</span>
+        <span style="opacity:.4">·</span>
+        <span id="status">就绪</span>
+        <div class="right">
+          <span id="fps"><b>60</b> FPS</span>
+          <span id="ping"><b>52</b> ms</span>
+          <span id="ply"><b>1</b> 人</span>
+        </div>
+      </footer>
+
+      <div id="ball"><span>OX</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="tips">
+  预览实现了与 Lua 侧一致的色块渲染：18×12 网格、12 FPS、110 帧循环，叠加推拉、扫描线、暗角与白闪。<br>
+  真实运行入口：<code>loadstring(game:HttpGet('https://raw.githubusercontent.com/hxhdsg666/O_X/main/O_X_HUB_Gold.lua'))()</code>
+</div>
+
+<script src="_frames.js"></script>
+<script>
+/* ================= 图标：6×6 色块 ================= */
+function paintGrid(el, grid, n){
+  el.innerHTML='';
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const c=grid[y][x], i=document.createElement('i');
+    i.style.background='rgb('+c[0]+','+c[1]+','+c[2]+')';
+    el.appendChild(i);
+  }
+}
+paintGrid(document.getElementById('iconGrid'), window.OX_ICON, 6);
+paintGrid(document.getElementById('logo'), window.OX_ICON, 6);
+
+/* ================= 加载动画 ================= */
+const cv = document.getElementById('lcanvas'), cx = cv.getContext('2d');
+const COLS=18, ROWS=12, FRAMES=window.OX_FRAMES, FPS=12;
+
+function fitCanvas(){
+  const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio||1, 2);
+  cv.width = Math.round(r.width*dpr); cv.height = Math.round(r.height*dpr);
+}
+fitCanvas();
+addEventListener('resize', ()=>{fitCanvas(); if(!loading) drawFrame(curFrame);});
+
+let curFrame = 0, loading = true, rafId = 0, t0 = 0, playing = false;
+
+function drawFrame(idx){
+  const w = cv.width, h = cv.height;
+  if(!w||!h) return;
+  const g = FRAMES[idx % FRAMES.length];
+  const cw = w/COLS + 1, ch = h/ROWS + 1;   // +1 消除接缝
+  for(let y=0;y<ROWS;y++){
+    for(let x=0;x<COLS;x++){
+      const c = g[y][x];
+      cx.fillStyle = 'rgb('+Math.min(255,c[0]+6)+','+Math.min(255,c[1]+6)+','+Math.min(255,c[2]+10)+')';
+      cx.fillRect(x*(w/COLS), y*(h/ROWS), cw, ch);
+    }
+  }
+}
+
+const stage = document.getElementById('loader');
+const fillEl = document.getElementById('lfill');
+const pctEl  = document.getElementById('lpct');
+const subEl  = document.getElementById('lsub');
+const scanEl = document.getElementById('scan');
+const flashEl= document.getElementById('flash');
+
+const STEPS = [
+  '正在挂载界面引擎…',
+  '正在解码视频帧…',
+  '正在载入透视与锁头模块…',
+  '正在校准平滑与 FOV…',
+  '正在准备 FlyV2…',
+  '正在连接外部脚本…',
+  '准备就绪'
+];
+
+function typeText(text, token){
+  subEl.textContent = '';
+  let i = 0;
+  return new Promise(res=>{
+    const timer = setInterval(()=>{
+      if(token !== typeToken){clearInterval(timer);return res();}
+      subEl.textContent = text.slice(0, ++i);
+      if(i >= text.length){clearInterval(timer);res();}
+    }, 18);
+  });
+}
+let typeToken = 0;
+
+function startLoad(){
+  playing = true; loading = true; t0 = performance.now();
+  stage.style.display = 'block'; stage.style.opacity = '1';
+  document.getElementById('chooser').classList.remove('on');
+  document.getElementById('app').classList.remove('on');
+  flashEl.style.opacity = 0;
+  fillEl.style.width = '0%'; pctEl.textContent = '0%';
+  subEl.textContent = ''; typeToken++;
+
+  const DUR = 4200, per = DUR/STEPS.length;
+  let stepi = 0;
+
+  function loop(now){
+    if(!playing) return;
+    const el = now - t0;
+    const p = Math.min(el / DUR, 1);
+
+    // 帧循环 12fps
+    const fi = Math.floor(el/1000*FPS) % FRAMES.length;
+    if(fi !== curFrame){ curFrame = fi; drawFrame(fi); }
+
+    // 推拉
+    const s = 1.08 + Math.sin(el/1000*0.32)*0.5*0.06 + 0.03;
+    stage.style.setProperty('--s', s);
+    const canvasScale = s;
+    cv.style.transform = 'scale('+canvasScale+')';
+
+    // 扫描线
+    const sp = (el/1000*0.26) % 1;
+    scanEl.style.top = (sp*100)+'%';
+    scanEl.style.opacity = String(0.35 + Math.sin(sp*Math.PI)*0.25);
+
+    // 进度
+    const eased = 1 - Math.pow(1-p, 2);
+    fillEl.style.width = (eased*100)+'%';
+    pctEl.textContent = Math.round(eased*100)+'%';
+
+    const wantStep = Math.min(Math.floor(el/per), STEPS.length-1);
+    if(wantStep !== stepi || el < 30){
+      stepi = wantStep;
+      typeToken++;
+      typeText(STEPS[stepi], typeToken);
+    }
+
+    if(p >= 1){ finishLoad(); return; }
+    rafId = requestAnimationFrame(loop);
+  }
+  drawFrame(0);
+  rafId = requestAnimationFrame(loop);
+  stepi = -1;
+}
+
+function finishLoad(){
+  playing = false;
+  typeToken++;
+  subEl.textContent = '准备就绪';
+  pctEl.textContent = '100%';
+  fillEl.style.width = '100%';
+
+  flashEl.style.opacity = 0.5;
+  setTimeout(()=>{
+    flashEl.style.opacity = 0;
+    stage.style.transition = 'opacity .42s ease';
+    stage.style.opacity = '0';
+    cv.style.transition = 'transform .42s ease';
+    cv.style.transform = 'scale(1.24)';
+  }, 70);
+  setTimeout(()=>{
+    loading = false;
+    stage.style.display = 'none';
+    cv.style.transition = '';
+    document.getElementById('chooser').classList.add('on');
+  }, 520);
+}
+
+/* ================= 主界面数据 ================= */
+const TABS = [
+  ['透视','◈'],['锁头','◎'],['自动开火','⌁'],['瞬移','→'],['换皮','❖'],
+  ['飞行','⟡'],['杂项','⚙'],['脚本','‹›'],['设置','⚑'],['关于','✦']
+];
+
+const PAGES = {
+  '透视': [
+    {type:'sec', text:'ESP 渲染'},
+    {type:'toggle', t:'透视总开关', d:'绘制方框 / 名字 / 距离', on:false},
+    {type:'toggle', t:'显示方框', on:true},
+    {type:'toggle', t:'显示名字', on:true},
+    {type:'toggle', t:'显示距离', on:true},
+    {type:'toggle', t:'显示血量条', on:true},
+    {type:'toggle', t:'显示骨骼', on:false},
+    {type:'toggle', t:'显示头部圆点', on:false},
+    {type:'toggle', t:'显示射线', on:false},
+    {type:'sec', text:'筛选'},
+    {type:'toggle', t:'队伍检查（忽略队友）', on:true},
+    {type:'slider', t:'最大显示距离', v:800, min:50, max:2000, unit:'m'}
+  ],
+  '锁头': [
+    {type:'sec', text:'Aimbot'},
+    {type:'toggle', t:'锁头总开关', on:false},
+    {type:'toggle', t:'按住右键触发', d:'关闭 = 常开', on:true},
+    {type:'slider', t:'FOV 范围（像素）', v:140, min:20, max:400, unit:'px'},
+    {type:'slider', t:'平滑度（1 = 瞬锁）', v:0.35, min:0.05, max:1, step:0.01},
+    {type:'slider', t:'最大锁定距离', v:600, min:50, max:1000, unit:'m'},
+    {type:'sec', text:'条件'},
+    {type:'toggle', t:'队伍检查', on:true},
+    {type:'toggle', t:'墙体检测（隔墙不锁）', on:true},
+    {type:'toggle', t:'显示 FOV 圈', on:true},
+    {type:'toggle', t:'锁定鼠标（mousemoverel）', on:false}
+  ],
+  '设置': [
+    {type:'sec', text:'外观'},
+    {type:'toggle', t:'浅色主题', d:'深色 / 浅色一键切换', on:false},
+    {type:'toggle', t:'边缘吸附', d:'拖动松手后自动贴边', on:true},
+    {type:'sec', text:'启动动画'},
+    {type:'toggle', t:'播放视频加载层', d:'110 帧色块流循环', on:true},
+    {type:'slider', t:'加载时长（秒）', v:4.2, min:1, max:10, step:0.1, unit:'s'},
+    {type:'slider', t:'播放倍速', v:1, min:0.5, max:2, step:0.1, unit:'x'},
+    {type:'sec', text:'诊断'},
+    {type:'toggle', t:'显示 FPS / Ping', on:true},
+    {type:'buttons', items:[['重播加载动画',''],['检测执行器能力','']]}
+  ],
+  '关于': [
+    {type:'sec', text:'O_X HUB'},
+    {type:'toggle', t:'版本', d:'v2.0 · Minimal Edition', on:true, lock:true},
+    {type:'toggle', t:'模块', d:'透视 / 锁头 / 自动开火 / 瞬移 / 换皮 / 飞行', on:true, lock:true},
+    {type:'toggle', t:'快捷键', d:'RightShift 隐藏 · F 飞行 · T 刷新', on:true, lock:true},
+    {type:'sec', text:'依赖'},
+    {type:'toggle', t:'O_X_Loading.lua', d:'加载动画（已连接）', on:true, lock:true},
+    {type:'toggle', t:'OX_Assets.lua', d:'110 帧视频色块流 · 635 KB', on:true, lock:true},
+    {type:'toggle', t:'O_X_Telemetry.lua', d:'FPS / Ping 遥测（已连接）', on:true, lock:true},
+    {type:'buttons', items:[['复制注入链接','pri']]}
+  ]
+};
+const EMPTY = [
+  {type:'sec', text:'模块'},
+  {type:'toggle', t:'模块开关', on:false},
+  {type:'slider', t:'参数调节', v:50, min:0, max:100},
+];
+TABS.forEach(([n])=>{ if(!PAGES[n]) PAGES[n]=EMPTY; });
+
+const nav = document.getElementById('nav');
+const main = document.getElementById('main');
+let active = '透视';
+
+TABS.forEach(([name, icon])=>{
+  const d = document.createElement('div');
+  d.className = 'tab'; d.dataset.name = name;
+  d.innerHTML = '<i>'+icon+'</i><span>'+name+'</span>';
+  d.onclick = ()=> select(name);
+  nav.appendChild(d);
+});
+
+function buildPage(name){
+  let el = document.getElementById('pg-'+name);
+  if(el) return el;
+  el = document.createElement('div');
+  el.className = 'page'; el.id = 'pg-'+name;
+  (PAGES[name]||EMPTY).forEach(item=>{
+    if(item.type==='sec'){
+      const s = document.createElement('div');
+      s.className='sec'; s.textContent=item.text; el.appendChild(s);
+    } else if(item.type==='toggle'){
+      const r = document.createElement('div'); r.className='row';
+      r.innerHTML = '<div><div class="t">'+item.t+'</div>'+(item.d?'<div class="d">'+item.d+'</div>':'')+'</div>';
+      const sw = document.createElement('div');
+      sw.className = 'sw' + (item.on?' on':'');
+      if(!item.lock) sw.onclick = ()=>{ sw.classList.toggle('on'); };
+      r.appendChild(sw); el.appendChild(r);
+    } else if(item.type==='slider'){
+      const r = document.createElement('div'); r.className='slider';
+      const pct = (item.v-item.min)/(item.max-item.min)*100;
+      r.innerHTML = '<div class="top"><div class="t">'+item.t+'</div><div class="v">'+item.v+(item.unit||'')+'</div></div>'+
+        '<div class="track"><div class="fill" style="width:'+pct+'%"></div><div class="knob" style="left:'+pct+'%"></div></div>';
+      const track = r.querySelector('.track'), fill=r.querySelector('.fill'), knob=r.querySelector('.knob'), vv=r.querySelector('.v');
+      const set = e=>{
+        const b = track.getBoundingClientRect();
+        let p = Math.max(0, Math.min(1, (e.clientX-b.left)/b.width));
+        let val = item.min + p*(item.max-item.min);
+        if(item.step) val = Math.round(val/item.step)*item.step;
+        else val = Math.round(val);
+        fill.style.width = (p*100)+'%'; knob.style.left=(p*100)+'%';
+        vv.textContent = (item.step? val.toFixed(2) : val) + (item.unit||'');
+      };
+      let down=false;
+      track.onpointerdown = e=>{down=true; set(e); track.setPointerCapture(e.pointerId);};
+      track.onpointermove = e=>{ if(down) set(e); };
+      track.onpointerup = ()=>{ down=false; };
+      el.appendChild(r);
+    } else if(item.type==='buttons'){
+      const wrap = document.createElement('div'); wrap.className='btnrow';
+      item.items.forEach(([txt, cls])=>{
+        const b = document.createElement('div');
+        b.className='btn'+(cls?' '+cls:''); b.textContent=txt;
+        if(txt==='重播加载动画') b.onclick = ()=>{ app.classList.remove('on'); chooser.classList.remove('on'); startLoad(); };
+        wrap.appendChild(b);
+      });
+      el.appendChild(wrap);
+    }
+  });
+  main.appendChild(el);
+  return el;
+}
+
+function select(name){
+  active = name;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.dataset.name===name));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  const el = buildPage(name);
+  requestAnimationFrame(()=>el.classList.add('on'));
+}
+TABS.forEach(([n])=>buildPage(n));
+select('透视');
+
+/* ================= 交互 ================= */
+const chooser = document.getElementById('chooser');
+const app = document.getElementById('app');
+const stageEl = document.getElementById('stage');
+const ball = document.getElementById('ball');
+
+document.querySelectorAll('.card').forEach(c=>{
+  c.onclick = ()=>{
+    chooser.classList.remove('on');
+    app.classList.add('on');
+    document.getElementById('status').textContent = 'O_X HUB v2.0 已启动';
+  };
+});
+
+document.getElementById('minBtn').onclick = ()=>{
+  app.classList.remove('on'); ball.style.display='flex';
+};
+ball.onclick = ()=>{ ball.style.display='none'; app.classList.add('on'); };
+document.getElementById('closeBtn').onclick = ()=>{
+  app.classList.remove('on'); ball.style.display='none';
+  chooser.classList.add('on');
+};
+document.getElementById('replay').onclick = ()=>{
+  chooser.classList.remove('on'); startLoad();
+};
+
+/* FPS / Ping 抖动 */
+let fps = 60;
+setInterval(()=>{
+  fps = 57 + Math.round(Math.random()*5);
+  document.getElementById('fps').innerHTML = '<b>'+fps+'</b> FPS';
+  document.getElementById('ping').innerHTML = '<b>'+(48+Math.round(Math.random()*12))+'</b> ms';
+  document.getElementById('liveTxt').textContent = fps < 30 ? 'LAG' : 'LIVE';
+  document.getElementById('liveDot').style.background = fps < 30 ? '#f87171' : '#4ade80';
+}, 1000);
+
+/* 启动 */
+startLoad();
+</script>
+</body>
+</html>
